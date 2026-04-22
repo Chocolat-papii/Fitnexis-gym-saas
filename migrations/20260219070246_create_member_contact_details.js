@@ -3,9 +3,7 @@
  * @returns { Promise<void> }
  */
 export async function up(knex) {
-   await knex.schema.alterTable("member_contact_details", (table) => {
-    table.timestamp("updated_at").defaultTo(knex.fn.now());
-  });
+  console.log("Skipping legacy migration - table was originally created manually");
 }
 
 /**
@@ -15,7 +13,5 @@ export async function up(knex) {
 
 
 export async function down(knex) {
-   await knex.schema.alterTable("member_contact_details", (table) => {
-    table.dropColumn("updated_at");
-  });
+  console.log("No rollback needed");
 }

@@ -187,14 +187,22 @@
 <div class="blob blue"></div>
 <div class="blob cyan"></div>
 
-<nav class="navbar navbar-expand-lg px-3 py-3 fixed-top">
+<nav class="navbar main-nav navbar-expand-lg px-3 py-3 fixed-top">
   <a class="navbar-brand brand" href="#">Fitnexis</a>
+  <h2 class="mt-1">
+     <i class="bi bi-list"></i>
+  </h2>
 </nav>
 
 <section class="hero container">
   <div class="badge-pill"><i class="bi bi-lightning-charge-fill cyan"></i> High-performance gym OS</div>
   <h1>Gym management, <span class="gradient">redefined.</span></h1>
   <p>Fitnexis centralizes memberships, payments, and growth into one intelligent platform.</p>
+  <div class="mb-5">
+    <a class="btn bg-primary rounded-pill text-dark" href="">Get early access <i class="bi bi-arrow-right"></i></a>
+    <a class="btn btn-outline rounded-pill text-light border" href=""><i class="bi bi-play"></i> Request demo</a>
+  </div>
+  <div class="small-note text-small ">No setup fees · Cancel anytime · 14-day onboarding included</div>
 </section>
 
 <!-- PROBLEM -->
@@ -269,10 +277,11 @@
 
   <div class="row g-3 mt-4">
     <div class="col-12 col-md-6 glass"><i class="bi bi-stars blue icon"></i>Smart memberships<br><span class="muted">Plans, freezes, upgrades, family billing.</span></div>
-    <div class="col-12 col-md-6 glass"><i class="bi bi-arrow-repeat green icon"></i>Automated billing<br><span class="muted">Debit orders, retries, reconciliation.</span></div>
     <div class="col-12 col-md-6 glass"><i class="bi bi-qr-code cyan icon"></i>Member check-ins<br><span class="muted">Frictionless QR & biometric access.</span></div>
     <div class="col-12 col-md-6 glass"><i class="bi bi-activity purple icon"></i>Gym analytics<br><span class="muted">Retention, LTV, heatmaps.</span></div>
     <div class="col-12 col-md-6 glass"><i class="bi bi-diagram-3 orange icon"></i>Multi-location</div>
+        <div class="col-12 col-md-6 glass"><i class="bi bi-arrow-repeat green icon"></i>Automated billing<br><span class="muted">Debit orders, retries, reconciliation.</span></div>
+
     <div class="col-12 col-md-6 glass"><i class="bi bi-person-badge blue icon"></i>Role-based access</div>
   </div>
 </section>
@@ -295,14 +304,14 @@
       <div class="price highlight">
         <i class="bi bi-box-seam blue icon"></i><b>Starter</b><br><br>
         For independent gyms going digital.<br><br>
-        <b>R299 / month</b><br><br>
-        <i class="bi bi-check green"></i> Up to 250 active members<br>
-        <i class="bi bi-check green"></i> Automated debit orders & billing<br>
-        <i class="bi bi-check green"></i> QR member check-ins<br>
+        <b><span class="h1"> R299</span> / month</b><br><br>
+        <i class="bi bi-check green"></i> Up to 120 active members<br>
+        <!-- <i class="bi bi-check green"></i> Automated debit orders & billing<br> -->
+        <i class="bi bi-check green"></i> member check-ins<br>
         <i class="bi bi-check green"></i> Core analytics dashboard<br>
         <i class="bi bi-check green"></i> Single location<br>
         <i class="bi bi-check green"></i> Email support<br><br>
-        Get early access
+        <div class="rounded-pill border bg-primary btn text-light">Get early access <i class="bi bi-arrow-right"></i></div>
       </div>
     </div>
 
@@ -312,7 +321,7 @@
         For multi-trainer gyms scaling members & revenue.<br><br>
         —<br>
         Advanced features for growth gyms — pricing to be announced.<br><br>
-        <i class="bi bi-hourglass-split"></i> Coming soon
+        <div class="rounded-pill border bg-none btn text-light"><i class="bi bi-hourglass-split"></i> Coming soon</div>
       </div>
     </div>
 
@@ -322,7 +331,7 @@
         Multi-location chains with custom workflows.<br><br>
         —<br>
         Advanced features for enterprise gyms — pricing to be announced.<br><br>
-        <i class="bi bi-hourglass-split"></i> Coming soon
+        <div class="rounded-pill border bg-none btn text-light"><i class="bi bi-hourglass-split"></i> Coming soon</div>
       </div>
     </div>
 
@@ -330,14 +339,18 @@
 </section>
 
 <!-- CTA -->
-<section class="container text-center">
+ <section class="container text-center">
+  <h2 class="title">Start running your gym like a modern business.</h2>
+  <p class="sub">From gym management to gym growth.</p>
+  <p class="sub">Join the operators rethinking how fitness businesses are built. Early access is opening in waves.</p><br><br>
+
   <h2>Get Early Access</h2>
   <p class="sub">Be among the first gyms on Fitnexis</p>
 
   <form class="row g-2 justify-content-center mt-3">
-    <div class="col-12 col-md-4"><input type="email" class="form-control" placeholder="Email (optional)"></div>
-    <div class="col-12 col-md-4"><input type="tel" class="form-control" placeholder="Phone number (required)" required></div>
-    <div class="col-12 col-md-2"><button class="btn btn-primary w-100">Submit</button></div>
+    <div class="col-12 col-md-4"><input type="email" class="form-control rounded-5" placeholder="Email (optional)"></div>
+    <div class="col-12 col-md-4"><input type="tel" class="form-control rounded-5" placeholder="Phone number (required)" required></div>
+    <div class="col-12 col-md-2"><button class="btn btn-primary w-100 rounded-5">Submit</button></div>
   </form>
 </section>
 

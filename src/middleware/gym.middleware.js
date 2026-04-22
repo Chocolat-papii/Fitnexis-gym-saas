@@ -15,7 +15,7 @@ export const requireGym = async (req, res, next) => {
     );
 
    if (host.includes("localhost")) {
-        const slug = req.headers["x-gym-slug"] || "gymshack"; // fallback
+        const slug = req.headers["x-gym-slug"] || "mashfitness"; // fallback
 
         const gymResult = await db.query(
           "SELECT * FROM gyms WHERE slug = $1",
