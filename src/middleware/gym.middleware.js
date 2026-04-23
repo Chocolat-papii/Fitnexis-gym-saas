@@ -14,23 +14,26 @@ export const requireGym = async (req, res, next) => {
       [host]
     );
 
-   if (host.includes("localhost")) {
-        const slug = req.headers["x-gym-slug"] || "mashfitness"; // fallback
+  if (
+  host.includes("localhost") ||
+  host.includes("herokuapp.com")
+) {
+  const slug = req.headers["x-gym-slug"] || "mashfitness";
 
-        const gymResult = await db.query(
-          "SELECT * FROM gyms WHERE slug = $1",
-          [slug]
-        );
+  const gymResult = await db.query(
+    "SELECT * FROM gyms WHERE slug = $1",
+    [slug]
+  );
 
-        if (!gymResult.rows.length) {
-          return res.status(404).json({ error: "Gym not found (dev mode)" });
-        }
+  if (!gymResult.rows.length) {
+    return res.status(404).json({ error: "Gym not found (dev/staging mode)" });
+  }
 
-        req.gym = gymResult.rows[0];
-        req.gymId = req.gym.id;
+  req.gym = gymResult.rows[0];
+  req.gymId = req.gym.id;
 
-        return next();
-      }
+  return next();
+}
 
     if (customDomainResult.rows.length) {
       gym = customDomainResult.rows[0];
