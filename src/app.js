@@ -31,7 +31,12 @@ const app = express();
 // database
 
 await connectDB();
-await seedAdmin();
+
+//seeding
+
+if (process.env.NODE_ENV !== "production") {
+  await seedAdmin();
+}
 
 // ----- middlewares ---- //
 app.use(requireGym);
