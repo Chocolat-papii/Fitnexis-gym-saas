@@ -1,566 +1,464 @@
-<!DOCTYPE html>
+</html><!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <title>Mash Fitness Club | Join the Movement</title>
-  <meta name="description" content="Mash Fitness Club — aerobics, strength training, jogging and hikes. Join the community." />
-     
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="assets/img/main-page/favicon.webp" rel="shortcut icon" type="image/x-icon" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitnexis — Gym Operating System</title>
 
-  <link rel="stylesheet" href="./assets/landing/css/bootsnav.css">
-  <link rel="stylesheet" href="./assets/landing/css/bootstrap.min.css">
-  <link rel="stylesheet" href="./assets/landing/css/owl.carousel.min.css">
-  <link rel="stylesheet" href="./assets/landing/css/owl.theme.default.min.css">
-  <link rel="stylesheet" href="./assets/landing/css/font-awesome.css">
-  <link rel="stylesheet" href="./assets/landing/css/font-awesome.min.css">
-  <link rel="stylesheet" href="./assets/landing/css/sm-clean.css">
-  <link rel="stylesheet" href="./assets/landing/css/sm-core-css.css">
-  <link rel="stylesheet" href="./assets/landing/css/style.css">
-  <link rel="stylesheet" href="./assets/landing/css/responsive.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script>
   <style>
-    #loader{
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#000000d5;
-  backdrop-filter: blur(20px);   /* optional glass effect */
-  
-  z-index:9999;
-}
+    :root{
+      --bg:#050712;
+      --glass:rgba(255,255,255,0.04);
+      --border:rgba(255,255,255,0.08);
+      --text:#E5E7EB;
+      --muted:#94A3B8;
+      --blue:#3B82F6;
+      --cyan:#22D3EE;
+      --purple:#A78BFA;
+      --green:#34D399;
+      --orange:#FBBF24;
+    }
+
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:'Inter',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    html{scroll-behavior:smooth;}
+
+    .blob{
+      position:fixed;
+      width:600px;
+      height:600px;
+      filter:blur(120px);
+      opacity:0.35;
+      z-index:-1;
+      animation:float 18s infinite ease-in-out;
+    }
+    .blob.blue{background:var(--blue); top:-200px; left:-150px;}
+    .blob.cyan{background:var(--cyan); bottom:-200px; right:-150px; animation-delay:3s;}
+
+    @keyframes float{
+      0%,100%{transform:translateY(0) translateX(0);}
+      50%{transform:translateY(60px) translateX(40px);}
+    }
+
+    .navbar{
+      background:rgba(5,7,18,0.6);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+    }
+
+    .brand{font-weight:900;color:var(--blue);}
+    .nav-link{color:var(--muted)!important;}
+    .nav-link:hover{color:var(--cyan)!important;}
+
+    .hero{
+      padding:170px 16px 110px;
+      text-align:center;
+    }
+
+    .border-10 {
+      border: 1px solid rgba(255,255,255,0.08);;
+    }
+
+    .badge-pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 14px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--glass);
+      font-size:12px;
+      margin-bottom:18px;
+    }
+
+    .hero h1{
+      font-size:clamp(2.2rem,5vw,3.6rem);
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
+    .gradient{
+      background:linear-gradient(90deg,var(--blue),var(--cyan));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero p{
+      max-width:720px;
+      margin:18px auto;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    section{padding:110px 16px;}
+
+    .title{
+      text-align:center;
+      font-weight:900;
+      font-size:2rem;
+      margin-bottom:10px;
+    }
+
+    .sub{
+      text-align:center;
+      color:var(--muted);
+      max-width:820px;
+      margin:0 auto;
+      line-height:1.6;
+    }
+
+    .glass{
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:22px;
+      backdrop-filter:blur(16px);
+      transition:0.35s;
+      height:100%;
+    }
+
+    .glass-2 {
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:22px;
+      backdrop-filter:blur(16px);
+      transition:0.35s;
+    }
+
+    .glass:hover, .glass-2:hover {
+      transform:translateY(-8px);
+      border-color:rgba(34,211,238,0.4);
+      box-shadow:0 20px 50px rgba(34,211,238,0.12);
+    }
+
+    .icon{font-size:20px;margin-right:10px;}
+
+    .blue{color:var(--blue);} .cyan{color:var(--cyan);} .green{color:var(--green);} .purple{color:var(--purple);} .orange{color:var(--orange);}
+
+    .muted{color:var(--muted);font-size:0.92rem;line-height:1.5;}
+
+    .item-row{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .price{
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:26px;
+      transition:0.35s;
+      height:100%;
+    }
+
+    .price:hover{
+      transform:translateY(-6px);
+      border-color:var(--cyan);
+      box-shadow:0 0 40px rgba(34,211,238,0.18);
+    }
+
+    .highlight{border:1px solid var(--blue);}
+
+    input{
+      background:var(--glass)!important;
+      border:1px solid var(--border)!important;
+      color:white!important;
+      border-radius:12px;
+      padding:12px;
+    }
+
+    input:focus{
+      border-color:var(--cyan)!important;
+      box-shadow:0 0 0 3px rgba(34,211,238,0.12)!important;
+    }
+
+    .footer{
+      text-align:center;
+      padding:60px;
+      border-top:1px solid var(--border);
+      color:var(--muted);
+    }
   </style>
 </head>
-
 <body>
-<div id="loader">
-  <div class="dumbbell"></div>
+
+<div class="blob blue"></div>
+<div class="blob cyan"></div>
+
+<nav class="navbar main-nav navbar-expand-lg px-3 py-3 d-flex justify-content-between fixed-top">
+  <div class="container">
+    <div>
+      <a class="navbar-brand brand" href="#">Fitnexis</a>
+    </div>
+    <div>
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" href="/#features">Features</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/#platform">Platform</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/#growth">Growth</a>
+        </li>
+       
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/#pricing">Pricing</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="hero container">
+  <div class="badge-pill"><i class="bi bi-lightning-charge-fill cyan"></i> High-performance gym OS</div>
+  <h1>Gym management, <span class="gradient">redefined.</span></h1>
+  <p>Fitnexis is the all-in-one operating system for memberships, payments, and gym growth — built for modern fitness businesses.</p>
+  <div class="mb-5">
+    <a class="btn bg-primary rounded-pill text-dark" href="/#contact">Get early access <i class="bi bi-arrow-right"></i></a>
+    <a class="btn btn-outline rounded-pill text-light highlight " href="/#contact"><i class="bi bi-play"></i> Request demo</a>
+  </div>
+  <div class="small-note text-small ">No setup fees · Cancel anytime · 14-day onboarding included</div>
+</section>
+
+<!-- Illustration -->
+
+<section>
+  <div class="container">
+    <div class="row">
+    <div class="col-12 col-md-6">
+      <img class="img-fluid rounded-4" src="../assets/landing/images/page/admindash.png" alt="Admi dashboard preview">
+   </div>
+    <div class="col-12 col-md-6">
+      <img class="img-fluid rounded-4" src="../assets/landing/images/page/addmember.png" alt="add member dashboard preview">
+   </div>
+   </div>
 </div>
-  <!-- loader start -->
-  <!-- <div class="page_loader">
-    <img src="assets/img/main-page/loader.svg" alt="img">
-  </div> -->
-  <!-- loader end -->
-  <!-- header -->
-  <%- include("partials/header.html") %>
-  <!-- end header -->
 
+</section>
+
+<!-- PROBLEM -->
+<section id="problem" class="container">
+  <p class="sub">The problem</p>
+  <h2 class="title">Gym management is still stuck in <span class="gradient">spreadsheets</span> and fragmented tools. Fitnexis replaces them with one intelligent platform.</h2>
+  <p class="sub">The fitness industry runs on duct-taped systems. Fitnexis replaces them with one intelligent platform.</p>
+
+
+  <div class="row g-4 mt-4">
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="glass">
+        <div class="item-row"><i class="bi bi-journal-x orange icon"></i><b>Manual member tracking</b></div>
+        <div class="muted">Spreadsheets, WhatsApp groups, sticky notes. Critical data scattered everywhere.</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="glass">
+        <div class="item-row"><i class="bi bi-cash-coin green icon"></i><b>Payment chaos</b></div>
+        <div class="muted">Failed debits, missed renewals, and revenue silently leaking every month.</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="glass">
+        <div class="item-row"><i class="bi bi-graph-down purple icon"></i><b>No visibility on growth</b></div>
+        <div class="muted">You can't optimize what you can't measure. Most owners fly blind.</div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="glass">
+        <div class="item-row"><i class="bi bi-person-workspace cyan icon"></i><b>Admin overload</b></div>
+        <div class="muted">Owners stuck doing operations instead of building the business.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PLATFORM -->
+<section id="platform" class="container text-left">
+  <div class="row d-flex justify-content-between">
+    <div class="col-md" style="text-align: left;">
+      <p class="sub mb-3 gradient" style="text-align: left;">The platform</p>
+      <h2 class="title" style="text-align: left;">One platform. Every operation.</h2>
+      <p class="sub" style="text-align: left;">Fitnexis centralizes everything that powers a modern gym — from the front desk to the boardroom — so
+        you spend less time on admin and more time growing.</p>
+      <div class="row g-3 mt-4">
+        <div class="col-12 col-md-6"><i class="bi bi-people-fill cyan icon"></i>Membership management</div>
+        <div class="col-12 col-md-6"><i class="bi bi-credit-card green icon"></i>Automated payments</div>
+        <div class="col-12 col-md-6"><i class="bi bi-qr-code blue icon"></i>Member check-ins</div>
+        <div class="col-12 col-md-6"><i class="bi bi-bar-chart purple icon"></i>Gym analytics dashboard</div>
+        <div class="col-12 col-md-6"><i class="bi bi-building cyan icon"></i>Multi-gym support</div>
+        <div class="col-12 col-md-6"><i class="bi bi-shield-lock orange icon"></i>Role-based admin access</div>
+      </div>
+    </div>
+    
+    <!-- MEMBER -->
+    <div class="col-md">
+      <div class="">
+        <div class="">
+          <img class="img-fluid rounded-4" src="../assets/landing/images/page/memerport.png" alt="member portal preview">
+      </div>
+      </div>
+    </div>
+  </div>
   
+</section>
 
-  <!-- start header banner section -->
-  <section class="hero-header-banner-section">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-6 col-sm-6 col-xs-6"></div>
-        <div class="col-md-10 col-sm-6 col-xs-6">
-          <div class="banner-content-section">
-            <div class="banner-img-section">
-              <h1>Transform Your Body. Reset Your Mind.</h1>
-            </div>
-            <div class="content-section">
-              <p class="lead">Structured fitness programs, detox challenges, hiking experiences & lifestyle transformation
-                 — built for real people, real results.</p>
-            </div>
-            <div class="d-flex gap-2">
-              <a class="content-btn" href="/signup">JOIN TODAY</a>
-              <a href="/#about" class="content-btn-2">READ MORE</a>
-            </div>
-          </div>
+
+
+<!-- CAPABILITIES -->
+<section class="container" id="features">
+  <p class="sub">Capabilities</p>
+
+  <h2 class="title">Everything your gym needs. In one system.</h2>
+
+  <div class="row g-2 mt-4">
+    <div class="col-md-6 glass p-2"><i class="bi bi-stars blue icon"></i>Smart memberships<br><span class="muted">Plans, freezes, upgrades, family billing.</span></div>
+    <div class="col-md-6 glass p-2"><i class="bi bi-qr-code cyan icon"></i>Member check-ins<br><span class="muted">Frictionless access with  live floor data.</span></div>
+    <div class="col-md-6 glass p-2"><i class="bi bi-activity purple icon"></i>Gym analytics<br><span class="muted">Cohort retention, LTV, attendance heatmaps — out of the box.</span></div>
+    <div class="col-md-6 glass p-2"><i class="bi bi-diagram-3 orange icon"></i>Multi-location <br><span class="muted">Run one gym or fifty. Unified data, separate operations.</span></div>
+    <div class="col-md-6 glass p-2"><i class="bi bi-arrow-repeat green icon"></i>Automated billing <br><span class="muted">Debit orders, retries, reconciliation.</span></div>
+    <div class="col-md-6 glass p-2"><i class="bi bi-person-badge blue icon"></i>Role-based access <br><span class="muted">Owners, managers, trainers, front-desk — with the right scope.</span></div>
+  </div>
+</section>
+
+<!-- BEYOND -->
+<section class="container text-center" id="growth">
+  <div class="row d-flex justify-content-evenly glass-2 align-items-center">
+    <div class="col-md-6">
+      <p class="sub" style="text-align: left;">Beyond operations</p><br><br>
+      <h2 class="title" style="text-align: left;">From gym <br> management <br> to <span class="gradient">gym growth.</span></h2>
+      <p class="sub width-75" style="text-align: left;">Fitnexis isn't just a back-office tool. It's a revenue and retention
+        engine — surfacing the signals that turn members into loyal customers and gyms into businesses that compound.
+      </p>
+    </div>
+    <div class="row g-4 mb-4 col-md-6">
+      <div class="col-md-6">
+        <div class="m-1 rounded-4 p-3 border-10 glass-2">
+          <h2><span class="gradient">+18%</span></h2>
+          <p>Avg revenue lift</p>
         </div>
       </div>
-      <div class="down-arrow"> <img src="./assets/landing/images/page/down-arrow.webp" alt="Mash Fitness" class="img-fluid"> </div>
-    </div>
-  </section>
-  <!-- end header banner section -->
-
-  <!-- start about section -->
-  <section id="about" class="hero-about">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-6 col-sm-12 col-xs-12">
-          <div class="hero-about-content">
-            <div class="about-header">
-              <h1>ABOUT <span>MASH FITNESS CLUB</span></h1>
-            </div>
-            <div class="about-content">
-              <p>
-                <strong>Mash Fitness Club</strong> is a fast-growing community-based fitness and wellness organization located in Rabie Ridge, Gauteng. <br><br>
-                
-                We provide <strong> structured physical training, online fitness programs, detox challenges, nutrition support, hiking
-                experiences, and lifestyle transformation </strong> initiatives designed to combat inactivity and lifestyle-related diseases. <br><br>
-                
-                Founded on discipline, accountability, and community empowerment, Mash Fitness Club delivers affordable, results-driven
-                programs suitable for individuals at <strong> all fitness levels</strong>. <br><br>
-                
-                We are not just a fitness club.
-                We are a movement dedicated to transforming lives <strong>physically, mentally</strong>, and <strong>socially </strong>.
-              </p>
-              <div class="about-button"> <a href="/#more-about-us" class="about-btn">LEARN MORE</a> </div>
-            </div>
-          </div>
+      <div class="col-md-6 ">
+        <div class="rounded-4 p-3 border-10 glass-2">
+          <h2><span class="gradient">-42%</span></h2>
+          <p>Member churn</p>
         </div>
-        <div class="col-lg-6 col-sm-12 col-xs-12  d-flex justify-content-center">
-          <div class="about-img"> 
-            <img src="./assets/landing/images/page/about-mash.jpg" alt="Mash Fitness" class="img-fluid downer" style="height: 400px; aspect-ratio: 1/1; background-size: cover;"> 
-          </div>
+      </div>
+      <div class="col-md-6 ">
+        <div class="rounded-4 p-3 border-10 glass-2">
+          <h2><span class="gradient">12hrs</span></h2>
+          <p>Saved per week</p>
+        </div>
+      </div>
+      <div class="col-md-6 ">
+        <div class="rounded-4 p-3 border-10 glass-2">
+          <h2><span class="gradient">1 view</span></h2>
+          <p>All locations</p>
         </div>
       </div>
     </div>
-  </section>
-  <!-- end about section -->
+  </div>
+</section>
 
-  <!-- start our courses -->
-  <section id="activities" class="hero-courses section">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="our-courses-header">
-            <h2>WHAT WE <span>OFFER</span></h2>
-            <p></p>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-6 col-xs-12">
-          <div class="our-courses-box">
-            <div class="course-img"> 
-              <!-- <img src="" alt="Mash Fitness" class="img-fluid"> -->
-            </div>
-            <div class="course-content">
-              <h2>🏋🏾 Structured Physical Training</h2>
-              <p>Structured sessions designed for fat loss, strength building, endurance improvement, and overall wellness.</p><br>
-              <div class="d-flex justify-content-center">
-              <ul class="bullet">
-                <li>Weight loss programs</li>
-                <li>Muscle gain programs</li>
-                <li>Bootcamp sessions</li>
-                <li>Personal training</li>
-              </div>
-              </ul>
-              <div class="ml-2">
-                <!-- <a href="/" class="content-btn-2">READ MORE</a> -->
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-6 col-xs-12">
-          <div class="our-courses-box">
-            <div class="course-img"> 
-              <!-- <img src="assets/img/main-page/courses-img-2.webp" alt="Mash Fitness" class="img-fluid"> -->
-            </div>
-            <div class="course-content">
-              <h2>🌿 Detox & Wellness Challenges</h2>
-              <p>We integrate structured training and nutrition education to drive lasting, measurable transformation.</p><br>
-              <div class="d-flex justify-content-center">
-              <ul class="bullet">
-                <li>7-Day Detox</li>
-                <li>14-Day Reset</li>
-                <li>Nutritional guidance</li>
-                <li>Wellness tracking</li>
-              </div>
-              </ul>
-              <div class="ml-2">
-                <!-- <a href="/" class="content-btn-2">READ MORE</a> -->
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-6 col-xs-12">
-          <div class="our-courses-box">
-            <div class="course-img"> 
-              <!-- <img src="assets/img/main-page/courses-img-3.webp" alt="Mash Fitness" class="img-fluid"> -->
-            </div>
-            <div class="course-content">
-              <h2>🥾 Hiking & Outdoor Fitness Experiences</h2>
-              <p>Our hiking experiences build physical strength and mental clarity while creating meaningful social connections.</p><br>
-              <div class="d-flex justify-content-center">
-              <ul class="bullet">
-                <li>Monthly group hikes</li>
-                <li>Community bonding</li>
-                <li>Outdoor strength sessions</li>
-                <br>
-              </ul>
-            </div>
-              <div class="ml-2">
-                <!-- <a href="/" class="content-btn-2">READ MORE</a> -->
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-6 col-xs-12">
-          <div class="our-courses-box">
-            <div class="course-img">
-               <!-- <img src="assets/img/main-page/courses-img-4.webp" alt="Mash Fitness" class="img-fluid"> -->
-            </div>
-            <div class="course-content">
-              <h2>💻 Online Fitness Programs</h2>
-              <p>Our hybrid model allows members to train from anywhere while remaining accountable and supported.</p><br>
-              <div class="d-flex justify-content-center">
-              <ul class="bullet">
-                <li>Home workout plans</li>
-                <li>Meal guidance</li>
-                <li>Weekly check-ins</li>
-                <li>WhatsApp support</li>
-              </div>
-              </ul>
-              <div class="ml-2">
-                <!-- <a href="/" class="content-btn-2">READ MORE</a> -->
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- <div class="col-lg-4 col-sm-6 col-xs-12">
-          <div class="our-courses-box">
-            <div class="course-img"> <img src="assets/img/main-page/courses-img-5.webp" alt="Mash Fitness" class="img-fluid">
-            </div>
-            <div class="course-content">
-              <h2>Martial Arts</h2>
-              <p>Morbi commodo sapien at risus aliquam dapibus. Quisque ullamcorper ex non leo blandit porta. </p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 col-sm-6 col-xs-12">
-          <div class="our-courses-box">
-            <div class="course-img"> <img src="assets/img/main-page/courses-img-6.webp" alt="Mash Fitness" class="img-fluid">
-            </div>
-            <div class="course-content">
-              <h2>Running</h2>
-              <p>Morbi commodo sapien at risus aliquam dapibus. Quisque ullamcorper ex non leo blandit porta. </p>
-            </div>
-          </div>
-        </div> -->
-        <!-- <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="course-button"> <a href="course.html" class="course-btn">VIEW MORE</a> </div>
-        </div> -->
+<!-- PRICING -->
+<section class="container" id="pricing">
+  <p class="sub">Pricing</p>
+
+  <h2 class="title">Simple pricing. <span class="gradient"> Built to scale with you.</span></h2>
+  <p class="sub">Start with everything you need to run a modern gym. Upgrade as you grow.</p>
+
+  <div class="row g-4 mt-4">
+
+    <div class="col-12 col-md-4">
+      <div class="price highlight">
+        <i class="bi bi-box-seam blue icon"></i><b>Starter</b><br><br>
+        For independent gyms going digital.<br><br>
+        <b><span class="h1"> R299</span> / month</b><br><br>
+        <i class="bi bi-check green"></i> Up to 120 active members<br>
+        <!-- <i class="bi bi-check green"></i> Automated debit orders & billing<br> -->
+        <i class="bi bi-check green"></i> member check-ins<br>
+        <i class="bi bi-check green"></i> Core analytics dashboard<br>
+        <i class="bi bi-check green"></i> Single location<br>
+        <i class="bi bi-check green"></i> Email support<br><br>
+        <div class="rounded-pill highlight gradient btn text-light">GET EARLY ACCESS <i class="bi bi-arrow-right"></i></div>
       </div>
     </div>
-  </section>
-  <!-- end our courses -->
 
-  <!-- start why us section -->
-  <section class="hero-about">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-6 col-sm-12 col-xs-12 d-flex justify-content-center">
-          <div class="about-img"> <img src="./assets/landing/images/page/weights-gym.jpg" alt="Mash Fitness" class="img-fluid" style="height: 380px; transform: translateY(-20px);"> </div>
-        </div>
-        <div class="col-lg-6 col-sm-12 col-xs-12 d-flex justify-content-center">
-          <div class="hero-about-content">
-            <div class="about-header">
-              <h1>WHY <span>CHOOSE</span> MASH FITNESS </h1>
-            </div>
-            <div class="about-content">
-              <p>We provide structured programmes, experiences, and lifestyle transformation initiatives designed to combat inactivity and lifestyle-related diseases.</p>
-              <ul class="bullet">
-                <li>Affordable programs ✔️</li>
-                <li>Accountability system ✔️</li>
-                <li>Community-driven ✔️</li>
-                <li>Discipline-based coaching ✔️</li>
-                <li>Real transformation focus ✔️</li>
-              </ul>
-              <div class="ml-2">
-                <!-- <a href="/" class="content-btn-2">READ MORE</a> -->
-              </div>
-              <br>
-              <div class="about-button why"> 
-                <a href="/signup" class="page-btn">GET ME STARTED</a>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="col-12 col-md-4">
+      <div class="price">
+        <i class="bi bi-graph-up-arrow purple icon"></i><b>Growth</b><br><br>
+        For multi-trainer gyms scaling members & revenue.<br><br>
+        —<br>
+        —<br>
+        —<br>
+        —<br>
+        Advanced features for growth gyms — pricing to be announced.<br><br>
+        <div class="rounded-pill highlight gradient btn text-light"><i class="bi bi-hourglass-split"></i> Coming soon</div>
       </div>
     </div>
-  </section>
-  <!-- end whyus section -->
 
-  <section class="hero-routine step-process">
-    <div class="container d-flex justify-content-start">
-      <div class="row">
-        <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="routine-title">
-            <h1 style="text-align: left;">YOUR 3-STEP <span>TRANSFORMATON</span> PROCESS</h1>
-            
-            <br>
-                <ul class="bullet-2 col-12">
-                  <li><span class="h2-font"> STEP 1.</span><br> <span class="fw-semibold">Assessment:</span> We evaluate
-                    your fitness level and goals.</li> <br>
-  
-                  <li><span class="h2-font"> STEP 2.</span><br> <span class="fw-semibold"> Structured Plan:</span> Custom
-                    training & nutrition guidance.</li> <br>
-  
-                  <li><span class="h2-font"> STEP 3.</span><br> <span class="fw-semibold">Results + Accountability:</span>
-                    We track progress & push consistency.</li>
-                </ul>
-              <p style="text-align: left; font-size: 16px;">Create your free profile so we can better understand your goals and tailor your fitness journey to your needs.</p>
-
-                <div class="about-button-2 col-12">
-                  <a href="/signup" class="about-btn">CREATE PROFILE</a>
-                </div>
-          </div>
-        </div>
+    <div class="col-12 col-md-4">
+      <div class="price">
+        <i class="bi bi-building orange icon"></i><b>Enterprise</b><br><br>
+        Multi-location chains with custom workflows.<br><br>
+        —<br>
+        —<br>
+        —<br>
+        —<br>
+        Advanced features for enterprise gyms — pricing to be announced.<br><br>
+        <div class="rounded-pill highlight gradient btn text-light"><i class="bi bi-hourglass-split"></i> Coming soon</div>
       </div>
     </div>
+
+  </div>
+</section>
+
+<!-- CTA -->
+ <section class="container text-center" id="contact">
+   <p class="sub">From gym management to gym growth.</p>
+  <h2 class="title">Start running your gym like a <span class="gradient"> modern business.</span></h2>
+  <p class="sub">Join the operators rethinking how fitness businesses are built. Early access is opening in waves.</p><br><br>
+
+  <h2>Get Early Access</h2>
+  <div class="d-flex justify-content-center">
+  <form class="mt-3 row g-2">
+    <div class=" mb-3">
+      <label for="f-email">Email</label>
+      <input id="f-email" type="email" class="form-control rounded-5" placeholder="Email (optional)">
     </div>
-  </section>
-  <!-- start Routine section -->
-
-
-  <!-- start trainer section -->
-  <section class="hero-trainers">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="trainer-header">
-            <h1>OUR <span>TRAINERS</span></h1>
-            <p>Quisque ullamcorper ex non leo blandit porta. Duis purus sapien, blandit non sem quis,<br>
-              mollis vehicula sapien.</p>
-          </div>
-        </div>
-        <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="owl-carousel owl-theme ss_carousel" id="slider1">
-            <div class="item">
-              <div class="trainer-box">
-                <div class="trainer-img"> <img src="../assets/landing/images/page/coach1.jpg" alt="Mash Fitness Club" style="height: 550px;"
-                    class="img-fluid">
-                  <div class="trainer-box-content">
-                    <h2>RUTH EDWARDS</h2>
-                    <h5>CARDIO EXPERT</h5>
-                    <p>Our dedicated trainers lead with discipline and encouragement, helping members push limits while staying supported.
-                      nibh.</p>
-                    <ul>
-                      <li><a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
-                      <li><a href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
-                      <li><a href="#"><i class="fa fa-google-plus" aria-hidden="true"></i></a></li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="trainers-tag-name">
-                  <h2>RUTH EDWARDS</h2>
-                </div>
-              </div>
-            </div>
-            <div class="item">
-              <div class="trainer-box">
-                <div class="trainer-img"> <img src="../assets/landing/images/page/coach2.jpg" alt="Mash Fitness" style="height: 550px;"
-                    class="img-fluid">
-                  <div class="trainer-box-content">
-                    <h2>BRUCE BAILEY</h2>
-                    <h5>CARDIO EXPERT</h5>
-                    <p>Vivamus in imperdiet libero, at dapibus eros. In varius lacinia gravida. Aenean dignissim nulla
-                      nibh.</p>
-                    <ul>
-                      <li><a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
-                      <li><a href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
-                      <li><a href="#"><i class="fa fa-google-plus" aria-hidden="true"></i></a></li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="trainers-tag-name">
-                  <h2>BRUCE BAILEY</h2>
-                </div>
-              </div>
-            </div>
-            
-          </div>
-        </div>
-      </div>
+    <div class=" mb-4">
+      <label for="f-tell">Phone</label>
+      <input id="f-tel" type="tel" class="form-control rounded-5" placeholder="Phone number (required)" required>
     </div>
-  </section>
-  <!-- start trainer section -->
-
-  <!-- start Routine section -->
-  <section id="schedule" class="hero-routine">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="routine-title">
-            <h1>OUR <span>TIMETABLE</span></h1>
-            <p>Check our training timetable and commit to sessions that align with your fitness journey. Log in to join a session.</p>
-          </div>
-        </div>
-        <div class="timetable-scroll mb-5">
-          <div id="timetable" class="row g-3 d-flex timetable-wrapper timetable-styler">
-          
-              <div class="col-md-3">
-                  <h6 class="text-center">Monday</h6>
-                  <div class="timetable-column shadow-sm" id="Monday"></div>
-              </div>
-          
-              <div class="col-md-3">
-                  <h6 class="text-center">Tuesday</h6>
-                  <div class="timetable-column shadow-sm" id="Tuesday"></div>
-              </div>
-          
-              <div class="col-md-3">
-                  <h6 class="text-center">Wednesday</h6>
-                  <div class="timetable-column shadow-sm" id="Wednesday"></div>
-              </div>
-          
-              <div class="col-md-3">
-                  <h6 class="text-center">Thursday</h6>
-                  <div class="timetable-column shadow-sm" id="Thursday"></div>
-              </div>
-          
-              <div class="col-md-3">
-                  <h6 class="text-center">Friday</h6>
-                  <div class="timetable-column shadow-sm" id="Friday"></div>
-              </div>
-          
-              <div class="col-md-3">
-                  <h6 class="text-center">Saturday</h6>
-                  <div class="timetable-column shadow-sm" id="Saturday"></div>
-              </div>
-          
-              <div class="col-md-3">
-                  <h6 class="text-center">Sunday</h6>
-                  <div class="timetable-column shadow-sm" id="Sunday"></div>
-              </div>
-          
-          </div>
-        </div>
-        <div class="about-button why d-flex justify-content-center"> 
-                <a href="/login" class="page-btn">JOIN SESSION</a>
-              </div>
-        
-  <!-- start blog section -->
-<div id="more-about-us"></div>
-  <!-- ABout Us section 2-->
-  <section class="hero-about">
-    <div class="container d-flex justify-content-center">
-      <div class="row col-10 ">
-        <div class="col-lg-6 col-sm-12 col-xs-12 d-flex justify-content-center">
-          <div class="hero-about-content">
-            <div class="about-header text-center">
-              <h1>OUR <span>MISSION</span></h1>
-            </div>
-            <div class="about-content">
-              <ul class="bullet">
-                <li>To make fitness accessible and affordable for all</li>
-                <li>To promote healthy lifestyles through structured training programs</li>
-                <li>To build strong community networks through outdoor and wellness events</li>
-                <li>To empower individuals with knowledge about nutrition and sustainable body transformation</li>
-              </ul>
-              <!--<div class="ml-2">
-                 <a href="/" class="content-btn-2">READ MORE</a> 
-              </div>-->
-              <br>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6 col-sm-12 col-xs-12 d-flex justify-content-center">
-          <div class="hero-about-content">
-            <div class="about-header text-center">
-              <h1>OUR <span>VISSION</span></h1>
-            </div>
-            <div class="about-content">
-              <p style="font-size: 20px;">To become one of South Africa’s leading community-driven fitness and wellness brands, transforming lives through structured training, wellness education, and powerful community engagement..</p>
-              <!--<div class="ml-2">
-                 <a href="/" class="content-btn-2">READ MORE</a> 
-              </div>-->
-              <br>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="">
+      <label for=""> </label>
+      <button class="btn btn-primary w-100 rounded-5">Submit</button>
     </div>
-  </section>
-  <!-- end whyus section -->
+  </form>
+</div>
+</section>
 
+<div class="footer">© 2026 Fitnexis - The OS for modern gyms</div>
 
-  <!-- start footer section -->
-  <footer>
-    <div class="container" id="contact">
-      <!-- start card section -->
-      <div class="row">
-        <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="card-box">
-            <div class="card-box-title">
-              <h1>SUBSCRIBE TO <span>OUR NEWSLETTER</span></h1>
-            </div>
-            <div class="card-box-input">
-              <input type="text" placeholder="Your Email...." class="card-input">
-              <div class="input-img"> <img src="../assets/landing/images/page/paper-plane.webp" alt="Mash Fitness" class="img-fluid">
-              </div>
-            </div>
-            <div class="card-box-content">
-              <p>Get latest updates for our latest activities</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- end card section -->
-      <div class="row">
-        <div class="col-lg-12 col-sm-12 col-xs-12">
-          <div class="footer-logo"> <img src="../assets/landing/images/icon/mfc-2.png" style="height: 40px;" alt="Mash Fitness" class="img-fluid">
-          </div>
-          <div class="footer-nav">
-            <ul>
-              <li><a href="#">HOME</a></li>
-              <li><a href="/#about">ABOUT US</a></li>
-              <li><a href="/#activities">ACTIVITIES</a></li>
-              <li><a href="/#schedule">SCHEDULE</a></li>
-              <!-- <li><a href="blog-details.html">BLOG</a></li> -->
-              <li><a href="/#contact">CONTACT US</a></li>
-            </ul>
-          </div>
-          <div class="footer-content">
-            <p>At Mash Fitness Club, we don’t just train bodies — we shape mindsets and build stronger communities. 
-              Through structured programs, expert guidance, and unwavering support, we help you become the strongest 
-              version of yourself. The transformation is real. The results are measurable. The community is waiting.</p>
-          </div>
-          <div class="footer-social-link">
-            <ul>
-              <li><span><i class="fa fa-phone" aria-hidden="true"></i></span><a href="tel:"></a></li>
-              <li><a href="#!"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></a></li>
-              <li><a href="#!"><i class="fa fa-facebook" aria-hidden="true"></i></a></li>
-              <li><a href="#!"><i class="fa fa-instagram" aria-hidden="true"></i></a></li>
-              <li><a href="#!"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a></li>
-              <li><span><i class="fa fa-envelope" aria-hidden="true"></i></span><a href="mailto:s"></a></li>
-            </ul>
-          </div>
-          <div class="bottom-line"></div>
-        </div>
-        <div class="col-lg-6 col-sm-6 col-xs-12">
-          <div class="footer-tag-">
-            <p>© 2026 MASH FITNESS All rights reserved.</p>
-          </div>
-        </div>
-        <div class="col-lg-6 col-sm-6 col-xs-12">
-          <div class="footer-tag text-light d-flex justify-content-end">
-            <p>Proudly designed by <a style="color: blanchedalmond;" href="https://smconnect.co.za" target="_blank">SMCONNECT</a></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </footer>
-  <!-- start footer section -->
-
-  <!-- jQuery -->
-   <script>
-    window.addEventListener("load", () => {
-      document.getElementById("loader").style.display = "none";
-    });
-  </script>
-  <script src="./assets/landing/js/jquery-3.6.0.min.js"></script>
-  <script src="./assets/landing/js/bootstrap.min.js"></script>
-  <script src="./assets/landing/js/jquery.smartmenus.js"></script>
-  <script src="./assets/landing/js/owl.carousel.js"></script>
-  <script src="./assets/landing/js/custom.js"></script>
-    <script src="../assets/public/timetable.js"></script>
-
-  <script>
-  async function loadTimetable() {
-    const res = await fetch("/api/sessions");
-    const sessions = await res.json();
-    renderTimetable(sessions); // pass "member" role
-  }
-
-loadTimetable();
-</script>
 </body>
-
 </html>
