@@ -90,7 +90,7 @@ export const updatePassword = async (req, res) => {
       [userId, gymId]
     );
 
-    if (result.rows.length === 0) {
+    if (rows.length === 0) {
       return res.status(404).json({
         ok: false,
         message: "User not found",
