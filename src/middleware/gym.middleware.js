@@ -34,7 +34,7 @@ export const requireGym = async (req, res, next) => {
       host.includes("localhost") ||
       host.includes("herokuapp.com")
     ) {
-      slug = req.headers["x-gym-slug"];
+      slug = "lumar";
 
       // no slug = platform page
       if (!slug) {
