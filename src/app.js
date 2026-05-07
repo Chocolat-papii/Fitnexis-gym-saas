@@ -64,8 +64,8 @@ app.use((req,res,next)=>{
 // ----- routes ---- //
 
 // app.use(attachUser); 
-app.use(authRoutes);
 app.use(landingPageRoutes);
+app.use(authRoutes);
 app.use("/api/sessions", sessionsRoutes);
 app.use("/api/class-bookings", classBookingRoutes);
 app.use("/member", requireAuth, hydrateMember, memberPageRoutes);

@@ -44,10 +44,10 @@ export const registerGym = async (req, res) => {
 
     // 2. Create gym
     const gymResult = await db.query(
-      `INSERT INTO gyms (name, slug, email)
-       VALUES ($1, $2, $3)
+      `INSERT INTO gyms (name, slug, email, address)
+       VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [name, slug, email]
+      [name, slug.toLowerCase(), email, address]
     );
 
     const gymId = gymResult.rows[0].id;
@@ -95,7 +95,7 @@ export const registerGym = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Gym registered successfully",
-      redirect: "/admin/all-members"
+      redirect: "/register-gym"
     });
 
   } catch (err) {
