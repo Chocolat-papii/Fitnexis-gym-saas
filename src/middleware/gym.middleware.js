@@ -2,9 +2,8 @@ import { db } from "../config/db.js";
 
 const ROOT_DOMAINS = [
   "localhost:3000",
-  "fitnexis.co.za",
-  "www.fitnexis.co.za",
-  "fitnexis.herokuapp.com",
+  "fitnexis.app",
+  "www.fitnexis.app",
 ];
 
 export const requireGym = async (req, res, next) => {
