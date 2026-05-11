@@ -106,13 +106,21 @@ export const requireGym = async (req, res, next) => {
       req.gymId = gym.id;
     }
 
+    console.log("------------");
+console.log("HOST:", host);
+console.log("HEADERS HOST:", req.headers.host);
+console.log("SLUG:", slug);
+console.log("------------");
+
     next();
 
   } catch (err) {
-    console.error("Gym middleware error:", err);
+  console.error("Gym middleware FULL error:");
+  console.error(err);
 
-    return res.status(500).json({
-      error: "Server error",
-    });
-  }
+  return res.status(500).json({
+    error: err.message,
+    stack: err.stack,
+  });
+}
 };
