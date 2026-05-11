@@ -29,17 +29,22 @@ export const requireGym = async (req, res, next) => {
     // Example:
     // localhost:3000 + x-gym-slug: goldsgym
     // -----------------------------------
-    if (
-      host.includes("localhost") ||
-      host.includes("herokuapp.com")
-    ) {
-      slug = "llumar";
+    if (host.includes("localhost")) {
+        // llumar.localhost:3000
+        // wendysgym.localhost:3000
 
-      // no slug = platform page
-      if (!slug) {
-        return next();
+        slug = host.split(".")[0];
+
+        // plain localhost:3000
+        if (slug === "localhost:3000") {
+          return next();
+        }
       }
-    }
+
+      else if (host.includes("herokuapp.com")) {
+        // optional staging fallback
+        slug = "llumar";
+      }
 
     // -----------------------------------
     // 3. Custom domain lookup
@@ -65,7 +70,7 @@ export const requireGym = async (req, res, next) => {
         const subdomain = host.split(".")[0];
 
         // prevent fitnexis.co.za becoming slug "fitnexis"
-        if (
+       if (
           !subdomain ||
           subdomain === "www" ||
           subdomain === "fitnexis"
