@@ -51,36 +51,36 @@ export const requireGym = async (req, res, next) => {
     // Example:
     // goldsgym.co.za
     // -----------------------------------
-    else {
-      const customDomainResult = await db.query(
-        "SELECT * FROM gyms WHERE custom_domain = $1",
-        [host]
-      );
+    // else {
+    //   const customDomainResult = await db.query(
+    //     "SELECT * FROM gyms WHERE custom_domain = $1",
+    //     [host]
+    //   );
 
-      if (customDomainResult.rows.length) {
-        gym = customDomainResult.rows[0];
-      }
+    //   if (customDomainResult.rows.length) {
+    //     gym = customDomainResult.rows[0];
+    //   }
 
       // -----------------------------------
       // 4. Fitnexis subdomain
       // Example:
       // goldsgym.fitnexis.co.za
       // -----------------------------------
-      if (!gym) {
-        const subdomain = host.split(".")[0];
+      // if (!gym) {
+      //   const subdomain = host.split(".")[0];
 
         // prevent fitnexis.co.za becoming slug "fitnexis"
-       if (
-          !subdomain ||
-          subdomain === "www" ||
-          subdomain === "fitnexis"
-        ) {
-          return next();
-        }
+    //    if (
+    //       !subdomain ||
+    //       subdomain === "www" ||
+    //       subdomain === "fitnexis"
+    //     ) {
+    //       return next();
+    //     }
 
-        slug = subdomain;
-      }
-    }
+    //     slug = subdomain;
+    //   }
+    // }
 
     // -----------------------------------
     // 5. Gym lookup
