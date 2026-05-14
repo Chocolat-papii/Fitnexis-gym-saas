@@ -24,28 +24,44 @@ export const requireGym = async (req, res, next) => {
     let slug = null;
 
     // -----------------------------------
-    // 2. Dev / staging mode
-    // localhost with tenant simulation
-    // Example:
-    // localhost:3000 + x-gym-slug: goldsgym
-    // -----------------------------------
-    if (host.includes("localhost")) {
-        // llumar.localhost:3000
-        // wendysgym.localhost:3000
+// LOCALHOST
+// -----------------------------------
+if (host.includes("localhost")) {
+  slug = host.split(".")[0];
+}
 
-        slug = host.split(".")[0];
+// -----------------------------------
+// CUSTOM DOMAIN
+// -----------------------------------
+else {
 
-        // plain localhost:3000
-        if (slug === "localhost:3000") {
-          return next();
-        }
-      }
+  // OPTIONAL custom domain support
+  const customDomainResult = await db.query(
+    "SELECT * FROM gyms WHERE custom_domain = $1",
+    [host]
+  );
 
-      else if (host.includes("herokuapp.com")) {
-        // optional staging fallback
-        slug = "llumar";
-      }
+  if (customDomainResult.rows.length) {
+    gym = customDomainResult.rows[0];
+  }
 
+  // -----------------------------------
+  // SUBDOMAIN FALLBACK
+  // -----------------------------------
+  if (!gym) {
+
+    const parts = host.split(".");
+
+    // wendysgym.fitnexis.app
+    // ["wendysgym", "fitnexis", "app"]
+
+    if (parts.length > 2) {
+      slug = parts[0];
+    }
+  }
+}
+
+console.log("SLUG:", slug);
     // -----------------------------------
     // 3. Custom domain lookup
     // Example:
