@@ -37,7 +37,7 @@ else {
 
   // OPTIONAL custom domain support
   const customDomainResult = await db.query(
-    "SELECT * FROM gyms WHERE custom_domain = $1",
+    "SELECT * FROM gyms WHERE slug = $1",
     [host]
   );
 
