@@ -9,7 +9,8 @@ export const viewMemberPortal = async (req, res, next) =>  {
 
     res.render("dashboard/member-portal", {
       activePage: "portal",
-      sessions
+      sessions,
+      gym: req.gym
     });
 
 

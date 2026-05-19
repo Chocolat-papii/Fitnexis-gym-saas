@@ -29,6 +29,7 @@ try {
    return res.render("dashboard/member-billing", {
     member,
     activePage: "billing",
+    gym: req.gym
   });
 } catch (err) {
     console.error("PORTAL ERROR:", err);

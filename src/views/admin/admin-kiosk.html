@@ -74,8 +74,8 @@
                         <button class="exit-btn btn fw-bold fs-4 border rounded-circle gl" onclick="exitKiosk()">✕</button>
             
                         <!-- Logo -->
-                        <button class="btn fw-bold fs-4 border-0 gl">
-                                    MFC
+                        <button class="btn fw-bold fs-4 border-0 gl" onclick="goHome()">
+                                    <%= gym.name %>
                                 </button>
                         <!-- <h2 class="nav-brand"><a href="/"><img src="../assets/landing/images/icon/mfc-2.png" alt="Mash Fitness" style="height: 35px;"
                                         class="img-fluid"></a></h2> -->
@@ -177,7 +177,15 @@
                     </div>
                     </div>
                 </div> 
+
+                <!-- footer -->
+          <%- include("partials/footer.html") %>
+    <!-- End footer -->
             </div>
+
+            <!-- footer -->
+          <%- include("partials/footer.html") %>
+    <!-- End footer -->
 <!-- Alerts for checkins -->
  <div id="toast" class="toast"></div>
 <audio id="successSound" src="/sounds/success.mp3" preload="auto"></audio>
@@ -300,6 +308,10 @@ function showToast(message) {
 function exitKiosk() {
     window.location.href = "/admin/insights";
 }
+function goHome() {
+    window.location.href = "/home";
+}
+
 </script>
 </body>
 

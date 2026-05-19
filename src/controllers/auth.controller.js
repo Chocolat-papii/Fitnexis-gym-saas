@@ -9,8 +9,9 @@ const __dirname = path.dirname(__filename);
 
 // working
 export const getSignUpForm = (req, res) => {
-  res.status(200).sendFile(path.join(__dirname, "..", "views", "landing", "partials", "sign-up-form.html"));
-};
+ return res.render("landing/partials/sign-up-form", {
+      gym: req.gym
+    });};
 
 // Working
 export const signUp = async (req, res) => {

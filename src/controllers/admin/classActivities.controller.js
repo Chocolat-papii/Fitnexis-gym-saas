@@ -13,7 +13,9 @@ export const getClassActivities = async (req, res, next) => {
     return res.render("admin/admin-class-activities", {
         activePage: "classes",
         classTypes,
-        sessions
+        sessions,
+        gym: req.gym
+
     });
 };
 

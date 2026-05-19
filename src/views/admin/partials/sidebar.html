@@ -3,7 +3,7 @@
             <!-- <div class="brand-badge">MMS</div> -->
             <div class="admin">
                 <div class="small-note fw-semibold">Admin Portal</div>
-                <div class="small-note">Welcome Admin</div>
+                <div class="small-note">Welcome <%= member.firstname %></div>
             </div>
         </div>
         <hr class="small-note admin">
@@ -18,9 +18,9 @@
       <a class="small-note nav-pill text-decoration-none <%= activePage === 'insights' ? 'active' : '' %>" href="/admin/insights">
         <span><i class="fa-solid fa-chart-area"></i></span> <span>Insights</span>
       </a>
-      <a class="small-note nav-pill text-decoration-none <%= activePage === 'classes' ? 'active' : '' %>" href="/admin/class-activities">
+      <!-- <a class="small-note nav-pill text-decoration-none <%= activePage === 'classes' ? 'active' : '' %>" href="/admin/class-activities">
         <span><i class="fa-regular fa-calendar"></i></span> <span>Classes</span>
-      </a>
+      </a> -->
       <a class="small-note nav-pill text-decoration-none <%= activePage === 'members' ? 'active' : '' %>" href="/admin/all-members">
         <span><i class="fa-solid fa-users"></i></span> <span>Members</span>
       </a>
@@ -30,7 +30,7 @@
       <a class="nav-pill text-decoration-none <%= activePage === 'edit-profile' ? 'active' : '' %>" href="/admin/edit-profile">
         <span><i class="fa-solid fa-user-gear"></i></span> <span>Edit Profile</span>
       </a> -->
-      <a class="small-note nav-pill text-decoration-none <%= activePage === 'billing' ? 'active' : '' %>" href="/admin/billing">
+      <!-- <a class="small-note nav-pill text-decoration-none <%= activePage === 'billing' ? 'active' : '' %>" href="/admin/billing">
         <span><i class="fa-solid fa-credit-card"></i></span> <span>Billing</span>
       </a>
       <a class="small-note nav-pill text-decoration-none <%= activePage === 'reports' ? 'active' : '' %>" href="/admin/reports">
@@ -38,7 +38,7 @@
       </a>
       <a class="small-note nav-pill text-decoration-none" href="/logout">
         <span><i class="fa-solid fa-gears"></i></span> <span>Settings</span>
-      </a>
+      </a> -->
     </nav>
         
     

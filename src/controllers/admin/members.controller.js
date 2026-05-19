@@ -4,7 +4,9 @@ import bcrypt from "bcrypt";
 
 export const viewAllMembers = async (req, res, next) => {
    return res.render("admin/admin-dashboard.html", { 
-      activePage: "members"
+      activePage: "members",
+      gym: req.gym
+
    });
 };
 
@@ -87,7 +89,8 @@ export const viewMemberDetails = async (req, res) => {
 
     res.render("admin/admin-member-details", {
       activePage: "members",
-      member
+      member,
+      gym: req.gym
     });
 
   } catch (error) {

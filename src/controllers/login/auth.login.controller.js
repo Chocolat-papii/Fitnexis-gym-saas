@@ -27,9 +27,9 @@ const signToken = (user) =>
     // working
 export const loginForm = (req, res) => {
 
-  return res.status(200).sendFile(
-    path.join(req.app.get("views"), "landing", "partials", "login-form.html")
-  );
+  return res.render("landing/partials/login-form", {
+    gym: req.gym
+  });
 };
 
 

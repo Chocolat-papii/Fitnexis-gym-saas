@@ -4,8 +4,8 @@
 <div class="d-flex justify-content-between align-items-center px-3 glass-card rounded-bottom-4 header mb-4">
 
   <!-- Logo -->
-  <button class="btn fw-bold fs-4 border-0">
-    Fitnexis
+  <button class="btn fw-bold fs-4 border-0" onclick="goHome()">
+    <%= gym.name %>
   </button>
   <!-- <h2 class="nav-brand"><a href="/"><img src="../assets/landing/images/icon/mfc-2.png" alt="Mash Fitness" style="height: 35px;"
                   class="img-fluid"></a></h2> -->
@@ -80,4 +80,8 @@
 
   </div>
 </div>
-
+ <script>
+  function goHome() {
+    window.location.href = "/home";
+}
+ </script>

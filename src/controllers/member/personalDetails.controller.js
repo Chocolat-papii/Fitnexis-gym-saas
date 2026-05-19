@@ -3,6 +3,7 @@ import { db } from "../../config/db.js";
 export const viewMemberPersonalDetails = async (req, res, next) => {
     return res.render("dashboard/member-personal-details", {
     activePage: "personal-details",
+    gym: req.gym
   });
 };
 

@@ -9,13 +9,14 @@ import { viewAdminInsights } from "../controllers/admin/insights.controller.js";
 import { searchMembersController, viewKiosk } from "../controllers/admin/searchMember.controller.js";
 import { createCheckin } from "../controllers/admin/attendance.controller.js";
 import { requireGym } from "../middleware/gym.middleware.js";
+import { hydrateMember } from "../middleware/hydrateMember.js";
 
 
 
 const router = Router();
 
 
-router.use("/admin", requireGym, requireAuth, requireAdmin);
+router.use("/admin", requireGym, requireAuth, requireAdmin, hydrateMember);
 
 // - - - admin dashboard - - - // 
 

@@ -6,5 +6,5 @@ export const logoutMember = (req, res) => {
     path: "/"
   });
 
-  return res.redirect("/login");
+  return res.redirect("/home");
 };

@@ -8,6 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const viewMemberNutrition = async (req, res, next) => {
 return res.render("dashboard/member-nutrition", {
     activePage: "nutrition",
+    gym: req.gym
   });
 }
 

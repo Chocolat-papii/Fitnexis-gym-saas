@@ -71,7 +71,8 @@ export const viewAdminInsights = async (req, res, next) => {
       checkinsPage,
       totalCheckinPages,
       inactivePage,
-      totalInactivePages
+      totalInactivePages,
+      gym: req.gym
     });
 
 

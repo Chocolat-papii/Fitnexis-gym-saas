@@ -3,7 +3,8 @@ import { searchMembers } from "../../services/member.service.js";
 
 export const viewKiosk = async (req, res) => {
     res.render("admin/admin-kiosk", {
-        activePage: 'kiosk'
+        activePage: 'kiosk',
+        gym: req.gym
         });
 }
 

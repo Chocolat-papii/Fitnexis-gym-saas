@@ -69,7 +69,7 @@ app.use(authRoutes);
 app.use("/api/sessions", sessionsRoutes);
 app.use("/api/class-bookings", classBookingRoutes);
 app.use("/member", requireAuth, hydrateMember, memberPageRoutes);
-app.use("/admin", requireAuth, requireAdmin, adminPageRoutes);
+app.use("/admin", requireAuth, requireAdmin, hydrateMember, adminPageRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/member/attendance", memberPageRoutes);
 

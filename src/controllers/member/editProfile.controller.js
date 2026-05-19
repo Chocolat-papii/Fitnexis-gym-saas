@@ -8,7 +8,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export const viewEditProfile = async (req, res, next) =>  { 
     return res.render("dashboard/member-edit-profile" , { 
-      activePage: "edit-profile"
+      activePage: "edit-profile",
+      gym: req.gym
    });
 };
 
