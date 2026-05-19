@@ -1,14 +1,20 @@
 import { db } from "../config/db.js";
 
 const ROOT_DOMAINS = [
-  "localhost:3000",
   "fitnexis.app",
-  "www.fitnexis.app",
+  "localhost:3000"
 ];
+
+const isPlatform = ROOT_DOMAINS.includes(host);
+
+if (isPlatform) {
+  req.gym = null;
+  return next();
+}
 
 export const requireGym = async (req, res, next) => {
   try {
-    const host = req.headers.host?.replace("www.", "");
+    let host = req.headers.host?.toLowerCase().replace("www.", "");
 
     // -----------------------------------
     // 1. Allow platform landing pages
@@ -20,9 +26,18 @@ export const requireGym = async (req, res, next) => {
       return next();
     }
 
-    let gym = null;
+   let gym = null;
     let slug = null;
 
+    // CUSTOM DOMAIN CHECK
+    const customDomain = await db.query(
+      "SELECT * FROM gyms WHERE slug = $1",
+      [host]
+    );
+
+    if (customDomain.rows.length > 0) {
+      gym = customDomain.rows[0];
+    }
     // -----------------------------------
 // LOCALHOST
 // -----------------------------------
@@ -48,20 +63,21 @@ else {
   // -----------------------------------
   // SUBDOMAIN FALLBACK
   // -----------------------------------
-  if (!gym) {
+      if (!gym) {
+        const parts = host.split(".");
 
-    const parts = host.split(".");
+        // llumar.fitnexis.app → ["llumar", "fitnexis", "app"]
+        if (parts.length >= 3) {
+          slug = parts[0];
 
-    // wendysgym.fitnexis.app
-    // ["wendysgym", "fitnexis", "app"]
-
-    if (parts.length > 2) {
-      slug = parts[0];
+          // safety guard
+          if (slug === "fitnexis") {
+            slug = null;
+          }
+        }
+      }
     }
-  }
-}
 
-console.log("SLUG:", slug);
     // -----------------------------------
     // 3. Custom domain lookup
     // Example:
@@ -101,27 +117,25 @@ console.log("SLUG:", slug);
     // -----------------------------------
     // 5. Gym lookup
     // -----------------------------------
-    if (!gym && slug) {
-      const gymResult = await db.query(
+     if (!gym && slug) {
+      const result = await db.query(
         "SELECT * FROM gyms WHERE slug = $1",
         [slug]
       );
 
-      if (!gymResult.rows.length) {
-        return res.status(404).json({
-          error: "Gym not found",
-        });
+      if (result.rows.length === 0) {
+        // IMPORTANT: don't break platform
+        return next(); // NOT 404
       }
 
-      gym = gymResult.rows[0];
+      gym = result.rows[0];
     }
 
     // attach tenant if found
     if (gym) {
-      req.gym = gym;
-      req.gymId = gym.id;
-    }
-
+        req.gym = gym;
+        req.gymId = gym.id;
+      }
     console.log("------------");
 console.log("HOST:", host);
 console.log("HEADERS HOST:", req.headers.host);
