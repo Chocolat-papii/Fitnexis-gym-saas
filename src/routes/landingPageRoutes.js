@@ -9,7 +9,7 @@ import { viewGymHome } from "../controllers/landing/gymHome/gymHomePage.controll
 
 const router = express.Router();
 
-router.get("/", requireGym, viewHomePage); // Show fitnexis landing page
+router.get("/", viewHomePage); // Show fitnexis landing page
 router.get("/", requireGym, getSessions); //Show sessions on home page
 
 

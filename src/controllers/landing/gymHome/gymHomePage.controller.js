@@ -3,7 +3,7 @@ export const viewGymHome = async (req, res, next) => {
 
     // no gym = platform page
     if (!req.gym) {
-      return ("landing/index");
+      return res.render("landing/index");
     }
 
     // tenant gym page

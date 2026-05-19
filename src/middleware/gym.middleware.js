@@ -10,12 +10,12 @@ const ROOT_DOMAINS = [
 export const requireGym = async (req, res, next) => {
   try {
     let host = req.headers.host?.toLowerCase().replace("www.", "");
-const isPlatform = ROOT_DOMAINS.includes(host);
+    const isPlatform = ROOT_DOMAINS.includes(host);
 
-if (isPlatform) {
-  req.gym = null;
-  next() 
-}
+    if (isPlatform) {
+      req.gym = null;
+      return next();
+    }
     // -----------------------------------
     // 1. Allow platform landing pages
     // -----------------------------------
@@ -26,7 +26,7 @@ if (isPlatform) {
       return next();
     }
 
-   let gym = null;
+    let gym = null;
     let slug = null;
 
     // CUSTOM DOMAIN CHECK
@@ -39,30 +39,30 @@ if (isPlatform) {
       gym = customDomain.rows[0];
     }
     // -----------------------------------
-// LOCALHOST
-// -----------------------------------
-if (host.includes("localhost")) {
-  slug = host.split(".")[0];
-}
+    // LOCALHOST
+    // -----------------------------------
+    if (host.includes("localhost")) {
+      slug = host.split(".")[0];
+    }
 
-// -----------------------------------
-// CUSTOM DOMAIN
-// -----------------------------------
-else {
+    // -----------------------------------
+    // CUSTOM DOMAIN
+    // -----------------------------------
+    else {
 
-  // OPTIONAL custom domain support
-  const customDomainResult = await db.query(
-    "SELECT * FROM gyms WHERE slug = $1",
-    [host]
-  );
+      // OPTIONAL custom domain support
+      const customDomainResult = await db.query(
+        "SELECT * FROM gyms WHERE slug = $1",
+        [host]
+      );
 
-  if (customDomainResult.rows.length) {
-    gym = customDomainResult.rows[0];
-  }
+      if (customDomainResult.rows.length) {
+        gym = customDomainResult.rows[0];
+      }
 
-  // -----------------------------------
-  // SUBDOMAIN FALLBACK
-  // -----------------------------------
+      // -----------------------------------
+      // SUBDOMAIN FALLBACK
+      // -----------------------------------
       if (!gym) {
         const parts = host.split(".");
 
@@ -93,15 +93,15 @@ else {
     //     gym = customDomainResult.rows[0];
     //   }
 
-      // -----------------------------------
-      // 4. Fitnexis subdomain
-      // Example:
-      // goldsgym.fitnexis.co.za
-      // -----------------------------------
-      // if (!gym) {
-      //   const subdomain = host.split(".")[0];
+    // -----------------------------------
+    // 4. Fitnexis subdomain
+    // Example:
+    // goldsgym.fitnexis.co.za
+    // -----------------------------------
+    // if (!gym) {
+    //   const subdomain = host.split(".")[0];
 
-        // prevent fitnexis.co.za becoming slug "fitnexis"
+    // prevent fitnexis.co.za becoming slug "fitnexis"
     //    if (
     //       !subdomain ||
     //       subdomain === "www" ||
@@ -117,7 +117,7 @@ else {
     // -----------------------------------
     // 5. Gym lookup
     // -----------------------------------
-     if (!gym && slug) {
+    if (!gym && slug) {
       const result = await db.query(
         "SELECT * FROM gyms WHERE slug = $1",
         [slug]
@@ -133,19 +133,19 @@ else {
 
     // attach tenant if found
     if (gym) {
-        req.gym = gym;
-        req.gymId = gym.id;
-      }
+      req.gym = gym;
+      req.gymId = gym.id;
+    }
 
     next();
 
   } catch (err) {
-  console.error("Gym middleware FULL error:");
-  console.error(err);
+    console.error("Gym middleware FULL error:");
+    console.error(err);
 
-  return res.status(500).json({
-    error: err.message,
-    stack: err.stack,
-  });
-}
+    return res.status(500).json({
+      error: err.message,
+      stack: err.stack,
+    });
+  }
 };
