@@ -5,17 +5,17 @@ const ROOT_DOMAINS = [
   "localhost:3000"
 ];
 
-const isPlatform = ROOT_DOMAINS.includes(host);
 
-if (isPlatform) {
-  req.gym = null;
-  return next();
-}
 
 export const requireGym = async (req, res, next) => {
   try {
     let host = req.headers.host?.toLowerCase().replace("www.", "");
+const isPlatform = ROOT_DOMAINS.includes(host);
 
+if (isPlatform) {
+  req.gym = null;
+  next() 
+}
     // -----------------------------------
     // 1. Allow platform landing pages
     // -----------------------------------
@@ -136,11 +136,6 @@ else {
         req.gym = gym;
         req.gymId = gym.id;
       }
-    console.log("------------");
-console.log("HOST:", host);
-console.log("HEADERS HOST:", req.headers.host);
-console.log("SLUG:", slug);
-console.log("------------");
 
     next();
 
