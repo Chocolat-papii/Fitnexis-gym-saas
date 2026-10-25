@@ -17,7 +17,11 @@ export const createClassSession = async (data, gymId) => {
       [data.class_type_id, gymId]
     );
 
-    if (!classType.rows[0]) throw new Error("Class type not found");
+    if (!classType.rows[0]) {
+      const error = new Error("Class type not found for this gym");
+      error.code = "CLASS_TYPE_NOT_FOUND";
+      throw error;
+    }
 
     const startAt = new Date(`${data.date} ${data.time}`);
     const endAt = calcEndAt(startAt, classType.rows[0].default_duration_minutes);
@@ -64,6 +68,18 @@ export const createClassSession = async (data, gymId) => {
   } catch (err) {
     console.error("CREATE SESSION ERROR:", err);
     throw err;
+
+    if (err.code === "CLASS_TYPE_NOT_FOUND") {
+    return res.status(404).json({
+      success: false,
+      message: "Class type not found for this gym"
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: "Failed to create session"
+  });
   }
 };
 
@@ -137,26 +153,60 @@ export const deleteSession = async (id, gymId) => {
   return result.rowCount; // 👈 important
 };
 
+
 export const updateSession = async (id, data, gymId) => {
+  // Ensure the selected class type belongs to this gym.
+  const classTypeResult = await db.query(
+    `SELECT id, default_duration_minutes
+     FROM class_types
+     WHERE id = $1
+       AND gym_id = $2
+     LIMIT 1`,
+    [data.class_type_id, gymId]
+  );
+
+  if (!classTypeResult.rows[0]) {
+    const error = new Error("Class type not found for this gym");
+    error.code = "CLASS_TYPE_NOT_FOUND";
+    throw error;
+  }
+
+  const classType = classTypeResult.rows[0];
+
+  const startsAt = new Date(`${data.date} ${data.time}`);
+
+  if (Number.isNaN(startsAt.getTime())) {
+    const error = new Error("Invalid session date or time");
+    error.code = "INVALID_SESSION_DATETIME";
+    throw error;
+  }
+
+  const endsAt = calcEndAt(
+    startsAt,
+    classType.default_duration_minutes
+  );
+
   const query = `
     UPDATE class_sessions
     SET
       class_type_id = $1,
       starts_at = $2,
       start_time = $3,
-      capacity = $4,
-      location = $5,
-      status = $6,
+      ends_at = $4,
+      capacity = $5,
+      location = $6,
+      status = $7,
       updated_at = NOW()
-    WHERE id = $7
-      AND gym_id = $8
+    WHERE id = $8
+      AND gym_id = $9
     RETURNING *
   `;
 
   const values = [
-    data.class_type_id,
-    new Date(`${data.date} ${data.time}`),
+    classType.id,
+    startsAt,
     data.time,
+    endsAt,
     data.capacity,
     data.location,
     data.status,
@@ -166,5 +216,5 @@ export const updateSession = async (id, data, gymId) => {
 
   const { rows } = await db.query(query, values);
 
-  return rows[0]; // undefined if not found
+  return rows[0];
 };
