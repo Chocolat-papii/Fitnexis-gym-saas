@@ -5,8 +5,8 @@ export const createBooking = async (session_id, user_id, gymId) => {
   return db.query(`
     INSERT INTO class_bookings
     (session_id, user_id, booking_status, booked_at, gym_id)
-    VALUES ($1,$2,'booked',NOW())
-  `,[session_id, user_id, gymId]);
+    VALUES ($1, $2, 'booked', NOW(), $3)
+  `, [session_id, user_id, gymId]);
 
 };
 
