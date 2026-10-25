@@ -61,12 +61,28 @@ export const editSession = async (req, res) => {
       session
     });
 
+  
   } catch (err) {
     console.error("UPDATE SESSION ERROR:", err);
 
-    res.status(500).json({
+    if (err.code === "CLASS_TYPE_NOT_FOUND") {
+      return res.status(404).json({
+        success: false,
+        message: "Class type not found for this gym"
+      });
+    }
+
+    if (err.code === "INVALID_SESSION_DATETIME") {
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
+    }
+
+    return res.status(500).json({
       success: false,
       message: "Failed to update session"
     });
   }
 };
+

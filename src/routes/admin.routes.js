@@ -26,15 +26,15 @@ router.get("/all-members", viewAllMembers);
 router.get("/member-details/:id", viewMemberDetails);
 
 //// class types APIs
-router.get("/api/class-types", getAllClassTypes);
-router.post("/api/class-types", createClassType);
-router.put("/api/class-types/:id", updateClassType);
-router.delete("/api/class-types/:id", deleteClassType);
+router.get("/api/class-types", requireGym,requireAuth, requireAdmin, getAllClassTypes);
+router.post("/api/class-types", requireGym,requireAuth, requireAdmin, createClassType);
+router.put("/api/class-types/:id", requireGym,requireAuth, requireAdmin, updateClassType);
+router.delete("/api/class-types/:id", requireGym,requireAuth, requireAdmin, deleteClassType);
 
 // class sessions APIs
-router.post("/api/class-sessions", createClassSession);
-router.delete("/api/class-sessions/:id", deleteSession)
-router.put("/api/class-sessions/:id", editSession)
+router.post("/api/class-sessions", requireGym,requireAuth, requireAdmin, createClassSession);
+router.delete("/api/class-sessions/:id", requireGym,requireAuth, requireAdmin, deleteSession)
+router.put("/api/class-sessions/:id", requireGym,requireAuth, requireAdmin, editSession)
 
 
 // member APIs

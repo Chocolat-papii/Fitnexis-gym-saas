@@ -34,27 +34,41 @@ export const getAllClassTypes = async (req, res) => {
     }
 };
 
-export const createClassType = async (req, res) => {
-    try {
-        const gymId = req.gymId;
-        const newClass = await classTypesService.createClassType({
-            ...req.body, 
-            gym_id: gymId});
 
-        res.status(201).json(newClass, {
-            message: "Class created successfully.",
-        });
-    } catch (error) {
-        console.error("CREATE CLASS ERROR:", error);
-        // Unique constraint violation
-        if (error.code === "23505") {
-            return res.status(409).json({
-                message: `${req.body.name} already exists.`
-            });
-        }
-        res.status(500).json({ message: "Failed to create class type" });
+export const createClassType = async (req, res) => {
+  try {
+    const gymId = req.gymId;
+
+    if (!gymId) {
+      return res.status(400).json({
+        message: "Gym context is required"
+      });
     }
+
+    const newClass = await classTypesService.createClassType(
+      req.body,
+      gymId
+    );
+
+    return res.status(201).json({
+      message: "Class created successfully.",
+      data: newClass
+    });
+  } catch (error) {
+    console.error("CREATE CLASS ERROR:", error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: `${req.body.name} already exists.`
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to create class type"
+    });
+  }
 };
+
 
 export const updateClassType = async (req, res) => {
     try {
