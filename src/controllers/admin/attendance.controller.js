@@ -14,6 +14,19 @@ export const createCheckin = async (req, res) => {
 
     const result = await checkInMember(user_id, admin_id, gymId);
 
+    if (checked === null) {
+        return res.status(404).json({
+          error: "Member not found in this gym"
+        });
+    }
+
+    if (result.memberNotFound) {
+      return res.status(404).json({
+        ok: false,
+        message: "Member not found in this gym"
+      });
+    }
+
     if (result.alreadyChecked) {
       return res.json({
         ok: false,
