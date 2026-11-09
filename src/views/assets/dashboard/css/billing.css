@@ -1,0 +1,26 @@
+.billing-card {
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.billing-card h2 { font-size: 1.125rem; margin-bottom: 1rem; }
+.billing-card label { display: block; margin: .5rem 0 .25rem; }
+.billing-card input, .billing-card select, .billing-card textarea { margin-bottom: .75rem; }
+.billing-stat { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.billing-note { color: var(--bs-secondary-color); font-size: .875rem; }
+.billing-table { overflow: auto; max-height: 30rem; }
+.billing-table th { white-space: nowrap; }
+.billing-table td { vertical-align: middle; }
+.billing-table .btn { white-space: nowrap; margin: .125rem 0; }
+.billing-summary .billing-card { height: 100%; margin: 0; }
+.billing-status { display: inline-block; padding: .25rem .6rem; border-radius: 2rem; font-size: .8rem; font-weight: 600; text-transform: capitalize; background: var(--bs-secondary-bg); }
+.billing-status-paid, .billing-status-succeeded, .billing-status-active, .billing-status-approved { color: var(--bs-success-text-emphasis); background: var(--bs-success-bg-subtle); }
+.billing-status-overdue, .billing-status-failed, .billing-status-rejected { color: var(--bs-danger-text-emphasis); background: var(--bs-danger-bg-subtle); }
+.billing-status-due, .billing-status-pending, .billing-status-paused { color: var(--bs-warning-text-emphasis); background: var(--bs-warning-bg-subtle); }
+.billing-empty { text-align: center; padding: 2rem !important; color: var(--bs-secondary-color) !important; }
+#billingMessage { scroll-margin-top: 5rem; }
+@media (min-width: 1200px) {
+  .billing-forms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+}

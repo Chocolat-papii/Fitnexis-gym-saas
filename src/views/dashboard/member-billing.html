@@ -1,359 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Portal</title>
-
-    <!-- links -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="../assets/dashboard/css/stylesdash.css" />
-    <script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script>
-        <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-
-</head>
-<body class="bg-body-bg">
-
-     <!-- header -->
-      <%- include("partials/header.html") %>
-    <!-- header -->
-  <div class="app-shell">
-
-  <!-- Sidebar -->
-      <%- include("partials/sidebar.html") %>
-
-  <!-- /member/billing -->
-<main class="content small-note">
-  <!-- Topbar -->
-  <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-    <div>
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <button class="btn btn-outline-light sidebar-toggle" id="toggleSidebar" type="button">
-          <i class="fa-solid fa-bars"></i> Menu
-        </button>
-      </div>
-
-      <h1 class="h3 text-white mb-1">Membership & Billing</h1>
-      <div class="muted">View your plan, payment status, and invoices.</div>
-    </div>
-
-    <div class="d-flex gap-2 flex-wrap">
-      <button class="btn btn-outline-light" type="button" data-bs-toggle="modal" data-bs-target="#upgradeModal">
-        Upgrade / Change Plan
-      </button>
-      <button class="btn btn-primary" type="button" id="payNowBtn">
-        Pay Now
-      </button>
-    </div>
-  </div>
-
-  <!-- Summary Cards -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-6 col-xl-3">
-      <div class="card glass-card rounded-4 shadow-sm">
-        <div class="card-body">
-          <div class="small-note">Current Tier</div>
-          <div class="h4 fw-semibold text-white mb-0" id="billTier">Silver</div>
-          <div class="small-note">Plan type: Monthly</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-      <div class="card glass-card rounded-4 shadow-sm">
-        <div class="card-body">
-          <div class="small-note">Status</div>
-          <div class="h4 fw-semibold text-white mb-0" id="billStatus">Active</div>
-          <div class="small-note">No restrictions</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-      <div class="card glass-card rounded-4 shadow-sm">
-        <div class="card-body">
-          <div class="small-note">Next Payment Due</div>
-          <div class="h4 fw-semibold text-white mb-0" id="billDueDate">28 Feb 2026</div>
-          <div class="small-note">Amount: <span id="billAmount">R399</span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-xl-3">
-      <div class="card glass-card rounded-4 shadow-sm">
-        <div class="card-body">
-          <div class="small-note">Billing Method</div>
-          <div class="h4 fw-semibold text-white mb-0" id="billMethod">EFT</div>
-          <div class="small-note">Ref: <span id="billRef">M-0001</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Payment Status Banner -->
-  <section class="card glass-card rounded-4 shadow-sm mb-4">
-    <div class="card-body p-4 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-      <div>
-        <div class="text-white fw-semibold" id="paymentBannerTitle">Payment Status: Paid</div>
-        <div class="small-note" id="paymentBannerNote">
-          You’re all good. Next payment due on <span class="text-white">28 Feb 2026</span>.
-        </div>
-      </div>
-
-      <div class="d-flex gap-2 flex-wrap">
-        <button class="btn btn-outline-light" type="button" data-bs-toggle="modal" data-bs-target="#paymentDetailsModal">
-          Payment details
-        </button>
-        <button class="btn btn-primary" type="button" id="downloadStatementBtn">
-          Download Statement
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Invoices -->
-  <section class="card glass-card rounded-4 shadow-sm">
-    <div class="card-body p-4">
-      <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-center justify-content-between mb-3">
-        <div>
-          <h2 class="h5 text-white mb-1">Invoices</h2>
-          <div class="small-note">Your payment history and downloadable invoices.</div>
-        </div>
-
-        <div class="d-flex gap-2 flex-wrap">
-          <input class="form-control" style="max-width: 220px;" id="invoiceSearch" placeholder="Search invoice..." />
-          <select class="form-select" style="max-width: 200px;" id="invoiceFilter">
-            <option value="all" selected>All</option>
-            <option value="paid">Paid</option>
-            <option value="due">Due</option>
-            <option value="overdue">Overdue</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-dark table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Invoice</th>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="invoiceTable">
-            <tr>
-              <td class="text-white">INV-1042</td>
-              <td class="small-note">05 Jan 2026</td>
-              <td class="text-white">R399</td>
-              <td><span class="badge text-bg-success">Paid</span></td>
-              <td class="text-end">
-                <button class="btn btn-outline-light btn-sm">View</button>
-                <button class="btn btn-outline-light btn-sm">Download</button>
-              </td>
-            </tr>
-            <tr>
-              <td class="text-white">INV-1041</td>
-              <td class="small-note">05 Dec 2025</td>
-              <td class="text-white">R399</td>
-              <td><span class="badge text-bg-success">Paid</span></td>
-              <td class="text-end">
-                <button class="btn btn-outline-light btn-sm">View</button>
-                <button class="btn btn-outline-light btn-sm">Download</button>
-              </td>
-            </tr>
-            <tr>
-              <td class="text-white">INV-1043</td>
-              <td class="small-note">05 Feb 2026</td>
-              <td class="text-white">R399</td>
-              <td><span class="badge text-bg-warning">Due</span></td>
-              <td class="text-end">
-                <button class="btn btn-outline-light btn-sm">View</button>
-                <button class="btn btn-primary btn-sm">Pay</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="small-note mt-3">
-        Tip: Use your reference <span class="text-white" id="billRefTip">M-0001</span> when paying via EFT.
-      </div>
-    </div>
-  </section>
-
-  <!-- Plan Change Modal -->
-  <div class="modal fade" id="upgradeModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content glass-card">
-        <div class="modal-header border-0">
-          <h5 class="modal-title text-white">Change Plan</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-          <div class="small-note mb-3">Select the plan you want. Admin will confirm if needed.</div>
-
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label small-note">New Tier</label>
-              <select class="form-select" id="newTier">
-                <option value="bronze">Bronze</option>
-                <option value="silver" selected>Silver</option>
-                <option value="gold">Gold</option>
-                <option value="platinum">Platinum</option>
-              </select>
-            </div>
-
-            <div class="col-12">
-              <label class="form-label small-note">Reason (optional)</label>
-              <textarea class="form-control" rows="3" id="planReason"
-                placeholder="e.g. I want more classes per week..."></textarea>
-            </div>
-
-            <div class="col-12">
-              <div class="p-3 rounded-4 glass-card">
-                <div class="text-white fw-semibold mb-1">Heads up</div>
-                <div class="small-note">
-                  Plan changes may take effect from the next billing cycle, depending on gym policy.
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <div class="modal-footer border-0">
-          <button class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-primary" id="requestPlanChangeBtn">Request change</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Payment Details Modal -->
-  <div class="modal fade" id="paymentDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content glass-card">
-        <div class="modal-header border-0">
-          <h5 class="modal-title text-white">Payment Details</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-12">
-              <div class="small-note">Reference</div>
-              <div class="text-white fw-semibold" id="payRefModal">M-0001</div>
-            </div>
-
-            <div class="col-12">
-              <div class="small-note">Preferred Method</div>
-              <div class="text-white fw-semibold" id="payMethodModal">EFT</div>
-              <div class="small-note mt-2">Card numbers are not stored in MMS.</div>
-            </div>
-
-            <div class="col-12">
-              <div class="small-note">Notes</div>
-              <div class="small-note">Pay via EFT using your reference. Upload proof if required (optional feature).</div>
-            </div>
-
-            <div class="col-12">
-              <label class="form-label small-note">Upload proof (optional)</label>
-              <input class="form-control" type="file" id="proofUpload" />
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer border-0">
-          <button class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
-          <button class="btn btn-primary" id="submitProofBtn">Submit</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
-
-<script>
-  // Hook these to API later
-  document.getElementById("payNowBtn")?.addEventListener("click", () => {
-    alert("Pay Now clicked (connect payment flow next).");
-  });
-
-  document.getElementById("downloadStatementBtn")?.addEventListener("click", () => {
-    alert("Statement download (generate PDF next).");
-  });
-
-  document.getElementById("requestPlanChangeBtn")?.addEventListener("click", () => {
-    const tier = document.getElementById("newTier").value;
-    alert(`Plan change requested: ${tier} (hook API next).`);
-    const modalEl = document.getElementById("upgradeModal");
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    modal?.hide();
-  });
-
-  document.getElementById("submitProofBtn")?.addEventListener("click", () => {
-    alert("Proof submitted (hook API next).");
-    const modalEl = document.getElementById("paymentDetailsModal");
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    modal?.hide();
-  });
-</script>
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-   
-  <script>
-        // Close sidebar when a link is clicked (mobile)
-      const btn = document.getElementById("toggleSidebar");
-      const sidebar = document.querySelector(".sidebar");
-
-      btn?.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-      });
-</script>
-<script>
-      // Tooltips
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        .forEach(el => new bootstrap.Tooltip(el));
-
-      // =========================
-      // Smooth Theme Toggle
-      // =========================
-      const html = document.documentElement;
-      const toggleBtn = document.getElementById('themeToggle');
-      const icon = document.getElementById('themeIcon');
-
-      function setTheme(theme) {
-        html.setAttribute('data-bs-theme', theme);
-        localStorage.setItem('theme', theme);
-        icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-      }
-
-      // Load theme
-      setTheme(localStorage.getItem('theme') || 'light');
-
-      toggleBtn.addEventListener('click', () => {
-        const current = html.getAttribute('data-bs-theme');
-        setTheme(current === 'light' ? 'dark' : 'light');
-      });
-
-      // =========================
-      // Bell Animation
-      // =========================
-      const bellIcon = document.getElementById('bellIcon');
-
-      document.getElementById('bellBtn').addEventListener('click', () => {
-        bellIcon.classList.remove('bell-animate');
-        void bellIcon.offsetWidth;
-        bellIcon.classList.add('bell-animate');
-      });
-    </script>
-<script src="../assets/dashboard/js/dashboard.js"></script>
-
-
-
-  </div>
-  </body>
-  </html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Membership & Billing · Fitnexis</title><meta name="billing-csrf" content="<%= csrf %>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="/assets/dashboard/css/stylesdash.css">
+<link rel="stylesheet" href="/assets/dashboard/css/billing.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script></head>
+<body class="bg-body-bg" data-billing-page><%- include('partials/header.html') %><div class="app-shell"><%- include('partials/sidebar.html') %>
+<main class="content small-note"><div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4"><div><h1 class="h3">Membership & Billing</h1><p class="muted">Your plan, invoices and secure Paystack payments</p></div></div>
+<% const fmt = value => new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(Number(value||0)); %>
+<% const dateFmt = value => value ? new Date(value).toLocaleDateString('en-ZA',{timeZone:'Africa/Johannesburg',day:'2-digit',month:'short',year:'numeric'}) : '—'; %>
+<% const updates = {
+  succeeded: 'Payment confirmed. Your invoice balance has been updated.',
+  failed: 'The payment was not completed. You can try again.',
+  abandoned: 'Checkout was not completed. You can try again.',
+  reversed: 'The payment was reversed. Contact your gym for assistance.',
+  'request-sent': 'Your plan change request has been sent to your gym.',
+  'verification-pending': 'We could not confirm your payment yet. Use Check status in payment history before trying again.'
+}; %>
+<% if (result && updates[result]) { %><div class="alert alert-info" role="status"><%= updates[result] %></div><% } %>
+<div class="alert alert-info d-none" role="status" id="billingMessage"></div>
+<div class="row g-3 mb-4 billing-summary">
+<div class="col-md-4"><div class="card glass-card rounded-4 h-100"><div class="card-body"><div class="small-note">Membership plan</div><div class="h4"><%= billing.membership?.plan_name || 'No plan assigned' %></div><div><%= billing.membership?.billing_cycle || '—' %> · <%= billing.membership ? fmt(billing.membership.plan_price) : '—' %></div></div></div></div>
+<div class="col-md-4"><div class="card glass-card rounded-4 h-100"><div class="card-body"><div class="small-note">Membership status</div><div class="h4"><%= billing.membership?.status || 'Not active' %></div><div>Next billing date: <%= billing.membership?.status === 'active' ? dateFmt(billing.membership.next_bill_on) : 'Not scheduled' %></div></div></div></div>
+<div class="col-md-4"><div class="card glass-card rounded-4 h-100"><div class="card-body"><div class="small-note">Outstanding invoices</div><div class="h4"><%= fmt(billing.summary.outstanding) %></div><div>Next due: <%= dateFmt(billing.summary.next_due) %></div></div></div></div></div>
+<section class="card glass-card rounded-4 mb-4"><div class="card-body p-4"><h2 class="h5">Recent invoices</h2><p class="small-note">Online payments use secure Paystack checkout (minimum R1). Your gym records cash and EFT receipts.</p>
+<% if (!billing.onlinePaymentsEnabled) { %><p class="billing-note">Online payments are not available yet. Contact your gym to arrange payment.</p><% } %>
+<div class="billing-table"><table class="table table-hover align-middle"><thead><tr><th>Invoice</th><th>Issued</th><th>Due</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<% if (!billing.invoices.length) { %><tr><td colspan="8" class="billing-empty">You have no invoices yet.</td></tr><% } %>
+<% billing.invoices.forEach(inv => { %><tr><td><%= inv.invoice_number || ('INV-'+inv.id) %></td><td><%= dateFmt(inv.issued_at) %></td><td><%= dateFmt(inv.due_at) %></td><td><%= fmt(inv.amount) %></td><td><%= fmt(inv.paid_amount) %></td><td><%= fmt(inv.balance) %></td><td><span class="billing-status billing-status-<%= inv.display_status %>"><%= inv.display_status %></span></td><td>
+<a class="btn btn-outline-light btn-sm" target="_blank" rel="noopener" href="/member/billing/invoices/<%= inv.id %>">View / print</a>
+<% if (Number(inv.balance)>=1 && inv.status!=='void' && billing.onlinePaymentsEnabled) { %><button class="btn btn-primary btn-sm pay-invoice" type="button" data-id="<%= inv.id %>">Pay now</button><% } %></td></tr><% }); %>
+</tbody></table></div></div></section>
+<section class="billing-card"><h2>Payment history</h2><p class="billing-note">Check pending payments here if you left checkout before returning to this page.</p>
+<div class="billing-table"><table class="table table-hover"><thead><tr><th>Invoice</th><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody>
+<% if (!billing.payments.length) { %><tr><td class="billing-empty" colspan="7">No payments recorded yet.</td></tr><% } %>
+<% billing.payments.forEach(payment => { %><tr><td><%= payment.invoice_number %></td><td><%= payment.reference %></td><td><%= fmt(payment.amount) %></td><td><%= payment.provider.toUpperCase() %></td><td><span class="billing-status billing-status-<%= payment.status %>"><%= payment.status %></span></td><td><%= dateFmt(payment.paid_at || payment.created_at) %></td><td>
+<% if (payment.provider==='paystack' && payment.status==='pending') { %><button class="btn btn-outline-light btn-sm" type="button" data-verify="<%= payment.reference %>">Check status</button><% } %></td></tr><% }) %>
+</tbody></table></div></section>
+<section class="card glass-card rounded-4 h-100"><div class="card-body p-4"><h2 class="h5">Request a plan change</h2><p class="small-note">Your gym administrator reviews your request. The new plan starts on approval, without prorating existing invoices.</p>
+<% const hasPendingRequest = billing.requests.some(request => request.status==='pending'); %>
+<% if (hasPendingRequest) { %><p class="alert alert-info">You have a plan change awaiting review.</p><% } %>
+<% if (!billing.plans.length) { %><p class="billing-note">Your gym has no available plans yet.</p><% } %>
+<form id="changePlan" class="row g-3"><div class="col-md-5"><label for="newPlan" class="form-label">Available plan</label><select id="newPlan" class="form-select" name="plan_id" required>
+<% billing.plans.forEach(plan => { %><option value="<%= plan.id %>"><%= plan.name %> — <%= fmt(plan.price) %> / <%= plan.billing_cycle %></option><% }) %></select></div>
+<div class="col-md-5"><label for="changeReason" class="form-label">Reason (optional)</label><input id="changeReason" class="form-control" name="reason" maxlength="500" placeholder="Change of training needs"></div>
+<div class="col-md-2 d-flex align-items-end"><button class="btn btn-outline-light w-100" type="submit" <%= billing.plans.length && !hasPendingRequest ? '' : 'disabled' %>>Submit</button></div></form>
+<% if (billing.requests.length) { %><div class="billing-table mt-4"><table class="table"><thead><tr><th>Requested plan</th><th>Date</th><th>Status</th></tr></thead><tbody><% billing.requests.forEach(request => { %><tr><td><%= request.plan_name %></td><td><%= dateFmt(request.created_at) %></td><td><span class="billing-status billing-status-<%= request.status %>"><%= request.status %></span></td></tr><% }) %></tbody></table></div><% } %>
+</div></section>
+</main></div>
+<script src="/assets/dashboard/js/billingCommon.js"></script><script src="/assets/dashboard/js/memberBilling.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="/assets/dashboard/js/dashboard.js"></script><script src="/assets/dashboard/js/dashboardShell.js"></script></body></html>

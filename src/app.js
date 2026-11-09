@@ -19,6 +19,8 @@ import classBookingRoutes from "./routes/classBooking.routes.js";
 import { requireAdmin } from "./middleware/requireAdmin.js";
 import attendanceRoutes from "./routes/attendance.router.js"
 import { requireGym } from "./middleware/gym.middleware.js";
+import { paystackWebhook } from "./controllers/paystackWebhook.controller.js";
+import { startBillingJobs } from "./services/billingJobs.service.js";
 
 
 
@@ -27,6 +29,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 const app = express();
+// Raw body must be preserved for Paystack HMAC verification.
+app.post("/api/billing/paystack/webhook", express.raw({ type: "application/json", limit: "200kb" }), paystackWebhook);
 
 // database
 
@@ -37,6 +41,7 @@ await connectDB();
 if (process.env.NODE_ENV !== "production") {
   await seedAdmin();
 }
+startBillingJobs();
 
 // ----- middlewares ---- //
 app.use(requireGym);

@@ -10,7 +10,7 @@ const isProd = process.env.NODE_ENV === "production";
 export const db = new Pool(
   isProd
     ? {
-        connectionString: process.env.PROD_DATABASE_URL,
+        connectionString: process.env.PROD_DATABASE_URL || process.env.DATABASE_URL,
         ssl: { rejectUnauthorized: false },
       }
     : {
@@ -24,6 +24,6 @@ export const db = new Pool(
 );
 
 export async function connectDB() {
-  await db.connect();
+  await db.query('SELECT 1');
   console.log("✅ Connected to PostgreSQL 2026");
 }

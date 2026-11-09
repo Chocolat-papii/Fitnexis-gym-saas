@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Billing & Payments · Fitnexis</title>
+<meta name="billing-csrf" content="<%= csrf %>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="/assets/dashboard/css/stylesdash.css">
+<link rel="stylesheet" href="/assets/dashboard/css/billing.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-body-bg" data-billing-page>
+<%- include('partials/header.html') %>
+<div class="app-shell"><%- include('partials/sidebar.html') %>
+<main class="content" id="billingAdmin">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+ <div><h1 class="h3">Billing & Payments</h1><p class="small-note">Memberships, invoices, collections and Paystack transactions for <%= gym.name %>.</p></div>
+ <div class="d-flex gap-2"><a class="btn btn-outline-light" href="/admin/billing/export.csv">Export CSV</a><button type="button" class="btn btn-primary" id="runBilling">Generate due invoices</button></div>
+</div>
+<div class="alert alert-info d-none" role="status" id="billingMessage"></div>
+<section class="row g-3 mb-4 billing-summary" aria-label="Billing summary">
+<div class="col-md-3"><div class="billing-card"><div class="billing-note">Collected this month</div><div class="billing-stat" id="monthCollected">—</div></div></div>
+<div class="col-md-3"><div class="billing-card"><div class="billing-note">Outstanding</div><div class="billing-stat" id="outstanding">—</div></div></div>
+<div class="col-md-3"><div class="billing-card"><div class="billing-note">Overdue invoices</div><div class="billing-stat" id="overdueCount">—</div></div></div>
+<div class="col-md-3"><div class="billing-card"><div class="billing-note">Active memberships</div><div class="billing-stat" id="activeMemberships">—</div></div></div>
+</section>
+<div class="billing-forms">
+<section class="billing-card"><h2>Create a membership plan</h2><form id="planForm">
+<label for="planName">Plan name</label><input class="form-control" id="planName" name="name" required maxlength="100" placeholder="e.g. Silver">
+<label for="planPrice">Price (ZAR)</label><input class="form-control" id="planPrice" name="price" required type="number" min="0" step="0.01">
+<label for="planCycle">Billing cycle</label><select class="form-select" id="planCycle" name="billing_cycle"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annual">Annual</option></select>
+<label for="planDescription">Description</label><textarea class="form-control" id="planDescription" name="description" rows="2" maxlength="500"></textarea>
+<button class="btn btn-primary" type="submit">Create plan</button></form></section>
+<section class="billing-card"><h2>Assign membership</h2><p class="billing-note">The next billing run will create the first invoice for the selected start date.</p><form id="membershipForm">
+<label for="memberForPlan">Member</label><select class="form-select" id="memberForPlan" name="user_id" required></select>
+<label for="membershipPlan">Plan</label><select class="form-select" id="membershipPlan" name="plan_id" required></select>
+<label for="membershipStart">Start date</label><input class="form-control" id="membershipStart" type="date" name="start_date" required>
+<button class="btn btn-primary" type="submit">Assign plan</button></form></section>
+<section class="billing-card"><h2>Create a one-off invoice</h2><form id="invoiceForm">
+<label for="invoiceMember">Member</label><select class="form-select" id="invoiceMember" name="user_id" required></select>
+<label for="invoiceAmount">Amount (ZAR)</label><input class="form-control" id="invoiceAmount" name="amount" required type="number" min="0" step="0.01">
+<label for="invoiceDue">Due date</label><input class="form-control" id="invoiceDue" name="due_at" type="date" required>
+<label for="invoiceDescription">Description</label><input class="form-control" id="invoiceDescription" name="description" maxlength="500" placeholder="Joining fee, training session...">
+<button class="btn btn-primary" type="submit">Create invoice</button></form></section>
+<section class="billing-card"><h2>Record EFT or cash payment</h2><p class="billing-note">Only record funds you have actually received. Unique reference required. Check pending online payments in the payment history before recording another receipt.</p><form id="manualPaymentForm">
+<label for="paymentInvoice">Invoice</label><select class="form-select" id="paymentInvoice" name="invoice_id" required></select>
+<label for="paymentAmount">Received amount (ZAR)</label><input class="form-control" id="paymentAmount" name="amount" type="number" step="0.01" min="0.01" required>
+<label for="paymentProvider">Method</label><select class="form-select" id="paymentProvider" name="provider"><option value="eft">EFT</option><option value="cash">Cash</option></select>
+<label for="paymentReference">Bank reference / till receipt</label><input class="form-control" id="paymentReference" name="reference" required maxlength="200">
+<button class="btn btn-primary" type="submit">Record payment</button></form></section>
+<section class="billing-card"><h2>Paystack gym settlement</h2><p class="billing-note">Enter the settlement account code provided when your gym was onboarded with Paystack.</p><form id="accountForm">
+<label for="paystackAccount">Paystack subaccount code</label><input class="form-control" id="paystackAccount" name="paystack_subaccount" pattern="ACCT_[A-Za-z0-9]{6,80}" placeholder="ACCT_..." required>
+<button class="btn btn-outline-light" type="submit">Save account</button></form></section>
+<section class="billing-card"><h2>Plan-change requests</h2><p class="billing-note">Approving a request replaces the current plan from today. Existing invoices are not prorated.</p><div class="billing-table table-responsive"><table class="table table-striped"><thead><tr><th>Member</th><th>Requested plan</th><th>Status</th><th>Action</th></tr></thead><tbody id="planRequests"></tbody></table></div></section>
+</div>
+<section class="billing-card"><h2>Membership plans</h2><p class="billing-note">Deactivating a plan prevents new assignments and future automatic invoices for that plan; it does not cancel existing balances.</p><div class="billing-table table-responsive"><table class="table table-striped"><thead><tr><th>Plan</th><th>Price</th><th>Cycle</th><th>Status</th><th>Action</th></tr></thead><tbody id="billingPlans"></tbody></table></div></section>
+<section class="billing-card"><h2>Assigned memberships</h2><div class="billing-table table-responsive"><table class="table table-striped"><thead><tr><th>Member</th><th>Plan</th><th>Next invoice</th><th>Status</th><th>Action</th></tr></thead><tbody id="billingMemberships"></tbody></table></div></section>
+<section class="billing-card"><h2>Invoices</h2><div class="billing-table table-responsive"><table class="table table-striped"><thead><tr><th>Invoice</th><th>Member</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody id="billingInvoices"></tbody></table></div></section>
+<section class="billing-card"><h2>Payments</h2><div class="billing-table table-responsive"><table class="table table-striped"><thead><tr><th>Reference</th><th>Member</th><th>Amount</th><th>Provider</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody id="billingPayments"></tbody></table></div></section>
+<section class="billing-card"><h2>Payment reminders</h2><p class="billing-note">Reminders queued for your team to follow up. Email and SMS are not sent automatically.</p><div class="billing-table table-responsive"><table class="table table-striped"><thead><tr><th>Invoice</th><th>Member</th><th>Kind</th><th>Created</th></tr></thead><tbody id="billingReminders"></tbody></table></div></section>
+</main></div>
+<script src="/assets/dashboard/js/billingCommon.js"></script><script src="/assets/dashboard/js/adminBilling.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="/assets/dashboard/js/dashboardShell.js"></script></body></html>

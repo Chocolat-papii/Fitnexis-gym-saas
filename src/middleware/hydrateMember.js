@@ -10,6 +10,7 @@ export const hydrateMember = async (req, res, next) => {
     if (!userId) return res.redirect("/login");
 
     const member = await getMemberWithProfile(userId, gymId);
+    if (!member) return res.redirect("/login");
     const dietary = await dietaryService.getDietaryInfo(req.user.sub, gymId);
     const physique = await physiqueService.getByMemberphysiqueInfo(req.user.sub, gymId);
 
@@ -17,8 +18,6 @@ export const hydrateMember = async (req, res, next) => {
     member.physique = physique; // ✅ attach physique info
 
 
-
-    if (!member) return res.redirect("/login");
 
     res.locals.member = member;
     return next();
