@@ -7,7 +7,7 @@ export const createClassSession = async (req, res) => {
     const session = await classSessionsService.createClassSession(req.body, gymId);
     res.status(201).json({ success: true, message: "Session created", session });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.status || 500).json({ success: false, message: err.message });
   }
 };
 
@@ -29,9 +29,9 @@ export const deleteSession = async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    res.status(err.status || 500).json({
       success: false,
-      message: "Failed to delete session"
+      message: err.status ? err.message : "Failed to delete session"
     });
   }
 };
@@ -81,7 +81,7 @@ export const editSession = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: "Failed to update session"
+      message: err.status ? err.message : "Failed to update session"
     });
   }
 };

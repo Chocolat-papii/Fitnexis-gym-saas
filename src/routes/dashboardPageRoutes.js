@@ -6,7 +6,8 @@ import { viewMemberActivities } from "../controllers/member/activities.controlle
 import { getMemberDietary, updateMemberDietary, viewMemberNutrition } from "../controllers/member/nutrition.controller.js";
 import { deleteEmergencyContact, getEmergencyContacts, updateEmsDetails, updateHealthRecord, updatePersonalDetails, viewMemberPersonalDetails } from "../controllers/member/personalDetails.controller.js";
 import { viewEditProfile, updateMemberProfile, updatePassword } from "../controllers/member/editProfile.controller.js";
-import { viewMemberBlling } from "../controllers/member/billing.controller.js";
+import { viewMemberBlling, memberInvoice, startCheckout, requestChange, returnFromPaystack, verifyPayment } from "../controllers/member/billing.controller.js";
+import { billingCsrf } from "../middleware/billingCsrf.js";
 import { viewMemberReports } from "../controllers/member/reports.controller.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { uploadProfilePic } from "../middleware/uploadProfilePic.js";
@@ -50,4 +51,9 @@ router.get("/reports", requireAuth, viewMemberReports);
 router.get("/stats", requireAuth, getMyStats);
 
 
+router.get("/billing/invoices/:id", requireAuth, memberInvoice);
+router.post("/billing/pay/:id", requireAuth, billingCsrf, startCheckout);
+router.post("/billing/requests", requireAuth, billingCsrf, requestChange);
+router.post("/billing/payments/:reference/verify", requireAuth, billingCsrf, verifyPayment);
+router.get("/billing/return", requireAuth, returnFromPaystack);
 export default router;

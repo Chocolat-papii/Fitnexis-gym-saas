@@ -13,11 +13,15 @@ export const createBooking = async (req, res) => {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
-    await bookingService.createBooking(session_id, user_id, gymId);
+    const booking = await bookingService.createBooking(session_id, user_id, gymId);
 
     res.json({
       ok: true,
-      message: "Enrolled successfully"
+      success: true,
+      booking,
+      payment_required: booking.booking_status === 'awaiting_payment',
+      invoice_id: booking.invoice_id,
+      message: booking.booking_status === 'awaiting_payment' ? 'Place reserved. Pay the session invoice to confirm your booking.' : 'Enrolled successfully'
     });
 
   } catch (err) {
@@ -31,9 +35,10 @@ export const createBooking = async (req, res) => {
 
     console.error(err);
 
-    res.status(500).json({
+    res.status(err.status || 500).json({
       ok: false,
-      message: "Failed to enroll"
+      success: false,
+      message: err.status ? err.message : "Failed to enroll"
     });
 
   }
@@ -50,6 +55,10 @@ export const getMyBookings = async (req,res)=>{
   SELECT 
     s.id,
     s.gym_id,
+    b.booking_status,
+    b.invoice_id,
+    s.is_paid,
+    s.price,
     c.name AS class_name,
     TO_CHAR(s.starts_at,'FMDay') AS day,
     TO_CHAR(s.starts_at,'HH24:MI') AS time

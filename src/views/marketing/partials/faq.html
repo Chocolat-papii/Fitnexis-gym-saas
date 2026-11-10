@@ -1,0 +1,3 @@
+<div class="faq-list">
+  <% items.forEach((item, index) => { %><details><summary><span class="question-number"><%= String(index + 1).padStart(2, '0') %></span><%= item.question %><span class="faq-symbol" aria-hidden="true">+</span></summary><p><%= item.answer %></p></details><% }); %>
+</div>

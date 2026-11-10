@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fitnexis · Platform overview</title><link rel="stylesheet" href="/assets/dashboard/css/platform.css"></head>
+<body>
+<% const number = value => new Intl.NumberFormat('en-ZA').format(Number(value));
+   const money = value => new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 2 }).format(Number(value));
+   const date = value => new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium', timeZone: 'Africa/Johannesburg' }).format(new Date(value));
+   const dateTime = value => new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Johannesburg' }).format(new Date(value)); %>
+<%- include('partials/sidebar.html') %>
+<main class="main">
+  <header class="topbar"><span>Workspace <span class="muted">/ Overview</span></span><span class="badge">Fitnexis platform</span></header>
+  <div class="page-heading"><div><p class="eyebrow">THE BIG PICTURE</p><h1>Your gym network, at a glance.</h1><p class="muted">A little clarity for every gym you help grow.</p></div><div class="heading-actions"><a class="refresh" href="/platform">↻ Refresh overview</a><a class="primary" href="/platform/gyms/new">+ Add gym</a></div></div>
+  <% if(created) { %><p class="success" role="status">Gym and administrator created successfully. The gym is now available in your directory.</p><% } %>
+  <section class="metrics" aria-label="Platform totals">
+    <article><p>Total gyms <span>▦</span></p><strong><%= number(summary.gyms) %></strong><small>Across your network</small></article>
+    <article><p>Total members <span>♧</span></p><strong><%= number(summary.members) %></strong><small><%= number(summary.active_members) %> with active member status</small></article>
+    <article><p>Check-ins <span>↗</span></p><strong><%= number(summary.checkins) %></strong><small>Last 30 days</small></article>
+    <article class="accent"><p>Gym collections <span>↗</span></p><strong><%= money(summary.collected) %></strong><small>Successful ZAR payments · last 30 days</small></article>
+  </section>
+  <section id="insights" class="panel insights">
+    <div><p class="eyebrow">GROWING TOGETHER</p><h2>Network growth</h2><p class="muted">New gyms and members each month.</p><p class="footnote">Collections reflect member payments to gyms, not Fitnexis subscription revenue.</p></div>
+    <div class="table-wrap"><table><caption class="sr-only">New registrations over the last six calendar months</caption><thead><tr><th>Month</th><th>New gyms</th><th>New members</th></tr></thead><tbody><% growth.forEach(row => { %><tr><td><%= row.month %></td><td><%= number(row.gyms) %></td><td><%= number(row.members) %></td></tr><% }); %></tbody></table></div>
+  </section>
+  <section id="gyms" class="panel">
+    <div class="section-heading"><div><h2>Gym directory</h2><p class="muted">Membership and activity across every location.</p></div><form class="search" action="/platform" method="get" role="search"><label for="gym-search" class="sr-only">Search gyms by name, slug or email</label><input id="gym-search" type="search" name="q" value="<%= search %>" placeholder="Search gyms…" maxlength="150"><button type="submit">Search</button><% if(search) { %><a href="/platform#gyms">Clear</a><% } %></form></div>
+    <div class="table-wrap"><table><thead><tr><th>Gym</th><th>Members</th><th>Active members</th><th>Check-ins · 30d</th><th>Collections · 30d (ZAR)</th><th>Joined</th></tr></thead><tbody>
+    <% gyms.forEach(gym => { %><tr><td><strong><%= gym.name %></strong><small class="gym-slug"><%= gym.slug %></small><% if(gym.email) { %><small class="gym-slug"><%= gym.email %></small><% } %></td><td><%= number(gym.members) %></td><td><span class="pill"><%= number(gym.active_members) %></span></td><td><%= number(gym.checkins) %></td><td><%= money(gym.collected) %></td><td><%= date(gym.created_at) %></td></tr><% }); %>
+    <% if (!gyms.length) { %><tr><td colspan="6" class="empty"><%= search ? 'No gyms match your search.' : 'No gyms on this page. Registered gyms will appear here.' %></td></tr><% } %>
+    </tbody></table></div>
+    <footer class="pagination"><span><%= number(total) %> matching gyms · page <%= page %></span><div><% if(page > 1) { %><a href="/platform?q=<%= encodeURIComponent(search) %>&amp;page=<%= page - 1 %>#gyms">← Previous</a><% } %><% if(page * 25 < total) { %><a href="/platform?q=<%= encodeURIComponent(search) %>&amp;page=<%= page + 1 %>#gyms">Next →</a><% } %></div></footer>
+  </section>
+  <section id="activity" class="panel"><div class="section-heading"><div><h2>Platform login activity</h2><p class="muted">The 10 most recent platform admin sessions. Times are South African Standard Time.</p></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Administrator</th><th>Signed in</th><th>Signed out</th><th>Session</th></tr></thead><tbody><% activity.forEach(session => { const active = !session.logged_out_at && new Date(session.expires_at) > new Date(); %><tr><td><%= session.name %></td><td><%= dateTime(session.created_at) %></td><td><%= session.logged_out_at ? dateTime(session.logged_out_at) : '—' %></td><td><span class="pill <%= active ? '' : 'neutral' %>"><%= session.logged_out_at ? 'Signed out' : active ? 'Active' : 'Expired' %></span></td></tr><% }); %><% if (!activity.length) { %><tr><td colspan="4" class="empty">No platform sessions yet.</td></tr><% } %></tbody></table></div></section>
+  <p class="footer-note">FITNEXIS · A stronger view of your network.</p>
+</main>
+</body></html>

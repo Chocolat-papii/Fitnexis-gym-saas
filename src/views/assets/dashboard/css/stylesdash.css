@@ -11,199 +11,102 @@ body  {
 }
 
 
-/* Layout */
-.app {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 100vh;
-}
-
-/* Sidebar */
-.sidebar {
-    position: fixed;
-    top: 80px;
-    height: 100vh;
-    padding: 18px;
-    border-right: 1px solid #ffffff1f;
-    background: #ffffff0a;
-    backdrop-filter: blur(20px);
-    color: var(--bs-body-color);
-}
-
-.brand-badge {
-    width: 44px;
-    height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: rgba(13, 110, 253, .18);
-    border: 1px solid rgba(13, 110, 253, .35);
-    color: white;
-    font-weight: 700;
-    letter-spacing: .5px;
-}
-
-.nav-pill {
-    color: rgba(255, 255, 255, .78);
-    border-radius: 14px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nav-pill:hover {
-    background: rgba(255, 255, 255, .07);
-    color: var(--bs-body-color);;
-}
-
-.nav-pill.active {
-    background: rgba(13, 110, 253, .18);
-    border: 1px solid rgba(13, 110, 253, .25);
-    color: var(--bs-body-color);;
-}
-
-/* Content */
-.content {
-    padding: 22px;
-}
-
-
-.glass-card {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px);
-    color: var(--bs-body-color);
-}
-
-
-.muted {
-    color: rgba(255, 255, 255, .72);
-}
-
-.small-note {
-    color: var(--bs-body-color);
-
-}
-
-.form-control,
-.form-select {
-    background: var(--bs-body-bg);
-    border-color: var(--bs-border-color);
-    color: var(--bs-body-color);
-}
-
-.form-control:focus,
-.form-select:focus {
-    background: var(--bs-body-bg);
-    color: var(--bs-body-color);
-}
-
-.table {
-    color: var(--bs-body-color);
-    background-color: transparent;
-}
-
-.table thead th {
-    color: var(--bs-secondary-color);
-}
-
-.table tbody td {
-    color: var(--bs-body-color);
-}
-
-/* Mobile */
-@media (max-width: 992px) {
-    .app {
-        grid-template-columns: 1fr;
-    }
-
-    .sidebar {
-        height: auto;
-        position: relative;
-    }
-}
-
-/* ===== Member Portal Layout Fix ===== */
-.app-shell {
+/* One layout for member and admin portals. */
+.app, .app-shell {
   display: flex;
+  align-items: flex-start;
   gap: 24px;
   padding: 20px;
-  align-items: flex-start;
+  min-height: calc(100vh - 104px);
 }
-
-/* Sidebar must have a fixed width */
 .sidebar {
   width: 280px;
   flex: 0 0 280px;
   padding: 18px;
   border-radius: 1.5rem;
-
-  /* keep it tidy */
-  max-height: calc(100vh - 40px);
-  overflow: auto;
-
   position: sticky;
   top: 80px;
+  max-height: calc(100dvh - 100px);
+  overflow: auto;
+  color: var(--bs-body-color);
 }
-
-/* Main content must be allowed to grow */
-.content {
-  flex: 1 1 auto;
-  min-width: 0;
+.content { flex: 1 1 auto; min-width: 0; padding: 0; }
+.nav-pill {
+  color: var(--bs-secondary-color);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
-/* Mobile overlay sidebar */
+.nav-pill:hover, .nav-pill.active { color: var(--bs-body-color); background: var(--bs-primary-bg-subtle); }
+.nav-pill.active { border-color: var(--bs-primary-border-subtle); }
+.glass-card {
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  backdrop-filter: blur(10px);
+  color: var(--bs-body-color);
+}
+.muted { color: var(--bs-secondary-color); }
+.small-note { color: var(--bs-body-color); }
+.form-control, .form-select, .form-control:focus, .form-select:focus {
+  background-color: var(--bs-body-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+.table { --bs-table-bg: transparent; --bs-table-color: var(--bs-body-color); }
+.table thead th { color: var(--bs-secondary-color); }
+.table tbody td { color: var(--bs-body-color); }
+/* Legacy pages use these Bootstrap variants in both themes. */
+.table-dark {
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--bs-border-color);
+  --bs-table-striped-bg: var(--bs-tertiary-bg);
+  --bs-table-striped-color: var(--bs-body-color);
+  --bs-table-hover-bg: var(--bs-secondary-bg);
+  --bs-table-hover-color: var(--bs-body-color);
+}
+[data-bs-theme="light"] .content .text-white,
+[data-bs-theme="light"] .sidebar .text-white { color: var(--bs-body-color) !important; }
+.btn-outline-light {
+  --bs-btn-color: var(--bs-body-color);
+  --bs-btn-border-color: var(--bs-border-color);
+  --bs-btn-hover-color: var(--bs-body-color);
+  --bs-btn-hover-bg: var(--bs-secondary-bg);
+  --bs-btn-hover-border-color: var(--bs-secondary-color);
+  --bs-btn-disabled-color: var(--bs-secondary-color);
+  --bs-btn-disabled-border-color: var(--bs-border-color);
+}
 .sidebar-toggle { display: none; }
-
-@media (max-width: 992px) {
-  .app-shell {
-    display: block;
-    padding: 14px;
-  }
-
-  .admin {
-    display: none;
-  }
-
+.backdrop { display: none; }
+@media (max-width: 991.98px) {
+  .app, .app-shell { display: block; padding: 14px; }
   .sidebar {
     position: fixed;
     inset: 74px 12px auto 12px;
     width: auto;
-    max-height: calc(100vh - 24px);
-    transform: translateX(-110%);
+    max-height: calc(100dvh - 90px);
+    transform: translateX(calc(-100% - 24px));
     transition: transform .25s ease;
     z-index: 1050;
-    overflow: auto;
+    background: var(--bs-body-bg) !important;
   }
-
   .sidebar.open { transform: translateX(0); }
   .sidebar-toggle { display: inline-flex; }
-
   .backdrop {
+    display: block;
     position: fixed;
-    inset: 0;
+    inset: 60px 0 0;
     background: rgba(0,0,0,.55);
-    backdrop-filter: blur(4px);
     opacity: 0;
     pointer-events: none;
-    transition: .2s ease;
+    transition: opacity .2s ease;
     z-index: 1040;
   }
-
-  .backdrop.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  .backdrop.show { opacity: 1; pointer-events: auto; }
 }
-
-/* Admin dashboard styles */
-
- .content {
-     flex: 1;
-     padding: 0;
- }
 
  .activity-card {
      transition: 0.2s;
@@ -436,7 +339,7 @@ display: none;
     top: 0;
       height: 60px;
       transition: background-color 0.3s ease, border-color 0.3s ease;
-    z-index: 1;
+    z-index: 1060;
     }
 
 .icon-btn {

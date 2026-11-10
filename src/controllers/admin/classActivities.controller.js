@@ -1,5 +1,6 @@
 import * as classTypesService from "../../services/classTypes.service.js";
 import * as sessionsService from "../../services/classSessions.service.js";
+import { csrfToken } from '../../middleware/billingCsrf.js';
 
 
 // - - actual page - - //
@@ -14,6 +15,7 @@ export const getClassActivities = async (req, res, next) => {
         activePage: "classes",
         classTypes,
         sessions,
+        csrf: csrfToken(req),
         gym: req.gym
 
     });

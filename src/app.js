@@ -19,6 +19,9 @@ import classBookingRoutes from "./routes/classBooking.routes.js";
 import { requireAdmin } from "./middleware/requireAdmin.js";
 import attendanceRoutes from "./routes/attendance.router.js"
 import { requireGym } from "./middleware/gym.middleware.js";
+import { paystackWebhook } from "./controllers/paystackWebhook.controller.js";
+import { startBillingJobs } from "./services/billingJobs.service.js";
+import platformRoutes from "./routes/platform.routes.js";
 
 
 
@@ -27,6 +30,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 const app = express();
+// Raw body must be preserved for Paystack HMAC verification.
+app.post("/api/billing/paystack/webhook", express.raw({ type: "application/json", limit: "200kb" }), paystackWebhook);
 
 // database
 
@@ -37,9 +42,9 @@ await connectDB();
 if (process.env.NODE_ENV !== "production") {
   await seedAdmin();
 }
+startBillingJobs();
 
 // ----- middlewares ---- //
-app.use(requireGym);
 app.use(logger);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -54,6 +59,10 @@ app.use(cookieParser());
 // serve /assets
 app.use("/assets", express.static(path.join(__dirname,  "views", "assets")));
 app.use(express.static(path.join(process.cwd(), "public")));
+
+// Platform administration has its own identity and must not inherit a gym context.
+app.use('/platform', platformRoutes);
+app.use(requireGym);
 
 //
 app.use((req,res,next)=>{

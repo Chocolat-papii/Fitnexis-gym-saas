@@ -1,0 +1,80 @@
+<div id="billingModals">
+<div class="modal fade billing-modal" id="planModal" tabindex="-1" aria-labelledby="planModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="planModalTitle">Create plan</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <form id="planForm"><div class="modal-body">
+      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
+      
+<label for="planName">Plan name</label><input class="form-control" id="planName" name="name" required maxlength="100" placeholder="e.g. Silver">
+<label for="planPrice">Price (ZAR)</label><input class="form-control" id="planPrice" name="price" required type="number" min="0" step="0.01">
+<label for="planCycle">Billing cycle</label><select class="form-select" id="planCycle" name="billing_cycle"><option value="once_off">Once-off</option><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select>
+<label for="planDescription">Description</label><textarea class="form-control" id="planDescription" name="description" rows="2" maxlength="500"></textarea>
+
+    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Create plan</button></div></form>
+  </div></div>
+</div>
+<div class="modal fade billing-modal" id="membershipModal" tabindex="-1" aria-labelledby="membershipModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="membershipModalTitle">Assign plan</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <form id="membershipForm"><div class="modal-body">
+      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
+      <p class="billing-note">The next billing run will create the first invoice for the selected start date.</p>
+<label for="memberForPlan">Member</label><select class="form-select" id="memberForPlan" name="user_id" required></select>
+<label for="membershipPlan">Plan</label><select class="form-select" id="membershipPlan" name="plan_id" required></select>
+<label for="membershipStart">Start date</label><input class="form-control" id="membershipStart" type="date" name="start_date" required>
+
+    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Assign plan</button></div></form>
+  </div></div>
+</div>
+<div class="modal fade billing-modal" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="invoiceModalTitle">Create invoice</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <form id="invoiceForm"><div class="modal-body">
+      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
+      
+<label for="invoiceMember">Member</label><select class="form-select" id="invoiceMember" name="user_id" required></select>
+<label for="invoiceAmount">Amount (ZAR)</label><input class="form-control" id="invoiceAmount" name="amount" required type="number" min="0" step="0.01">
+<label for="invoiceDue">Due date</label><input class="form-control" id="invoiceDue" name="due_at" type="date" required>
+<label for="invoiceDescription">Description</label><input class="form-control" id="invoiceDescription" name="description" maxlength="500" placeholder="Joining fee, training session...">
+
+    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Create invoice</button></div></form>
+  </div></div>
+</div>
+<div class="modal fade billing-modal" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="paymentModalTitle">Record payment</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <form id="manualPaymentForm"><div class="modal-body">
+      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
+      <p class="billing-note">Only record funds you have actually received. Unique reference required. Check pending online payments in the payment history before recording another receipt.</p>
+<label for="paymentInvoice">Invoice</label><select class="form-select" id="paymentInvoice" name="invoice_id" required></select>
+<label for="paymentAmount">Received amount (ZAR)</label><input class="form-control" id="paymentAmount" name="amount" type="number" step="0.01" min="0.01" required>
+<label for="paymentProvider">Method</label><select class="form-select" id="paymentProvider" name="provider"><option value="eft">EFT</option><option value="cash">Cash</option></select>
+<label for="paymentReference">Bank reference / till receipt</label><input class="form-control" id="paymentReference" name="reference" required maxlength="200">
+
+    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Record payment</button></div></form>
+  </div></div>
+</div>
+<div class="modal fade billing-modal" id="accountModal" tabindex="-1" aria-labelledby="accountModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="accountModalTitle">Payment settings</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <form id="accountForm"><div class="modal-body">
+      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
+      <p class="billing-note">Enter the settlement account code provided when your gym was onboarded with Paystack.</p>
+<label for="paystackAccount">Paystack subaccount code</label><input class="form-control" id="paystackAccount" name="paystack_subaccount" pattern="ACCT_[A-Za-z0-9]{6,80}" placeholder="ACCT_..." required>
+
+    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Save settings</button></div></form>
+  </div></div>
+</div>
+<div class="modal fade billing-modal" id="requestsModal" tabindex="-1" aria-labelledby="requestsModalTitle" aria-hidden="true">
+<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+<div class="modal-header"><h2 class="modal-title fs-5" id="requestsModalTitle">Plan-change requests</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+<div class="modal-body"><div class="alert alert-danger d-none billing-modal-message" role="alert"></div><p class="billing-note">Approving a request replaces the current plan from today. Existing invoices are not prorated.</p><div class="billing-table table-responsive"><table class="table table-striped"><thead><tr><th>Member</th><th>Requested plan</th><th>Status</th><th>Action</th></tr></thead><tbody id="planRequests"></tbody></table></div></div>
+<div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button></div>
+</div></div></div>
+<div class="modal fade billing-modal" id="generateModal" tabindex="-1" aria-labelledby="generateModalTitle" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+<div class="modal-header"><h2 class="modal-title fs-5" id="generateModalTitle">Generate due invoices</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+<div class="modal-body"><div class="alert alert-danger d-none billing-modal-message" role="alert"></div><p>Create invoices for active memberships whose billing date has arrived. Missed periods are included; already generated periods are skipped.</p><p class="billing-note mb-0">Members are not automatically charged. This adds invoices to their account.</p></div>
+<div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="runBilling">Generate invoices</button></div>
+</div></div></div>
+</div>

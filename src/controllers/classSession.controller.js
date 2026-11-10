@@ -9,13 +9,17 @@ export const getSessions = async (req, res) => {
     SELECT 
       s.id,
       s.starts_at,
-      TO_CHAR(s.starts_at,'HH24:MI') AS time,
-      TRIM(TO_CHAR(s.starts_at,'Day')) AS day,
+      TO_CHAR(s.starts_at AT TIME ZONE 'Africa/Johannesburg','HH24:MI') AS time,
+      TRIM(TO_CHAR(s.starts_at AT TIME ZONE 'Africa/Johannesburg','Day')) AS day,
       s.capacity,
       s.location,
       s.gym_id,
+      s.is_paid,
+      s.price,
       c.name AS class_name,
-      (b.id IS NOT NULL) AS enrolled
+      COALESCE(b.booking_status='booked',false) AS enrolled,
+      b.booking_status,
+      b.invoice_id
     FROM class_sessions s
     JOIN class_types c 
     ON s.class_type_id = c.id
@@ -25,6 +29,7 @@ export const getSessions = async (req, res) => {
       AND b.user_id = $1::int
       AND b.gym_id = $2
       WHERE s.gym_id = $2
+      AND s.status='scheduled' AND s.starts_at>NOW()
     ORDER BY s.starts_at
   `,[user_id, gymId]);
 

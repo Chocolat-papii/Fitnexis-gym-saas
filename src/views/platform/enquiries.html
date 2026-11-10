@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fitnexis · Enquiries</title><link rel="stylesheet" href="/assets/dashboard/css/platform.css"></head>
+<body><%- include('partials/sidebar.html') %>
+<main class="main"><header class="topbar"><span>Workspace <span class="muted">/ Enquiries</span></span><span class="badge"><%= counts.unread %> awaiting review</span></header>
+<div class="page-heading"><div><p class="eyebrow">YOUR NEXT GYM RELATIONSHIP</p><h1>Website enquiries</h1><p class="muted">Early access, walkthrough, pricing and support requests from the public site.</p></div><a class="refresh" href="/platform/enquiries">Refresh</a></div>
+<% if(!enquiries.length) { %><div class="panel empty">No enquiries on this page. Website enquiries will appear here after submission.</div><% } %>
+<% enquiries.forEach(enquiry => { %><article class="panel enquiry-card"><div class="section-heading"><div><span class="pill <%= enquiry.reviewed_at ? 'neutral' : '' %>"><%= enquiry.reviewed_at ? 'Reviewed' : 'New' %></span><h2><%= enquiry.gym_name %></h2><p class="muted"><%= enquiry.name %> · <%= enquiry.email %></p></div><div><p class="eyebrow"><%= enquiry.interest.replaceAll('-', ' ').toUpperCase() %></p><p class="muted"><%= new Intl.DateTimeFormat('en-ZA', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Johannesburg' }).format(new Date(enquiry.created_at)) %> SAST</p></div></div><p class="enquiry-message"><%= enquiry.message || 'No additional message.' %></p><% if(!enquiry.reviewed_at) { %><form method="post" action="/platform/enquiries/<%= enquiry.id %>/review" class="enquiry-action"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit">Mark reviewed</button></form><% } %></article><% }); %>
+<footer class="pagination"><span><%= counts.total %> enquiries · Page <%= page %></span><div><% if(page > 1) { %><a href="/platform/enquiries?page=<%= page - 1 %>">← Previous</a><% } %><% if(page * 25 < Number(counts.total)) { %><a href="/platform/enquiries?page=<%= page + 1 %>">Next →</a><% } %></div></footer>
+<p class="footer-note">Enquiries are saved here for review. Email notifications and replies are not automated.</p>
+</main></body></html>

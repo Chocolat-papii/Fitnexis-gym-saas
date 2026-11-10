@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="billing-csrf" content="<%= csrf %>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 
@@ -134,52 +135,7 @@
 </div>    
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
    
-  <script>
-        // Close sidebar when a link is clicked (mobile)
-      const btn = document.getElementById("toggleSidebar");
-      const sidebar = document.querySelector(".sidebar");
-
-      btn?.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-      });
-</script>
-<script>
-      // Tooltips
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        .forEach(el => new bootstrap.Tooltip(el));
-
-      // =========================
-      // Smooth Theme Toggle
-      // =========================
-      const html = document.documentElement;
-      const toggleBtn = document.getElementById('themeToggle');
-      const icon = document.getElementById('themeIcon');
-
-      function setTheme(theme) {
-        html.setAttribute('data-bs-theme', theme);
-        localStorage.setItem('theme', theme);
-        icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-      }
-
-      // Load theme
-      setTheme(localStorage.getItem('theme') || 'light');
-
-      toggleBtn.addEventListener('click', () => {
-        const current = html.getAttribute('data-bs-theme');
-        setTheme(current === 'light' ? 'dark' : 'light');
-      });
-
-      // =========================
-      // Bell Animation
-      // =========================
-      const bellIcon = document.getElementById('bellIcon');
-
-      document.getElementById('bellBtn').addEventListener('click', () => {
-        bellIcon.classList.remove('bell-animate');
-        void bellIcon.offsetWidth;
-        bellIcon.classList.add('bell-animate');
-      });
-    </script>
+<script src="/assets/dashboard/js/dashboardShell.js"></script>
 <script src="../assets/dashboard/js/dashboard.js"></script>
 <script src="../assets/public/timetable.js"></script>
 <script>
@@ -190,7 +146,7 @@
   }
 
 loadTimetable();
-loadMemberStats();
+
 </script>
 
 
