@@ -1,5 +1,6 @@
 import * as classTypesService from "../../services/classTypes.service.js";
 import * as sessionsService from "../../services/classSessions.service.js";
+import { csrfToken } from '../../middleware/billingCsrf.js';
 
 
 // - - actual page - - //
@@ -14,6 +15,7 @@ export const getClassActivities = async (req, res, next) => {
         activePage: "classes",
         classTypes,
         sessions,
+        csrf: csrfToken(req),
         gym: req.gym
 
     });
@@ -37,11 +39,10 @@ export const getAllClassTypes = async (req, res) => {
 export const createClassType = async (req, res) => {
     try {
         const gymId = req.gymId;
-        const newClass = await classTypesService.createClassType({
-            ...req.body, 
-            gym_id: gymId});
+        const newClass = await classTypesService.createClassType(req.body, gymId);
 
-        res.status(201).json(newClass, {
+        res.status(201).json({
+            ...newClass,
             message: "Class created successfully.",
         });
     } catch (error) {
@@ -52,7 +53,7 @@ export const createClassType = async (req, res) => {
                 message: `${req.body.name} already exists.`
             });
         }
-        res.status(500).json({ message: "Failed to create class type" });
+        res.status(error.status || 500).json({ message: error.status ? error.message : "Failed to create class type" });
     }
 };
 

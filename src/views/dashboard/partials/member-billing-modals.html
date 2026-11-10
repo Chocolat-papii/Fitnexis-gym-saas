@@ -1,0 +1,29 @@
+<div class="modal fade billing-modal" id="memberPlanModal" tabindex="-1" aria-labelledby="memberPlanModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="memberPlanModalTitle">Request a plan change</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <form id="changePlan"><div class="modal-body">
+      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
+      <p class="billing-note">Your gym reviews your request. The new plan starts on approval, without prorating existing invoices.</p>
+      <% if (hasPendingRequest) { %><div class="alert alert-info">You have a plan change awaiting review. Wait for a decision before submitting another request.</div><% } %>
+      <% if (!billing.plans.length) { %><p class="billing-note">Your gym has no available plans yet.</p><% } %>
+      <label class="form-label" for="newPlan">Available plan</label><select class="form-select" id="newPlan" name="plan_id" required <%= hasPendingRequest || !billing.plans.length ? 'disabled' : '' %>>
+        <% billing.plans.forEach(plan => { %><option value="<%= plan.id %>"><%= plan.name %> &mdash; <%= fmt(plan.price) %> / <%= cycleLabel(plan.billing_cycle) %></option><% }) %>
+      </select>
+      <label class="form-label" for="changeReason">Reason (optional)</label><input class="form-control" id="changeReason" name="reason" maxlength="500" placeholder="Change of training needs" <%= hasPendingRequest ? 'disabled' : '' %>>
+    </div><div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit" <%= billing.plans.length && !hasPendingRequest ? '' : 'disabled' %>>Send request</button></div></form>
+  </div></div>
+</div>
+<div class="modal fade billing-modal" id="memberPaymentModal" tabindex="-1" aria-labelledby="memberPaymentModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="memberPaymentModalTitle">Pay an invoice</h2><button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <form id="memberPayForm"><div class="modal-body">
+      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
+      <p class="billing-note">Choose an invoice and review the outstanding amount. You will continue to secure Paystack checkout to complete your payment.</p>
+      <label class="form-label" for="memberPaymentInvoice">Invoice</label><select class="form-select" id="memberPaymentInvoice" required>
+        <% payableInvoices.forEach(invoice => { %><option value="<%= invoice.id %>" data-balance="<%= invoice.balance %>"><%= invoice.invoice_number || ('INV-' + invoice.id) %> &mdash; <%= fmt(invoice.balance) %><%= invoice.description ? ' / ' + invoice.description : '' %></option><% }) %>
+      </select>
+      <div class="billing-card mb-0"><div class="billing-note">Amount due</div><div class="billing-stat" id="memberPaymentBalance"><%= fmt(payableInvoices[0]?.balance) %></div></div>
+      <% if (!billing.onlinePaymentsEnabled) { %><p class="billing-note mt-3 mb-0">Online payments are not available yet. Contact your gym to arrange payment.</p><% } %>
+    </div><div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit" <%= billing.onlinePaymentsEnabled && payableInvoices.length ? '' : 'disabled' %>>Continue to Paystack</button></div></form>
+  </div></div>
+</div>

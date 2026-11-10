@@ -1,5 +1,6 @@
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { db } from '../config/db.js';
+import { confirmPaidSessionBooking } from './sessionBilling.service.js';
 
 const fail = (message, status = 400) => Object.assign(new Error(message), { status });
 export const newPaymentReference = () => `fnx-${randomUUID()}`;
@@ -124,6 +125,7 @@ export async function verifyAndSettle(reference, { gymId = null, userId = null }
       const { rows: [totals] } = await client.query("SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE invoice_id=$1 AND gym_id=$2 AND status='succeeded'", [invoice.id, invoice.gym_id]);
       if (invoice.status !== 'void' && moneyToCents(totals.total) >= moneyToCents(invoice.amount)) {
         await client.query("UPDATE invoices SET status='paid', updated_at=NOW() WHERE id=$1 AND gym_id=$2", [invoice.id, invoice.gym_id]);
+        await confirmPaidSessionBooking(client, invoice.gym_id, invoice.id);
       }
     } else if (['failed', 'abandoned', 'reversed'].includes(remote.status)) {
       await client.query("UPDATE payments SET status='failed' WHERE id=$1 AND status='pending'", [payment.id]);

@@ -1,0 +1,13 @@
+<aside class="sidebar">
+  <a class="brand" href="/platform">fitnexis<span>®</span></a><div class="workspace">PLATFORM WORKSPACE</div>
+  <nav aria-label="Dashboard">
+    <a href="/platform" class="<%= section === 'overview' ? 'selected' : '' %>">◫ &nbsp; Overview</a>
+    <a href="/platform#gyms">▦ &nbsp; Gym directory</a>
+    <a href="/platform/gyms/new" class="<%= section === 'new-gym' ? 'selected' : '' %>">+ &nbsp; Add gym</a>
+    <a href="/platform/enquiries" class="<%= section === 'enquiries' ? 'selected' : '' %>">✉ &nbsp; Enquiries</a>
+    <a href="/platform#insights">↗ &nbsp; Growth insights</a>
+    <a href="/platform/billing" class="<%= section === 'billing' ? 'selected' : '' %>">▤ &nbsp; Billing <span class="nav-soon">Soon</span></a>
+    <a href="/platform#activity">◷ &nbsp; Login activity</a>
+  </nav>
+  <div class="sidebar-bottom"><div class="avatar"><%= admin.name.charAt(0).toUpperCase() %></div><strong><%= admin.name %></strong><small>Platform administrator</small><form action="/platform/logout" method="post"><input type="hidden" name="_csrf" value="<%= csrf %>"><button type="submit" class="logout">Sign out ↗</button></form></div>
+</aside>

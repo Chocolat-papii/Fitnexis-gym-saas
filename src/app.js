@@ -21,6 +21,7 @@ import attendanceRoutes from "./routes/attendance.router.js"
 import { requireGym } from "./middleware/gym.middleware.js";
 import { paystackWebhook } from "./controllers/paystackWebhook.controller.js";
 import { startBillingJobs } from "./services/billingJobs.service.js";
+import platformRoutes from "./routes/platform.routes.js";
 
 
 
@@ -44,7 +45,6 @@ if (process.env.NODE_ENV !== "production") {
 startBillingJobs();
 
 // ----- middlewares ---- //
-app.use(requireGym);
 app.use(logger);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -59,6 +59,10 @@ app.use(cookieParser());
 // serve /assets
 app.use("/assets", express.static(path.join(__dirname,  "views", "assets")));
 app.use(express.static(path.join(process.cwd(), "public")));
+
+// Platform administration has its own identity and must not inherit a gym context.
+app.use('/platform', platformRoutes);
+app.use(requireGym);
 
 //
 app.use((req,res,next)=>{

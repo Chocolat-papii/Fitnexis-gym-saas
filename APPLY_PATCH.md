@@ -18,7 +18,7 @@ This ZIP contains only the files that must be added or replaced; it does not inc
 To publish from your own terminal after testing:
 
 ```bash
-git add package.json src/app.js src/routes src/controllers src/services src/middleware src/views/admin/admin-billing.html src/views/admin/partials/sidebar.html src/views/dashboard/member-billing.html src/views/dashboard/partials/sidebar.html src/views/billing tests migrations/202611030001_billing_payments.js docs/BILLING.md
+git add package.json knexfile.js src tests migrations docs/BILLING.md APPLY_PATCH.md
 git commit -m "feat(billing): membership billing Paystack and invoices"
 git push -u origin feature/billing-payments-complete
 ```
@@ -28,12 +28,18 @@ Then create a pull request into `develop`, or merge with your own repository pro
 ## QA completed in this isolated environment
 
 - `node --check` for all added or modified JavaScript files.
-- `npm test`: 7 passing unit tests.
+- `npm test` with an isolated local `BILLING_TEST_DATABASE_URL`: 16 passing tests, including PostgreSQL lifecycle, authenticated routes and form interactions.
 - EJS compilation and runtime rendering with mock admin/member records.
 - Inline browser JavaScript parsed successfully.
 - Imports of admin and member route modules successful.
 
-**Not performed:** live PostgreSQL migration, real Paystack network call, CI on GitHub, browser end-to-end tests, deployment, or GitHub push (write operations returned HTTP 403).
+**Not performed for this update:** production database migration, real Paystack checkout, CI on GitHub, browser end-to-end tests, deployment, or GitHub push.
+
+## 9 November 2026 update
+
+The working tree now includes once-off/weekly/monthly/yearly billing cycles, the Create Plan button repair, and paid/free class-session booking with invoice settlement. These changes were applied directly to the repository; no ZIP extraction is needed for this update.
+
+Run `npm run migrate` (or `npm.cmd run migrate` in Windows PowerShell) before starting the updated application. This applies `202611090001_paid_class_sessions.js`, adding session pricing and the booking-to-invoice link. Existing sessions remain free. See `docs/BILLING.md` for payment and reservation behavior.
 
 ## Production policy decisions still needed
 

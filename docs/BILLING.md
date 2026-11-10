@@ -3,6 +3,8 @@
 ## What is implemented
 
 - Gym-specific pricing plans, plan activation and membership assignment.
+- Once-off, weekly, monthly and yearly plans. Existing quarterly and annual plans remain supported; annual is displayed as yearly.
+- Paid/free class-session switch and per-member ZAR pricing on Classes & Activities. Paid bookings create invoices and confirm only after full payment.
 - Member billing views, real invoice history, plan-change requests.
 - Automated recurring invoice creation, guarded by unique membership / billing-period keys and row locks.
 - Cash/EFT payment recording, unique references, partial payments and paid balances.
@@ -38,6 +40,7 @@ Production runtime and Knex migrations both use `PROD_DATABASE_URL`, falling bac
 ## Billing rules
 
 - Billing dates and month boundaries use `Africa/Johannesburg`, including when PostgreSQL runs in UTC. An invoice becomes overdue on the day after its due date.
+- Once-off plans generate one invoice, then clear the next billing date and stop automatic invoicing. Weekly plans advance seven calendar days. Yearly plans preserve their original anniversary, clamping leap-day anniversaries as needed.
 - Monthly dates preserve the original billing day, clamping shorter months to their final day.
 - Each run handles up to 200 due memberships, catching up at most 120 periods per membership. Further runs handle remaining backlog. Membership end dates cap invoice generation.
 - Assigning or approving a replacement plan replaces both active and paused memberships. Existing invoices remain payable. Approval starts the new plan today; there is no automatic credit or prorating.
@@ -50,15 +53,34 @@ Production runtime and Knex migrations both use `PROD_DATABASE_URL`, falling bac
 
 ## UI review
 
+Member billing follows the same layout: top actions open payment and plan-change modals, while the main page shows the membership, outstanding balance and next steps. Invoice, payment and plan-request histories use separate tabs. Invoice-row payment buttons preselect that invoice in the payment modal; checkout starts only after confirmation. Session invoice links remain supported, pending payments retain verification controls, and failed plan requests preserve the modal draft. This member layout requires no migration. Its JavaScript/template checks pass; the PostgreSQL integration suite was not rerun for this UI-only revision.
+
+The admin page now opens Create Plan, Assign Plan, Create Invoice, Record Payment, payment settings, plan requests and invoice generation from a top action toolbar. Forms live in Bootstrap modals: successful saves close the form, while failures preserve its values and display the error inside the modal. The overview shows collection totals, overdue balances, pending payments and requests, plus a monthly breakdown by payment method. Records are grouped into tabs with invoice search and status filters. Insights aggregate all gym records; invoice/payment histories show the latest 200. Collection figures are gross confirmed receipts, not net bank settlements. No additional migration is needed for this layout.
+
 The original dashboard stylesheet defined `.sidebar` and `.content` multiple times and used different layouts for `.app` and `.app-shell`. The shared stylesheet now uses one layout with consistent spacing, sidebar sizing and a Bootstrap-aligned mobile breakpoint. Legacy white text, dark tables and outline buttons now follow the selected theme.
 
 Billing previously mixed custom admin cards with member glass cards, used white headings against the default light background, and omitted working theme/menu behavior on the admin page. The member page also duplicated the header's mobile toggle ID. Billing now uses shared spacing, badges, tables, feedback, disabled/empty states and a shell script independent of chart data. Payment forms suppress repeated submission, show remaining invoice balances and offer clear verification controls.
 
 Other dashboard pages still contain their older page-specific navigation/theme scripts. Consolidating these scripts is a separate refactor; shared layout and color fixes apply to them, but a full visual/browser review of every screen has not been performed.
 
+## Class-session payments
+
+Apply `202611090001_paid_class_sessions.js` with `npm run migrate` before using this version. Existing sessions default to free. The Classes navigation link is enabled in the admin sidebar.
+
+1. In **Classes → Create Session**, switch **Paid session** on and enter the per-member price (at least R1). Turn it off for a free session. Editing restores the current payment settings; opening a new session resets the switch to free.
+2. The member timetable shows the session price before booking. A free booking confirms immediately without an invoice. A paid booking creates one invoice at the server's saved price and reserves a place with `awaiting_payment` status.
+3. The member is taken to the session invoice in Membership & Billing. They can pay online when Paystack is configured, or arrange cash/EFT with the gym. Repeated bookings return the same invoice. Pending timetable entries offer **Pay invoice**.
+4. A full confirmed payment changes the booking to `booked` in the same transaction as invoice settlement. Partial payments keep it awaiting payment. Both recorded cash/EFT and server-verified Paystack transactions follow this rule.
+
+Reserved and confirmed bookings both count toward capacity; concurrent requests cannot take the same last place. Reservations do not currently expire automatically. Payment terms cannot be changed after any bookings exist. Sessions with bookings cannot be deleted, and paid sessions with active reservations cannot be cancelled through this form until bookings/refunds are resolved. This release does not add a refund or reservation-cancellation workflow.
+
+The Activities page rendering and timetable success-response mismatch were repaired. The authenticated timetable now recognizes the member's existing confirmed and pending bookings. Session writes and bookings require the session-bound CSRF token.
+
+**Create Plan repair:** creating a plan or configuring settlement no longer depends on all dashboard sections loading successfully. Member-dependent forms remain disabled until their required data is available; save errors and refresh failures are displayed explicitly.
+
 ## Verification
 
-The suite was run successfully against a fresh, isolated PostgreSQL 18 database with Paystack HTTP responses mocked: 11 tests passed. It covers migrations, missed-period catch-up, duplicate generation and concurrent settlement, partial receipts, amount mismatches, pending-checkout reuse, initialization failures/timeouts, membership transitions, end dates, plan-change races, tenant checks, real authenticated billing routes, CSRF and template rendering. The application query pool runs in UTC during integration tests to exercise South African calendar handling.
+The suite was run successfully against an isolated PostgreSQL 18 database with Paystack HTTP responses mocked: 16 tests passed. It covers migrations, missed-period catch-up, once-off/weekly/yearly cycles, duplicate generation and concurrent settlement, partial receipts, amount mismatches, pending-checkout reuse, initialization failures/timeouts, membership transitions, end dates, plan-change races, tenant checks, real authenticated billing/session/booking routes, CSRF and template rendering. Added JavaScript interaction tests cover plan submission during a dashboard-load failure and paid-session form creation/edit/reset. Paid-booking tests cover invoice creation, price tampering, duplicate requests, last-seat races, manual and online confirmation, and payment-history preservation. The application query pool runs in UTC during integration tests to exercise South African calendar handling.
 
 To repeat the database test, create a dedicated local database named `fitnexis_billing_test` (or `fitnexis_billing_test_<suffix>`), set `BILLING_TEST_DATABASE_URL` to its PostgreSQL URL and run `npm test`. The test refuses remote hosts and other database names, applies migrations and removes only its own gym fixture afterward. Without that variable, the integration test is explicitly skipped. No existing application database is required or modified by this test setup.
 

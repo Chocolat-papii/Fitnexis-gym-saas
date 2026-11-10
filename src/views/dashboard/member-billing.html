@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script></head>
 <body class="bg-body-bg" data-billing-page><%- include('partials/header.html') %><div class="app-shell"><%- include('partials/sidebar.html') %>
-<main class="content small-note"><div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4"><div><h1 class="h3">Membership & Billing</h1><p class="muted">Your plan, invoices and secure Paystack payments</p></div></div>
+<% const cycleLabel = value => ({once_off:'Once-off',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly',annual:'Yearly',quarterly:'Quarterly'})[value] || value; %>
 <% const fmt = value => new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(Number(value||0)); %>
 <% const dateFmt = value => value ? new Date(value).toLocaleDateString('en-ZA',{timeZone:'Africa/Johannesburg',day:'2-digit',month:'short',year:'numeric'}) : '—'; %>
 <% const updates = {
@@ -14,38 +14,58 @@
   failed: 'The payment was not completed. You can try again.',
   abandoned: 'Checkout was not completed. You can try again.',
   reversed: 'The payment was reversed. Contact your gym for assistance.',
+  'session-payment-required': 'Your place is reserved. Pay the class session invoice below to confirm your booking.',
   'request-sent': 'Your plan change request has been sent to your gym.',
   'verification-pending': 'We could not confirm your payment yet. Use Check status in payment history before trying again.'
 }; %>
-<% if (result && updates[result]) { %><div class="alert alert-info" role="status"><%= updates[result] %></div><% } %>
-<div class="alert alert-info d-none" role="status" id="billingMessage"></div>
-<div class="row g-3 mb-4 billing-summary">
-<div class="col-md-4"><div class="card glass-card rounded-4 h-100"><div class="card-body"><div class="small-note">Membership plan</div><div class="h4"><%= billing.membership?.plan_name || 'No plan assigned' %></div><div><%= billing.membership?.billing_cycle || '—' %> · <%= billing.membership ? fmt(billing.membership.plan_price) : '—' %></div></div></div></div>
-<div class="col-md-4"><div class="card glass-card rounded-4 h-100"><div class="card-body"><div class="small-note">Membership status</div><div class="h4"><%= billing.membership?.status || 'Not active' %></div><div>Next billing date: <%= billing.membership?.status === 'active' ? dateFmt(billing.membership.next_bill_on) : 'Not scheduled' %></div></div></div></div>
-<div class="col-md-4"><div class="card glass-card rounded-4 h-100"><div class="card-body"><div class="small-note">Outstanding invoices</div><div class="h4"><%= fmt(billing.summary.outstanding) %></div><div>Next due: <%= dateFmt(billing.summary.next_due) %></div></div></div></div></div>
-<section class="card glass-card rounded-4 mb-4"><div class="card-body p-4"><h2 class="h5">Recent invoices</h2><p class="small-note">Online payments use secure Paystack checkout (minimum R1). Your gym records cash and EFT receipts.</p>
-<% if (!billing.onlinePaymentsEnabled) { %><p class="billing-note">Online payments are not available yet. Contact your gym to arrange payment.</p><% } %>
-<div class="billing-table"><table class="table table-hover align-middle"><thead><tr><th>Invoice</th><th>Issued</th><th>Due</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+<% const hasPendingRequest = billing.requests.some(request => request.status === 'pending'); %>
+<% const pendingPayments = billing.payments.filter(payment => payment.provider === 'paystack' && payment.status === 'pending'); %>
+<% const payableInvoices = billing.invoices.filter(invoice => Number(invoice.balance) >= 1 && invoice.status !== 'void'); %>
+<main class="content" id="memberBilling">
+  <header class="billing-page-heading"><div><div class="billing-eyebrow">Your account</div><h1 class="h3 mb-1">Membership &amp; Billing</h1><p class="billing-note mb-0">Your plan, balances and payment activity in one place.</p></div></header>
+  <nav class="billing-actions" aria-label="Member billing actions">
+    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#memberPaymentModal" <%= billing.onlinePaymentsEnabled && payableInvoices.length ? '' : 'disabled' %>><i class="bi bi-credit-card" aria-hidden="true"></i> Pay invoice</button>
+    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#memberPlanModal">Request plan change</button>
+    <button class="btn btn-outline-secondary" type="button" data-view-payments>View payments</button>
+  </nav>
+  <% if (result && updates[result]) { %><div class="alert alert-info" role="status"><%= updates[result] %></div><% } %>
+  <div class="alert alert-info d-none" role="status" id="billingMessage"></div>
+  <section class="row g-3 mb-4 billing-summary" aria-label="Your billing summary">
+    <div class="col-md-4"><div class="billing-card"><div class="billing-note">Your membership</div><div class="h4 mt-2 mb-1"><%= billing.membership?.plan_name || 'No plan assigned' %></div><div class="billing-stat-caption"><%= billing.membership ? fmt(billing.membership.plan_price) + ' / ' + cycleLabel(billing.membership.billing_cycle) : 'Contact your gym to get started' %></div></div></div>
+    <div class="col-md-4"><div class="billing-card"><div class="billing-note">Membership status</div><div class="mt-2 mb-2"><span class="billing-status billing-status-<%= billing.membership?.status || 'inactive' %>"><%= billing.membership?.status || 'Not active' %></span></div><div class="billing-stat-caption">Next billing date: <%= billing.membership?.status === 'active' && billing.membership.next_bill_on ? dateFmt(billing.membership.next_bill_on) : 'Not scheduled' %></div></div></div>
+    <div class="col-md-4"><div class="billing-card"><div class="billing-note">Outstanding balance</div><div class="billing-stat"><%= fmt(billing.summary.outstanding) %></div><div class="billing-stat-caption">Next due: <%= dateFmt(billing.summary.next_due) %></div></div></div>
+  </section>
+  <section class="billing-card mb-4"><h2 class="h5 mb-1">Your next steps</h2>
+    <div class="billing-attention-row"><div><div class="fw-semibold"><%= Number(billing.summary.outstanding) > 0 ? 'You have an outstanding balance' : 'No outstanding balance' %></div><div class="billing-note"><%= Number(billing.summary.outstanding) > 0 ? 'Choose an invoice to view its details or make a payment.' : 'Your account is up to date. New invoices will appear below.' %></div></div></div>
+    <% if (pendingPayments.length) { %><div class="billing-attention-row"><div><div class="fw-semibold">Payments awaiting confirmation</div><div class="billing-note">Check the status of your recent online payments before starting another checkout.</div></div><button class="btn btn-sm btn-outline-secondary" type="button" data-view-payments>Review payments</button></div><% } %>
+    <% if (hasPendingRequest) { %><div class="billing-attention-row"><div><div class="fw-semibold">You have a plan change awaiting review</div><div class="billing-note">Your gym will review it. You can follow its status in Plan requests below.</div></div></div><% } %>
+    <% if (!billing.onlinePaymentsEnabled) { %><div class="billing-attention-row"><div><div class="fw-semibold">Online payments are not available yet</div><div class="billing-note">Contact your gym to arrange cash or EFT payment. Your gym records the receipt against your invoice.</div></div></div><% } else { %><p class="billing-note mt-3 mb-0">Online payments use secure Paystack checkout (minimum R1). Your gym records cash and EFT receipts.</p><% } %>
+  </section>
+  <section class="billing-card billing-records">
+    <div class="nav nav-tabs billing-tabs" role="tablist" aria-label="Your billing records">
+      <button class="nav-link active" id="memberInvoicesTab" data-bs-toggle="tab" data-bs-target="#memberInvoicesPanel" type="button" role="tab" aria-controls="memberInvoicesPanel" aria-selected="true">Invoices</button>
+      <button class="nav-link" id="memberPaymentsTab" data-bs-toggle="tab" data-bs-target="#memberPaymentsPanel" type="button" role="tab" aria-controls="memberPaymentsPanel" aria-selected="false">Payments</button>
+      <button class="nav-link" id="memberRequestsTab" data-bs-toggle="tab" data-bs-target="#memberRequestsPanel" type="button" role="tab" aria-controls="memberRequestsPanel" aria-selected="false">Plan requests</button>
+    </div>
+    <div class="tab-content pt-4">
+      <section class="tab-pane fade show active" id="memberInvoicesPanel" role="tabpanel" aria-labelledby="memberInvoicesTab" tabindex="0"><h2 class="h5 mb-1">Recent invoices</h2><p class="billing-note">Latest 200 invoices. Your outstanding balance includes all payable invoices.</p><div class="billing-table"><table class="table table-hover align-middle"><thead><tr><th>Invoice</th><th>Issued</th><th>Due</th><th>Amount</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody>
 <% if (!billing.invoices.length) { %><tr><td colspan="8" class="billing-empty">You have no invoices yet.</td></tr><% } %>
-<% billing.invoices.forEach(inv => { %><tr><td><%= inv.invoice_number || ('INV-'+inv.id) %></td><td><%= dateFmt(inv.issued_at) %></td><td><%= dateFmt(inv.due_at) %></td><td><%= fmt(inv.amount) %></td><td><%= fmt(inv.paid_amount) %></td><td><%= fmt(inv.balance) %></td><td><span class="billing-status billing-status-<%= inv.display_status %>"><%= inv.display_status %></span></td><td>
+<% billing.invoices.forEach(inv => { %><tr id="invoice-<%= inv.id %>"><td><%= inv.invoice_number || ('INV-'+inv.id) %><div class="billing-note"><%= inv.description || '' %></div></td><td><%= dateFmt(inv.issued_at) %></td><td><%= dateFmt(inv.due_at) %></td><td><%= fmt(inv.amount) %></td><td><%= fmt(inv.paid_amount) %></td><td><%= fmt(inv.balance) %></td><td><span class="billing-status billing-status-<%= inv.display_status %>"><%= inv.display_status %></span></td><td>
 <a class="btn btn-outline-light btn-sm" target="_blank" rel="noopener" href="/member/billing/invoices/<%= inv.id %>">View / print</a>
-<% if (Number(inv.balance)>=1 && inv.status!=='void' && billing.onlinePaymentsEnabled) { %><button class="btn btn-primary btn-sm pay-invoice" type="button" data-id="<%= inv.id %>">Pay now</button><% } %></td></tr><% }); %>
-</tbody></table></div></div></section>
-<section class="billing-card"><h2>Payment history</h2><p class="billing-note">Check pending payments here if you left checkout before returning to this page.</p>
-<div class="billing-table"><table class="table table-hover"><thead><tr><th>Invoice</th><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody>
+<% if (Number(inv.balance)>=1 && inv.status!=='void' && billing.onlinePaymentsEnabled) { %><button class="btn btn-primary btn-sm pay-invoice" type="button" data-bs-toggle="modal" data-bs-target="#memberPaymentModal" data-invoice="<%= inv.id %>">Pay now</button><% } %></td></tr><% }); %>
+</tbody></table></div></section>
+      <section class="tab-pane fade" id="memberPaymentsPanel" role="tabpanel" aria-labelledby="memberPaymentsTab" tabindex="0"><h2 class="h5 mb-1">Payment history</h2><p class="billing-note">Latest 200 payments. Check pending payments here if you left checkout before returning.</p><div class="billing-table"><table class="table table-hover"><thead><tr><th>Invoice</th><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody>
 <% if (!billing.payments.length) { %><tr><td class="billing-empty" colspan="7">No payments recorded yet.</td></tr><% } %>
 <% billing.payments.forEach(payment => { %><tr><td><%= payment.invoice_number %></td><td><%= payment.reference %></td><td><%= fmt(payment.amount) %></td><td><%= payment.provider.toUpperCase() %></td><td><span class="billing-status billing-status-<%= payment.status %>"><%= payment.status %></span></td><td><%= dateFmt(payment.paid_at || payment.created_at) %></td><td>
 <% if (payment.provider==='paystack' && payment.status==='pending') { %><button class="btn btn-outline-light btn-sm" type="button" data-verify="<%= payment.reference %>">Check status</button><% } %></td></tr><% }) %>
 </tbody></table></div></section>
-<section class="card glass-card rounded-4 h-100"><div class="card-body p-4"><h2 class="h5">Request a plan change</h2><p class="small-note">Your gym administrator reviews your request. The new plan starts on approval, without prorating existing invoices.</p>
-<% const hasPendingRequest = billing.requests.some(request => request.status==='pending'); %>
-<% if (hasPendingRequest) { %><p class="alert alert-info">You have a plan change awaiting review.</p><% } %>
-<% if (!billing.plans.length) { %><p class="billing-note">Your gym has no available plans yet.</p><% } %>
-<form id="changePlan" class="row g-3"><div class="col-md-5"><label for="newPlan" class="form-label">Available plan</label><select id="newPlan" class="form-select" name="plan_id" required>
-<% billing.plans.forEach(plan => { %><option value="<%= plan.id %>"><%= plan.name %> — <%= fmt(plan.price) %> / <%= plan.billing_cycle %></option><% }) %></select></div>
-<div class="col-md-5"><label for="changeReason" class="form-label">Reason (optional)</label><input id="changeReason" class="form-control" name="reason" maxlength="500" placeholder="Change of training needs"></div>
-<div class="col-md-2 d-flex align-items-end"><button class="btn btn-outline-light w-100" type="submit" <%= billing.plans.length && !hasPendingRequest ? '' : 'disabled' %>>Submit</button></div></form>
-<% if (billing.requests.length) { %><div class="billing-table mt-4"><table class="table"><thead><tr><th>Requested plan</th><th>Date</th><th>Status</th></tr></thead><tbody><% billing.requests.forEach(request => { %><tr><td><%= request.plan_name %></td><td><%= dateFmt(request.created_at) %></td><td><span class="billing-status billing-status-<%= request.status %>"><%= request.status %></span></td></tr><% }) %></tbody></table></div><% } %>
-</div></section>
+      <section class="tab-pane fade" id="memberRequestsPanel" role="tabpanel" aria-labelledby="memberRequestsTab" tabindex="0"><h2 class="h5 mb-1">Plan-change requests</h2><p class="billing-note">Your latest 20 requests and your gym's decisions.</p><div class="billing-table"><table class="table table-hover"><thead><tr><th>Requested plan</th><th>Date</th><th>Status</th></tr></thead><tbody>
+        <% if (!billing.requests.length) { %><tr><td class="billing-empty" colspan="3">No plan changes requested yet.</td></tr><% } %>
+        <% billing.requests.forEach(request => { %><tr><td><%= request.plan_name %></td><td><%= dateFmt(request.created_at) %></td><td><span class="billing-status billing-status-<%= request.status %>"><%= request.status %></span></td></tr><% }) %>
+      </tbody></table></div></section>
+    </div>
+  </section>
 </main></div>
-<script src="/assets/dashboard/js/billingCommon.js"></script><script src="/assets/dashboard/js/memberBilling.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="/assets/dashboard/js/dashboard.js"></script><script src="/assets/dashboard/js/dashboardShell.js"></script></body></html>
+<%- include('partials/member-billing-modals.html', { fmt, cycleLabel, hasPendingRequest, payableInvoices }) %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/dashboard/js/billingCommon.js"></script><script src="/assets/dashboard/js/memberBilling.js"></script><script src="/assets/dashboard/js/dashboard.js"></script><script src="/assets/dashboard/js/dashboardShell.js"></script></body></html>

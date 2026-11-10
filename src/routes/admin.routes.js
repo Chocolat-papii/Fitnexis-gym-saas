@@ -22,9 +22,9 @@ router.get('/api/class-types', requireGym, requireAuth, requireAdmin, getAllClas
 router.post('/api/class-types', requireGym, requireAuth, requireAdmin, createClassType);
 router.put('/api/class-types/:id', requireGym, requireAuth, requireAdmin, updateClassType);
 router.delete('/api/class-types/:id', requireGym, requireAuth, requireAdmin, deleteClassType);
-router.post('/api/class-sessions', requireGym, requireAuth, requireAdmin, createClassSession);
-router.delete('/api/class-sessions/:id', requireGym, requireAuth, requireAdmin, deleteSession);
-router.put('/api/class-sessions/:id', requireGym, requireAuth, requireAdmin, editSession);
+router.post('/api/class-sessions', requireGym, requireAuth, requireAdmin, billingCsrf, createClassSession);
+router.delete('/api/class-sessions/:id', requireGym, requireAuth, requireAdmin, billingCsrf, deleteSession);
+router.put('/api/class-sessions/:id', requireGym, requireAuth, requireAdmin, billingCsrf, editSession);
 router.get('/api/members', getMembers);
 router.post('/api/members', createMember);
 router.delete('/api/members/:id', deleteMember);

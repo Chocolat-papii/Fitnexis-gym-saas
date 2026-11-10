@@ -1,5 +1,7 @@
 import { db } from '../config/db.js';
 import { billingToday, dateOnly } from './billingDates.js';
+import { billingCycles, normalizeBillingCycle, nextBillingDate } from './billingCycles.js';
+import { confirmPaidSessionBooking } from './sessionBilling.service.js';
 
 export const billingError = (message, status = 400) => Object.assign(new Error(message), { status });
 export const positiveId = value => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
@@ -17,17 +19,7 @@ const isoDate = value => {
       new Date(`${str}T00:00:00Z`).toISOString().slice(0, 10) !== str) throw billingError('Invalid date');
   return str;
 };
-export const advancePeriod = (date, cycle, anchor = date) => {
-  const months = { monthly: 1, quarterly: 3, annual: 12 }[cycle];
-  if (!months) throw billingError('Invalid billing cycle');
-  const d = new Date(`${date.slice(0, 10)}T00:00:00Z`);
-  const anchorDay = Number(String(anchor).slice(8, 10));
-  const month = d.getUTCMonth() + months;
-  const first = new Date(Date.UTC(d.getUTCFullYear(), month, 1));
-  const end = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0)).getUTCDate();
-  first.setUTCDate(Math.min(anchorDay, end));
-  return first.toISOString().slice(0, 10);
-};
+export const advancePeriod = nextBillingDate;
 
 const invoiceSql = `SELECT i.id,i.user_id,i.membership_id,i.invoice_number,i.description,i.amount,i.currency,i.status,
   i.issued_at,i.due_at,i.period_start,u.firstname,u.lastname,u.email,
@@ -67,13 +59,23 @@ export async function billingOverview(gymId) {
   const { rows: [invoices] } = await db.query(`SELECT COUNT(*)::int AS invoice_count,
     COALESCE(SUM(amount) FILTER (WHERE status<>'void'),0)::numeric(12,2) AS total_billed,
     COALESCE(SUM(GREATEST(amount-COALESCE(paid,0),0)) FILTER (WHERE status<>'void'),0)::numeric(12,2) AS outstanding,
+    COALESCE(SUM(GREATEST(amount-COALESCE(paid,0),0)) FILTER (WHERE status<>'void' AND
+      (due_at AT TIME ZONE 'Africa/Johannesburg')::date<(NOW() AT TIME ZONE 'Africa/Johannesburg')::date),0)::numeric(12,2) AS overdue_amount,
     COUNT(*) FILTER (WHERE status<>'void' AND (due_at AT TIME ZONE 'Africa/Johannesburg')::date<(NOW() AT TIME ZONE 'Africa/Johannesburg')::date AND amount>COALESCE(paid,0))::int AS overdue_count
     FROM (SELECT i.*, (SELECT SUM(p.amount) FROM payments p WHERE p.invoice_id=i.id AND p.gym_id=i.gym_id AND p.status='succeeded') AS paid
       FROM invoices i WHERE i.gym_id=$1) x`, [gymId]);
-  const { rows: [revenue] } = await db.query(`SELECT COALESCE(SUM(amount),0)::numeric(12,2) AS month_collected
+  const { rows: [revenue] } = await db.query(`SELECT COALESCE(SUM(amount),0)::numeric(12,2) AS month_collected,
+    COALESCE(SUM(amount) FILTER (WHERE provider='cash'),0)::numeric(12,2) AS month_cash,
+    COALESCE(SUM(amount) FILTER (WHERE provider='eft'),0)::numeric(12,2) AS month_eft,
+    COALESCE(SUM(amount) FILTER (WHERE provider='paystack'),0)::numeric(12,2) AS month_paystack
     FROM payments WHERE gym_id=$1 AND status='succeeded'
     AND paid_at>=(date_trunc('month', NOW() AT TIME ZONE 'Africa/Johannesburg') AT TIME ZONE 'Africa/Johannesburg')`, [gymId]);
-  return { ...stats, ...invoices, ...revenue };
+  const { rows: [pending] } = await db.query(`SELECT COUNT(*)::int AS pending_payments,
+    COALESCE(SUM(amount),0)::numeric(12,2) AS pending_payment_amount FROM payments
+    WHERE gym_id=$1 AND provider='paystack' AND status='pending'`, [gymId]);
+  const { rows: [requests] } = await db.query(`SELECT COUNT(*)::int AS pending_requests
+    FROM billing_plan_requests WHERE gym_id=$1 AND status='pending'`, [gymId]);
+  return { ...stats, ...invoices, ...revenue, ...pending, ...requests };
 }
 
 export async function listInvoices(gymId, { user_id = null, limit = 200 } = {}) {
@@ -137,6 +139,7 @@ export async function recordManualPayment(gymId, adminId, { invoice_id, amount, 
       VALUES ($1,$2,$3,$4,$5,'succeeded','ZAR',$6,NOW()) RETURNING *`, [invoiceId, gymId, provider, sum, ref, adminId]);
     if (cents(sum) === cents(invoice.amount) - cents(settled.total)) {
       await client.query("UPDATE invoices SET status='paid',updated_at=NOW() WHERE id=$1 AND gym_id=$2", [invoiceId, gymId]);
+      await confirmPaidSessionBooking(client, gymId, invoiceId);
     }
     await client.query('COMMIT'); return payment;
   } catch (error) { await client.query('ROLLBACK'); if (error.code === '23505') throw billingError('Payment reference already used', 409); throw error; }
@@ -145,7 +148,8 @@ export async function recordManualPayment(gymId, adminId, { invoice_id, amount, 
 
 export async function createPlan(gymId, { name, price, billing_cycle = 'monthly', description = '' }) {
   const planName = String(name || '').trim();
-  if (!planName || planName.length > 100 || !['monthly', 'quarterly', 'annual'].includes(billing_cycle)) throw billingError('Invalid plan');
+  billing_cycle = normalizeBillingCycle(billing_cycle);
+  if (!planName || planName.length > 100 || !billingCycles.includes(billing_cycle)) throw billingError('Invalid plan');
   const amount = amountValue(price, { allowZero: true });
   try {
     const { rows: [plan] } = await db.query(`INSERT INTO plans(name,price,billing_cycle,description,gym_id)
@@ -193,7 +197,7 @@ export async function setMembershipStatus(gymId, membershipId, status) {
     if (!owner) throw billingError('Membership not found', 404);
     await client.query('SELECT id FROM users WHERE id=$1 AND gym_id=$2 FOR UPDATE', [owner.user_id, gymId]);
     const { rows: [membership] } = await client.query(`UPDATE memberships SET status=$1::varchar,updated_at=NOW(),
-      next_bill_on=CASE WHEN status='paused' AND $1::varchar='active' THEN GREATEST(next_bill_on,$4::date) ELSE next_bill_on END
+      next_bill_on=CASE WHEN status='paused' AND $1::varchar='active' AND auto_invoice THEN GREATEST(next_bill_on,$4::date) ELSE next_bill_on END
       WHERE id=$2 AND gym_id=$3 AND status IN ('active','paused') RETURNING *`, [status, id, gymId, billingToday()]);
     if (!membership) throw billingError('Cancelled or replaced memberships cannot be changed', 409);
     await client.query('COMMIT');
@@ -280,7 +284,7 @@ export async function runBillingCycle(gymId, today = billingToday()) {
           await client.query("UPDATE invoices SET invoice_number='INV-' || LPAD(id::text,8,'0') WHERE id=$1 AND gym_id=$2", [invoice.id, gymId]);
           created++;
         }
-        await client.query('UPDATE memberships SET next_bill_on=$1,updated_at=NOW() WHERE id=$2 AND gym_id=$3', [next, membership.id, gymId]);
+        await client.query('UPDATE memberships SET next_bill_on=$1,auto_invoice=($1::date IS NOT NULL),updated_at=NOW() WHERE id=$2 AND gym_id=$3', [next, membership.id, gymId]);
         membership.next_bill_on = next;
       }
       await client.query('COMMIT');

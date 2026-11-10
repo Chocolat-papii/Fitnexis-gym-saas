@@ -1,11 +1,12 @@
 window.FitnexisBilling = (() => {
   const token = document.querySelector('meta[name="billing-csrf"]').content;
   const money = value => new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(Number(value || 0));
+  const cycleLabel = value => ({ once_off: 'Once-off', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly', annual: 'Yearly', quarterly: 'Quarterly' })[value] || value;
   const date = value => value ? new Date(value).toLocaleDateString('en-ZA', { timeZone: 'Africa/Johannesburg', day: '2-digit', month: 'short', year: 'numeric' }) : '—';
   const safe = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const status = value => `<span class="billing-status billing-status-${safe(value)}">${safe(value)}</span>`;
   function message(text, isError = false) {
-    const box = document.getElementById('billingMessage');
+    const box = (isError && document.querySelector('.modal.show .billing-modal-message')) || document.getElementById('billingMessage');
     box.textContent = text;
     box.classList.remove('d-none', 'alert-info', 'alert-danger');
     box.classList.add(isError ? 'alert-danger' : 'alert-info');
@@ -26,10 +27,11 @@ window.FitnexisBilling = (() => {
     if (button.disabled) return;
     const label = button.textContent;
     button.disabled = true;
+    button.dataset.billingBusy = 'true';
     button.textContent = 'Please wait…';
     try { await work(); }
     catch (error) { message(error.message, true); }
-    finally { if (button.isConnected) { button.disabled = false; button.textContent = label; } }
+    finally { if (button.isConnected) { delete button.dataset.billingBusy; button.disabled = false; button.textContent = label; } }
   }
   const paymentMessage = status => ({
     succeeded: 'Payment confirmed. Your invoice balance has been updated.',
@@ -37,5 +39,5 @@ window.FitnexisBilling = (() => {
     abandoned: 'Checkout was not completed. You can try again.',
     reversed: 'The payment was reversed. Contact your gym for assistance.'
   })[status] || 'Payment is still awaiting confirmation. Check its status again shortly.';
-  return { money, date, safe, status, message, api, busy, paymentMessage };
+  return { money, cycleLabel, date, safe, status, message, api, busy, paymentMessage };
 })();

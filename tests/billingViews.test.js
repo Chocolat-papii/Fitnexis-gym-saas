@@ -29,6 +29,13 @@ test('Member billing renders empty and populated states with one navigation togg
   assert.ok(populated.includes('data-verify="fnx-test"'));
   assert.ok(populated.includes('You have a plan change awaiting review'));
   assert.ok(!populated.includes('<script>injection</script>'));
+  assert.ok(populated.includes('data-bs-target="#memberPlanModal"'));
+  assert.ok(populated.includes('data-bs-target="#memberPaymentModal"'));
+  assert.ok(populated.indexOf('id="changePlan"') > populated.indexOf('</main>'), 'The plan-change form is inside a modal outside the main overview');
+  assert.ok(populated.includes('id="memberRequestsPanel"'));
+  assert.ok(populated.includes('id="invoice-1"'), 'Session invoice deep links remain available');
+  const ids = [...populated.replace(/<!--[\s\S]*?-->/g, '').matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(ids.length, new Set(ids).size);
 });
 
 test('Admin billing renders the shared shell and payment status action column', async () => {
@@ -39,4 +46,13 @@ test('Admin billing renders the shared shell and payment status action column', 
   assert.ok(html.includes('/assets/dashboard/js/dashboardShell.js'));
   assert.ok(html.includes('/assets/dashboard/js/adminBilling.js'));
   assert.ok(!html.includes('table-dark'));
+  const ids = [...html.replace(/<!--[\s\S]*?-->/g, '').matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(ids.length, new Set(ids).size, 'Modal, form and record IDs are unique');
+  for (const [modal, form] of [['planModal','planForm'], ['membershipModal','membershipForm'], ['invoiceModal','invoiceForm'], ['paymentModal','manualPaymentForm'], ['accountModal','accountForm']]) {
+    assert.ok(html.includes(`data-bs-target="#${modal}"`));
+    assert.ok(html.indexOf(`id="${form}"`) > html.indexOf('</main>'), 'Forms live in modals outside the dashboard');
+  }
+  assert.ok(html.includes('id="collectionMethods"'));
+  assert.ok(html.includes('id="invoiceFilter"'));
+  assert.ok(html.includes('id="paymentFilter"'));
 });

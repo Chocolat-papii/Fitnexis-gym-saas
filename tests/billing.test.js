@@ -21,6 +21,10 @@ test('Recurring dates clamp at month end, preserve the original billing anchor',
   assert.equal(advancePeriod('2026-02-28', 'monthly', '2026-01-31'), '2026-03-31');
   assert.equal(advancePeriod('2026-02-10', 'quarterly'), '2026-05-10');
   assert.equal(advancePeriod('2024-02-29', 'annual'), '2025-02-28');
+  assert.equal(advancePeriod('2024-02-29', 'yearly'), '2025-02-28');
+  assert.equal(advancePeriod('2026-12-28', 'weekly'), '2027-01-04');
+  assert.equal(advancePeriod('2026-01-31', 'once_off'), null);
+  assert.equal(advancePeriod('2026-01-31', 'once-off'), null);
 });
 
 test('Paystack webhook signature requires exact signed raw bytes', () => {
