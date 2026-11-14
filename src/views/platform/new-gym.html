@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fitnexis · Add gym</title><link rel="stylesheet" href="/assets/dashboard/css/platform.css"><link rel="stylesheet" href="/assets/dashboard/css/platform-brand.css"><link rel="stylesheet" href="/assets/dashboard/css/commercial.css"></head>
+<body>
+<%- include('partials/sidebar.html') %>
+<main class="main">
+  <header class="topbar"><span>Workspace <span class="muted">/ Add gym</span></span><span class="badge">Fitnexis platform</span></header>
+  <div class="page-heading"><div><p class="eyebrow">GROW YOUR NETWORK</p><h1>Add a gym.</h1><p class="muted">Create the gym and its first administrator together.</p></div><a class="refresh" href="/platform#gyms">Back to gym directory</a></div>
+  <%- include('partials/reauth.html') %>
+  <% if(error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form class="panel gym-form" action="/platform/gyms" method="post">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="form-columns">
+      <fieldset><legend>Gym details</legend>
+        <label for="name">Gym name</label><input id="name" name="name" value="<%= values.name %>" maxlength="150" required>
+        <label for="slug">Gym slug</label><input id="slug" name="slug" value="<%= values.slug %>" pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="63" placeholder="e.g. golds-gym" aria-describedby="slug-help" required>
+        <p class="footnote" id="slug-help">The unique subdomain for this gym. Use lowercase letters, numbers and single hyphens.</p>
+        <label for="gymMail">Gym email</label><input id="gymMail" name="gymMail" type="email" value="<%= values.gymMail %>" maxlength="255" required>
+        <label for="address">Gym address <span class="muted">(optional)</span></label><textarea id="address" name="address" rows="4" maxlength="2000"><%= values.address %></textarea>
+      </fieldset>
+      <fieldset><legend>Gym administrator</legend>
+        <label for="firstname">First name</label><input id="firstname" name="firstname" value="<%= values.firstname %>" maxlength="100" required>
+        <label for="lastname">Last name</label><input id="lastname" name="lastname" value="<%= values.lastname %>" maxlength="100" required>
+        <label for="phone">Phone</label><input id="phone" name="phone" type="tel" value="<%= values.phone %>" maxlength="50" required>
+        <label for="email">Administrator email</label><input id="email" name="email" type="email" value="<%= values.email %>" maxlength="255" autocomplete="off" required>
+        <label for="password">Initial password</label><input id="password" name="password" type="password" minlength="12" autocomplete="new-password" aria-describedby="password-help" required>
+        <p class="footnote" id="password-help">At least 12 characters, up to 72 UTF-8 bytes. Share the credentials securely with the gym administrator.</p>
+      </fieldset>
+    </div>
+    <div class="form-actions"><a class="refresh" href="/platform#gyms">Cancel</a><button class="primary" type="submit">Create gym and administrator</button></div>
+  </form>
+</main>
+</body></html>

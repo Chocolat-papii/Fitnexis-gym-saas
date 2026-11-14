@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fitnexis · Platform login</title><link rel="stylesheet" href="/assets/dashboard/css/platform.css"><link rel="stylesheet" href="/assets/dashboard/css/platform-brand.css"></head>
+<body class="login-page">
+  <main class="login-card">
+    <a class="brand fitnexis-brand" href="/"><img src="/assets/brand/fitnexis-mark.svg" alt="" width="39" height="34"><span>FITNE<span class="brand-x">X</span>IS</span></a>
+    <p class="eyebrow">PLATFORM ADMINISTRATION</p>
+    <h1>Your network.<br>One clear view.</h1>
+    <p class="muted">Sign in to oversee your gyms and follow their growth.</p>
+    <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+    <form method="post" action="/platform/login">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="username" maxlength="255" required>
+      <label for="password">Password</label>
+      <div class="login-password-field">
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button id="togglePassword" type="button" aria-controls="password" aria-label="Show password" aria-pressed="false" hidden>Show</button>
+      </div>
+      <button class="primary" type="submit">Sign in to Fitnexis <span aria-hidden="true">→</span></button>
+    </form>
+    <p class="footnote">For Fitnexis platform administrators. Gym teams can sign in on their gym website.</p>
+  </main>
+<script src="/assets/dashboard/js/platformLogin.js" defer></script>
+</body></html>

@@ -13,6 +13,9 @@ export const getAll = async (gymId) => {
 };
 
 export const createClassType = async (data, gymId) => {
+    if (!gymId) {
+        throw Object.assign(new Error('Gym context is required to create a class type. Open your gym portal and try again.'), { status: 400 });
+    }
     const query = `
         INSERT INTO class_types
         (name, description, default_duration_minutes, gym_id)

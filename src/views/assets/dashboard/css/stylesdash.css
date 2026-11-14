@@ -1,3 +1,5 @@
+@import url('/assets/brand/brand.css');
+
 body  {
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -11,199 +13,102 @@ body  {
 }
 
 
-/* Layout */
-.app {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 100vh;
-}
-
-/* Sidebar */
-.sidebar {
-    position: fixed;
-    top: 80px;
-    height: 100vh;
-    padding: 18px;
-    border-right: 1px solid #ffffff1f;
-    background: #ffffff0a;
-    backdrop-filter: blur(20px);
-    color: var(--bs-body-color);
-}
-
-.brand-badge {
-    width: 44px;
-    height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-    background: rgba(13, 110, 253, .18);
-    border: 1px solid rgba(13, 110, 253, .35);
-    color: white;
-    font-weight: 700;
-    letter-spacing: .5px;
-}
-
-.nav-pill {
-    color: rgba(255, 255, 255, .78);
-    border-radius: 14px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nav-pill:hover {
-    background: rgba(255, 255, 255, .07);
-    color: var(--bs-body-color);;
-}
-
-.nav-pill.active {
-    background: rgba(13, 110, 253, .18);
-    border: 1px solid rgba(13, 110, 253, .25);
-    color: var(--bs-body-color);;
-}
-
-/* Content */
-.content {
-    padding: 22px;
-}
-
-
-.glass-card {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px);
-    color: var(--bs-body-color);
-}
-
-
-.muted {
-    color: rgba(255, 255, 255, .72);
-}
-
-.small-note {
-    color: var(--bs-body-color);
-
-}
-
-.form-control,
-.form-select {
-    background: var(--bs-body-bg);
-    border-color: var(--bs-border-color);
-    color: var(--bs-body-color);
-}
-
-.form-control:focus,
-.form-select:focus {
-    background: var(--bs-body-bg);
-    color: var(--bs-body-color);
-}
-
-.table {
-    color: var(--bs-body-color);
-    background-color: transparent;
-}
-
-.table thead th {
-    color: var(--bs-secondary-color);
-}
-
-.table tbody td {
-    color: var(--bs-body-color);
-}
-
-/* Mobile */
-@media (max-width: 992px) {
-    .app {
-        grid-template-columns: 1fr;
-    }
-
-    .sidebar {
-        height: auto;
-        position: relative;
-    }
-}
-
-/* ===== Member Portal Layout Fix ===== */
-.app-shell {
+/* One layout for member and admin portals. */
+.app, .app-shell {
   display: flex;
+  align-items: flex-start;
   gap: 24px;
   padding: 20px;
-  align-items: flex-start;
+  min-height: calc(100vh - 104px);
 }
-
-/* Sidebar must have a fixed width */
 .sidebar {
   width: 280px;
   flex: 0 0 280px;
   padding: 18px;
   border-radius: 1.5rem;
-
-  /* keep it tidy */
-  max-height: calc(100vh - 40px);
-  overflow: auto;
-
   position: sticky;
   top: 80px;
+  max-height: calc(100dvh - 100px);
+  overflow: auto;
+  color: var(--bs-body-color);
 }
-
-/* Main content must be allowed to grow */
-.content {
-  flex: 1 1 auto;
-  min-width: 0;
+.content { flex: 1 1 auto; min-width: 0; padding: 0; }
+.nav-pill {
+  color: var(--bs-secondary-color);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-
-/* Mobile overlay sidebar */
+.nav-pill:hover, .nav-pill.active { color: var(--bs-body-color); background: var(--bs-primary-bg-subtle); }
+.nav-pill.active { border-color: var(--bs-primary-border-subtle); }
+.glass-card {
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+  backdrop-filter: blur(10px);
+  color: var(--bs-body-color);
+}
+.muted { color: var(--bs-secondary-color); }
+.small-note { color: var(--bs-body-color); }
+.form-control, .form-select, .form-control:focus, .form-select:focus {
+  background-color: var(--bs-body-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+.table { --bs-table-bg: transparent; --bs-table-color: var(--bs-body-color); }
+.table thead th { color: var(--bs-secondary-color); }
+.table tbody td { color: var(--bs-body-color); }
+/* Legacy pages use these Bootstrap variants in both themes. */
+.table-dark {
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--bs-border-color);
+  --bs-table-striped-bg: var(--bs-tertiary-bg);
+  --bs-table-striped-color: var(--bs-body-color);
+  --bs-table-hover-bg: var(--bs-secondary-bg);
+  --bs-table-hover-color: var(--bs-body-color);
+}
+[data-bs-theme="light"] .content .text-white,
+[data-bs-theme="light"] .sidebar .text-white { color: var(--bs-body-color) !important; }
+.btn-outline-light {
+  --bs-btn-color: var(--bs-body-color);
+  --bs-btn-border-color: var(--bs-border-color);
+  --bs-btn-hover-color: var(--bs-body-color);
+  --bs-btn-hover-bg: var(--bs-secondary-bg);
+  --bs-btn-hover-border-color: var(--bs-secondary-color);
+  --bs-btn-disabled-color: var(--bs-secondary-color);
+  --bs-btn-disabled-border-color: var(--bs-border-color);
+}
 .sidebar-toggle { display: none; }
-
-@media (max-width: 992px) {
-  .app-shell {
-    display: block;
-    padding: 14px;
-  }
-
-  .admin {
-    display: none;
-  }
-
+.backdrop { display: none; }
+@media (max-width: 991.98px) {
+  .app, .app-shell { display: block; padding: 14px; }
   .sidebar {
     position: fixed;
     inset: 74px 12px auto 12px;
     width: auto;
-    max-height: calc(100vh - 24px);
-    transform: translateX(-110%);
+    max-height: calc(100dvh - 90px);
+    transform: translateX(calc(-100% - 24px));
     transition: transform .25s ease;
     z-index: 1050;
-    overflow: auto;
+    background: var(--bs-body-bg) !important;
   }
-
   .sidebar.open { transform: translateX(0); }
   .sidebar-toggle { display: inline-flex; }
-
   .backdrop {
+    display: block;
     position: fixed;
-    inset: 0;
+    inset: 60px 0 0;
     background: rgba(0,0,0,.55);
-    backdrop-filter: blur(4px);
     opacity: 0;
     pointer-events: none;
-    transition: .2s ease;
+    transition: opacity .2s ease;
     z-index: 1040;
   }
-
-  .backdrop.show {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  .backdrop.show { opacity: 1; pointer-events: auto; }
 }
-
-/* Admin dashboard styles */
-
- .content {
-     flex: 1;
-     padding: 0;
- }
 
  .activity-card {
      transition: 0.2s;
@@ -436,7 +341,7 @@ display: none;
     top: 0;
       height: 60px;
       transition: background-color 0.3s ease, border-color 0.3s ease;
-    z-index: 1;
+    z-index: 1060;
     }
 
 .icon-btn {
@@ -510,3 +415,104 @@ display: none;
             bottom: 20%;
         }
       }
+
+/* Bootstrap tokens keep tables, forms, billing, and modals in the same system. */
+:root:not([data-bs-theme="light"]), [data-bs-theme="dark"] {
+  --bs-body-bg: var(--fx-bg);
+  --bs-body-color: var(--fx-text);
+  --bs-body-color-rgb: 248, 250, 252;
+  --bs-body-bg-rgb: 11, 17, 27;
+  --bs-secondary-color: var(--fx-muted);
+  --bs-secondary-bg: #162131;
+  --bs-tertiary-bg: var(--fx-charcoal);
+  --bs-border-color: var(--fx-slate);
+  --bs-emphasis-color: #fff;
+  --bs-primary: #0ea5ff;
+  --bs-primary-rgb: 14, 165, 255;
+  --bs-primary-bg-subtle: #123047;
+  --bs-primary-border-subtle: #245675;
+  --bs-primary-text-emphasis: #6cddff;
+  --bs-link-color: #58cdff;
+  --bs-link-color-rgb: 88, 205, 255;
+  --bs-link-hover-color: #98eaff;
+  --bs-link-hover-color-rgb: 152, 234, 255;
+  --bs-heading-color: var(--fx-text);
+  --bs-body-font-family: var(--fx-font);
+  color-scheme: dark;
+}
+[data-bs-theme="light"] {
+  --fx-bg: #f1f5f9;
+  --fx-text: #111827;
+  --fx-muted: #526478;
+  --fx-surface: #fff;
+  --fx-line: #cbd5e1;
+  --bs-primary-rgb: 2, 132, 199;
+  --bs-primary: #0284c7;
+  --bs-primary-bg-subtle: #e0f2fe;
+  --bs-primary-border-subtle: #7dd3fc;
+  --bs-link-color: #0369a1;
+  --bs-body-font-family: var(--fx-font);
+  color-scheme: light;
+}
+body { font-family: var(--fx-font); }
+h1, h2, h3, h4, h5, h6 { font-family: var(--fx-heading); letter-spacing: -.025em; }
+.bg-body-bg { background: radial-gradient(ellipse at 95% 0%, #0ea5ff0b, transparent 45%), var(--bs-body-bg); }
+.header { min-height: 76px; margin: 0 20px; border-top: 0; box-shadow: 0 8px 35px #00000012; }
+.header > button:first-child { color: var(--bs-body-color); font-family: var(--fx-heading); font-size: 1.1rem !important; }
+.header > button:first-child::before {
+  content: ""; display: inline-block; width: 34px; height: 30px; margin-right: 10px;
+  background: url('/assets/brand/fitnexis-mark.svg') center/contain no-repeat; vertical-align: middle;
+}
+.glass-card, [data-bs-theme] .glass-card, .billing-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--bs-tertiary-bg) 97%, var(--bs-body-color)), var(--bs-tertiary-bg));
+  border-color: var(--bs-border-color);
+  box-shadow: 0 8px 24px #0000000c;
+}
+.sidebar { border-radius: 18px; top: 96px; max-height: calc(100dvh - 116px); }
+.sidebar-brand { margin: 6px 0 28px; font-size: 20px; }
+.sidebar-brand img { width: 34px; }
+.nav-pill { padding: 12px 14px; border-radius: 9px; font-size: .875rem; }
+.nav-pill i { color: var(--bs-link-color); width: 19px; text-align: center; }
+.nav-pill:hover { background: var(--bs-primary-bg-subtle); }
+.nav-pill.active { background: var(--fx-pulse); border-color: #0ea5ff; color: #fff; box-shadow: 0 4px 18px #0ea5ff1f; }
+.nav-pill.active i { color: #fff; }
+.small-note { color: var(--bs-secondary-color); }
+.nav-pill.small-note, .content h1.small-note { color: var(--bs-body-color); }
+.nav-pill.active.small-note { color: #fff; }
+.btn { border-radius: 9px; font-weight: 500; }
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #0284c7;
+  --bs-btn-border-color: #0ea5ff;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #2563eb;
+  --bs-btn-hover-border-color: #06d6ff;
+  --bs-btn-active-bg: #1d4ed8;
+  --bs-btn-active-border-color: #0ea5ff;
+  --bs-btn-disabled-bg: #334155;
+  --bs-btn-disabled-border-color: #475569;
+  background-image: var(--fx-pulse);
+  box-shadow: 0 3px 15px #0ea5ff15;
+}
+.btn-primary:hover { background-image: linear-gradient(115deg, #0284c7, #2563eb); }
+.btn-primary:disabled { background-image: none; }
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-link-color);
+  --bs-btn-border-color: #0ea5ff80;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #0369a1;
+  --bs-btn-hover-border-color: #0ea5ff;
+  --bs-btn-active-bg: #0369a1;
+}
+.form-control, .form-select { border-radius: 8px; }
+.form-control:focus, .form-select:focus { border-color: var(--fx-blue); box-shadow: 0 0 0 .2rem #0ea5ff26; }
+.form-check-input:checked { background-color: #0284c7; border-color: #0ea5ff; }
+.progress-bar { background: var(--fx-pulse); }
+.table { --bs-table-border-color: var(--bs-border-color); --bs-table-hover-bg: var(--bs-primary-bg-subtle); }
+.table thead th { font-size: .75rem; font-weight: 600; padding-block: 14px; }
+.table td { padding-block: 14px; }
+.display-6, .billing-stat, #total-visits, #visits-month { font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+.icon-btn { color: var(--bs-body-color); border-color: var(--bs-border-color) !important; border-radius: 10px; }
+.dropdown-menu, .modal-content { --bs-dropdown-bg: var(--bs-tertiary-bg); background-color: var(--bs-tertiary-bg); border-color: var(--bs-border-color); }
+@media (max-width: 991.98px) { .header { margin-inline: 14px; } .sidebar { top: 84px; max-height: calc(100dvh - 100px); } }
+@media (max-width: 480px) { .header { margin-inline: 8px; padding-inline: 8px !important; } .header > button:first-child { font-size: .9rem !important; } }

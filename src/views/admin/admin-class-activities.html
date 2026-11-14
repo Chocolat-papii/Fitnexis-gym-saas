@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
+    <meta name="billing-csrf" content="<%= csrf %>">
     <title>Admin Dashboard -  Activities</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -16,8 +17,10 @@
 
 
     <link rel="stylesheet" href="../assets/dashboard/css/stylesdash.css" />
+    <link rel="stylesheet" href="/assets/dashboard/css/session-history.css" />
     <script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script>
 
+<script src="/assets/dashboard/js/csrfFetch.js" data-csrf="<%= csrf %>"></script>
 </head>
 
 <body class="bg-body-bg">
@@ -41,7 +44,7 @@
                 <i class="fas fa-plus-circle"></i> Create Class
             </button>
         </div>
-         <hr class="small-note">
+        <hr class="small-note">
 
         <!-- ACTIVITY CARDS -->
         <div class="row g-4 mb-5">
@@ -155,13 +158,14 @@
             
                                 <li>
                                     <strong>Bookings:</strong>
-                                    0 / <%= session.capacity %>
+                                    <%= session.booking_count %> / <%= session.capacity %>
                                 </li>
             
                                 <li>
                                     <strong>Location:</strong>
                                     <%= session.location %>
                                 </li>
+                                <li><strong>Payment:</strong> <%= session.is_paid ? new Intl.NumberFormat('en-ZA', {style:'currency',currency:'ZAR'}).format(Number(session.price)) : 'Free' %></li>
             
                                 <li>
                                     <strong>Status:</strong>
@@ -182,14 +186,18 @@
                             <div class="d-flex justify-content-between mt-3">
                                 <button 
                                     class="btn btn-sm btn-outline-secondary edit-session"
-                                      class="btn btn-sm btn-outline-secondary edit-session"
                                         data-id="<%= session.id %>"
                                         data-class="<%= session.class_type_id %>"
-                                        data-date="<%= session.starts_at %>"
+                                        data-date="<%= new Date(session.starts_at).toLocaleDateString('en-CA', {timeZone:'Africa/Johannesburg'}) %>"
                                         data-time="<%= session.start_time %>"
                                         data-capacity="<%= session.capacity %>"
                                         data-location="<%= session.location %>"
                                         data-status="<%= session.status %>"
+                                        data-paid="<%= session.is_paid %>"
+                                        data-price="<%= session.price %>"
+                                        data-duration="<%= session.default_duration_minutes %>"
+                                        data-waitlist="<%= session.waitlist_enabled %>"
+                                        data-deadline="<%= session.cancellation_deadline_hours %>"
                                         data-bs-toggle="modal"
                                         data-bs-target="#activityModal">
                                     <i class="fas fa-edit"></i>
@@ -229,9 +237,11 @@
 
         
         <!-- DRAG & DROP TIMETABLE -->
-        <h2 class="mb-4 mt-3 small-note">Weekly Timetable Summary</h2>
+        <h2 class="mb-4 mt-3 small-note">Session timetable</h2>
+        <p class="small-note">Upcoming sessions grouped by weekday. Previous sessions are listed in the history below.</p>
          <hr class="small-note">
         <div class="mb-4"></div>
+        <p id="timetableStatus" class="small-note mb-3" role="status">Loading sessions...</p>
         <div class="small-note row d-flex g-3 timetable-wrapper">
         
             <div class="col-md-3">
@@ -270,6 +280,7 @@
             </div>
         
         </div>
+        <%- include('../partials/session-history.html', {historyMember:false}) %>
         <!-- footer -->
           <%- include("partials/footer.html") %>
     <!-- End footer -->
@@ -330,15 +341,15 @@
             </div>
 
             <div class="modal-body">
-                <form>
+                <form id="sessionForm">
                     <div class="row g-3">
 
                         <div class="col-md-6">
                             <label class="form-label">Class Name</label>
-                           <select class="form-select" id="sessionClassName">
+                           <select class="form-select" id="sessionClassName" required>
                                 <option value="">Select Class</option>
                                 <% classTypes.forEach(cls => { %>
-                                    <option value="<%= cls.id %>">
+                                    <option value="<%= cls.id %>" data-duration="<%= cls.default_duration_minutes %>">
                                         <%= cls.name %>
                                     </option>
                                 <% }) %>
@@ -372,15 +383,15 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Capacity</label>
-                            <input type="number" class="form-control" id="sessionCapacity">
+                            <input type="number" class="form-control" id="sessionCapacity" min="1" step="1" value="20" required>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Status</label>
                             <select class="form-select" id="sessionStatus">
-                                <option>Scheduled</option>
-                                <option>Cancelled</option>
-                                <option>Completed</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="completed">Completed</option>
                             </select>
                         </div>                        
 
@@ -389,6 +400,17 @@
                             <input type="text" class="form-control" id="sessionLocation">
                         </div>
                         
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="sessionIsPaid">
+                                <label class="form-check-label" for="sessionIsPaid">Paid session</label>
+                            </div>
+                            <div class="small-note">Free sessions confirm immediately. Paid sessions reserve a place and require full invoice payment to confirm.</div>
+                        </div>
+                        <div class="col-md-6 d-none" id="sessionPriceField">
+                            <label class="form-label" for="sessionPrice">Price per member (ZAR)</label>
+                            <input class="form-control" type="number" id="sessionPrice" min="1" step="0.01" disabled>
+                        </div>
                         <!-- Additional Recommended Fields -->
                         <div class="col-md-6">
                             <label class="form-label">Waitlist Enabled</label>
@@ -406,7 +428,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-primary" id="saveSessionBtn">Save</button>
+                <button class="btn btn-primary" id="saveSessionBtn" type="submit" form="sessionForm">Save session</button>
             </div>
 
         </div>
@@ -416,86 +438,12 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-  // Tooltips
-  document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    .forEach(el => new bootstrap.Tooltip(el));
-
-  // =========================
-  // Smooth Theme Toggle
-  // =========================
-  const html = document.documentElement;
-  const toggleBtn = document.getElementById('themeToggle');
-  const icon = document.getElementById('themeIcon');
-
-  function setTheme(theme) {
-    html.setAttribute('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
-    icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-  }
-
-  // Load theme
-  setTheme(localStorage.getItem('theme') || 'light');
-
-  toggleBtn.addEventListener('click', () => {
-    const current = html.getAttribute('data-bs-theme');
-    setTheme(current === 'light' ? 'dark' : 'light');
-  });
-
-  // =========================
-  // Bell Animation
-  // =========================
-  const bellIcon = document.getElementById('bellIcon');
-
-  document.getElementById('bellBtn').addEventListener('click', () => {
-    bellIcon.classList.remove('bell-animate');
-    void bellIcon.offsetWidth;
-    bellIcon.classList.add('bell-animate');
-  });
-
-  // =========================
-  // Hamburger
-  // =========================
-
-     
-</script>
+<script src="/assets/dashboard/js/dashboardShell.js"></script>
 <script src="../assets/dashboard/js/adminClassActivity.js" defer></script>
 <script src="../assets/dashboard/js/classSessionHandler.js"></script>
-<script src="../assets/public/timetable.js"></script>
-<script>
-    async function loadTimetable() {
-    const res = await fetch("/api/sessions");
-    const sessions = await res.json();
-    renderTimetable(sessions, "admin"); // pass "admin" role
-    }
-    loadTimetable();
-</script>
-<script>
+<script src="/assets/public/timetable.js" data-role="admin" defer></script>
+<script src="/assets/dashboard/js/sessionHistory.js" defer></script>
 
-    const sidebar = document.querySelector(".sidebar");
-      const toggle = document.getElementById("toggleSidebar");
-      const backdrop = document.getElementById("backdrop");
-
-      function openSidebar() {
-        sidebar.classList.add("open");
-        backdrop.classList.add("show");
-      }
-
-      function closeSidebar() {
-        sidebar.classList.remove("open");
-        backdrop.classList.remove("show");
-      }
-
-      toggle?.addEventListener("click", openSidebar);
-      backdrop?.addEventListener("click", closeSidebar);
-
-      // Close sidebar when a link is clicked (mobile)
-      document.querySelectorAll(".sidebar a").forEach(a => {
-        a.addEventListener("click", () => {
-          if (window.innerWidth < 1024) closeSidebar();
-        });
-      });
-</script>
 
 </body>
 </html>

@@ -1,0 +1,22 @@
+@import url('/assets/brand/brand.css');
+
+/* Tenant sites keep the gym name and content within the Fitnexis visual system. */
+body { background-color: var(--fx-bg); color: var(--fx-text); font-family: var(--fx-font); }
+.former { background: radial-gradient(ellipse at 20% 0%, #0ea5ff1a, transparent 55%), var(--fx-bg); }
+h1, h2, h3, h4, h5, h6 { font-family: var(--fx-heading); }
+header, footer { background-color: #111827; }
+.nav-brand a { color: var(--fx-text); font-family: var(--fx-heading); }
+.nav-brand a::before { content: ''; display: inline-block; width: 33px; height: 30px; margin-right: 9px; vertical-align: middle; background: url('/assets/brand/fitnexis-mark.svg') center/contain no-repeat; }
+.nav-brand a:has(img)::before { display: none; }
+.sm-clean a, .sm-clean a:hover, .sm-clean a:focus, .sm-clean a:active { color: var(--fx-text); }
+.sm-clean a:hover, .sm-clean a:focus { color: var(--fx-cyan); }
+.content-btn, .content-btn-2, .page-btn a, .enroll-btn, .btn-primary { background: var(--fx-pulse); color: #fff; border-color: var(--fx-blue); border-radius: 9px; }
+.content-btn:hover, .content-btn-2:hover, .enroll-btn:hover { background: linear-gradient(115deg, #0284c7, #2563eb); color: #fff; }
+.sm-clean .last_menu a, .sm-clean .page-btn a { background: var(--fx-pulse); color: white; }
+.auth-card, .glass-card { background: var(--fx-charcoal); border-color: var(--fx-slate); }
+.form-control, .form-select { background-color: var(--fx-carbon); color: var(--fx-text); border-color: var(--fx-slate); }
+.form-control:focus, .form-select:focus { background-color: var(--fx-carbon); color: var(--fx-text); border-color: var(--fx-blue); box-shadow: 0 0 0 .2rem #0ea5ff26; }
+.form-control::placeholder { color: var(--fx-muted); }
+.text-muted, .form-text { color: var(--fx-muted) !important; }
+.text-primary { color: var(--fx-cyan) !important; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--fx-cyan); outline-offset: 4px; }

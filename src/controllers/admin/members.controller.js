@@ -1,5 +1,7 @@
 import { db } from "../../config/db.js";
 import bcrypt from "bcrypt";
+import {audit} from '../../services/audit.service.js';
+import {enforceLimit} from '../../services/saasBilling.service.js';
 
 
 export const viewAllMembers = async (req, res, next) => {
@@ -185,6 +187,7 @@ export const getMembers = async (req, res) => {
 
 
 export const createMember = async (req, res) => {
+  const client=await db.connect();
   try {
     const { firstname, lastname, email, phone, tier, joindate,
             gender, birthdate, notes,
@@ -199,19 +202,22 @@ export const createMember = async (req, res) => {
 
     const allowed = ["Bronze", "Gold", "Platinum"];
     const safeTier = allowed.includes(tier) ? tier : "Bronze";
-    const password = 'Password123';
+    const password = req.body.password;
+    if(typeof password!=='string'||password.length<12||Buffer.byteLength(password)>72)return res.status(400).json({message:'Provide an initial password of at least 12 characters (maximum 72 bytes).'});
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
 
-     await db.query("BEGIN");
+     await client.query("BEGIN");
+     await client.query('SELECT id FROM gyms WHERE id=$1 FOR UPDATE',[gymId]);
+     await enforceLimit(client,gymId,'members');
 
-    const result = await db.query(
+    const result = await client.query(
       `INSERT INTO public.users 
       (firstname, lastname, email, phone, password, tier, joindate, gym_id)
        VALUES 
        ($1, $2, $3, $4, $5, $6, COALESCE($7::date, CURRENT_DATE),$8)
-       RETURNING id, firstname, lastname, email, phone, password, tier, 
+       RETURNING id, firstname, lastname, email, phone, tier,
         to_char(joindate, 'YYYY-MM-DD') AS joindate
         `,
       [firstname, lastname, email.trim().toLowerCase(), phone, hashedPassword, safeTier, joindate, gymId]
@@ -220,7 +226,7 @@ export const createMember = async (req, res) => {
       const userId = result.rows[0].id;
 
        // Insert contact details
-        await db.query(
+        await client.query(
           `INSERT INTO public.member_contact_details
           (user_id, gender, birthdate, notes, gym_id)
           VALUES ($1,$2,$3,$4,$5)`,
@@ -228,14 +234,15 @@ export const createMember = async (req, res) => {
         );
 
         // Insert emergency contact
-        await db.query(
+        await client.query(
           `INSERT INTO public.member_emergency_contacts
           (user_id, ecname, relationship, phone, gym_id)
           VALUES ($1,$2,$3,$4,$5)`,
           [userId, ecname, relationship, ephone, gymId]
         );
 
-         await db.query("COMMIT");
+         await audit(client,{scope:'gym',id:Number(req.user.sub)},'member.created',gymId,String(userId));
+         await client.query("COMMIT");
 
         return res.status(201).json({
           ok: true,
@@ -244,10 +251,10 @@ export const createMember = async (req, res) => {
         });
     
   }catch (err) {
-    await db.query("ROLLBACK"); // 🔥 REQUIRED
+    await client.query("ROLLBACK"); // 🔥 REQUIRED
   console.error("CREATE MEMBER ERROR:", err.code, err.message);
-  return res.status(500).json({ message: err.message });
-}
+  return res.status(err.status||500).json({message:err.status?err.message:'Could not create member.'});
+} finally { client.release(); }
 
 };
 
@@ -264,7 +271,7 @@ export const deleteMember = async (req, res) => {
     }
 
     const result = await db.query(
-      "DELETE FROM public.users WHERE id = $1 AND gym_id = $2 RETURNING id",
+      "UPDATE public.users SET is_active=false,auth_version=auth_version+1 WHERE id=$1 AND gym_id=$2 AND role='member' RETURNING id",
       [id, gymId]
     );
 
@@ -274,7 +281,7 @@ export const deleteMember = async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    return res.json({ message: "Deleted", id: result.rows[0].id });
+    return res.json({ message: "Member deactivated; payment history retained.", id: result.rows[0].id });
   } catch (err) {
     console.error("DELETE ERROR:", err);
     return res.status(500).json({ message: "Server error" });

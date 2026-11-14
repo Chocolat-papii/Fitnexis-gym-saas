@@ -1,5 +1,6 @@
 import * as classTypesService from "../../services/classTypes.service.js";
 import * as sessionsService from "../../services/classSessions.service.js";
+import { csrfToken } from '../../middleware/billingCsrf.js';
 
 
 // - - actual page - - //
@@ -8,12 +9,14 @@ export const getClassActivities = async (req, res, next) => {
 
     const gymId = req.gymId;
     const classTypes = await classTypesService.getAll(gymId);
-    const sessions = await sessionsService.getAllSessions(gymId);
+    const allSessions = await sessionsService.getAllSessions(gymId,req.user?.role==='gym_super_admin'?null:req.user?.sub);
+    const sessions = allSessions.filter(session=>session.status==='scheduled'&&new Date(session.ends_at||session.starts_at)>new Date());
 
     return res.render("admin/admin-class-activities", {
         activePage: "classes",
         classTypes,
         sessions,
+        csrf: csrfToken(req),
         gym: req.gym
 
     });
@@ -34,27 +37,41 @@ export const getAllClassTypes = async (req, res) => {
     }
 };
 
-export const createClassType = async (req, res) => {
-    try {
-        const gymId = req.gymId;
-        const newClass = await classTypesService.createClassType({
-            ...req.body, 
-            gym_id: gymId});
 
-        res.status(201).json(newClass, {
-            message: "Class created successfully.",
-        });
-    } catch (error) {
-        console.error("CREATE CLASS ERROR:", error);
-        // Unique constraint violation
-        if (error.code === "23505") {
-            return res.status(409).json({
-                message: `${req.body.name} already exists.`
-            });
-        }
-        res.status(500).json({ message: "Failed to create class type" });
+export const createClassType = async (req, res) => {
+  try {
+    const gymId = req.gymId;
+
+    if (!gymId) {
+      return res.status(400).json({
+        message: "Gym context is required"
+      });
     }
+
+    const newClass = await classTypesService.createClassType(
+      req.body,
+      gymId
+    );
+
+    return res.status(201).json({
+      message: "Class created successfully.",
+      data: newClass
+    });
+  } catch (error) {
+    console.error("CREATE CLASS ERROR:", error);
+
+    if (error.code === "23505") {
+      return res.status(409).json({
+        message: `${req.body.name} already exists.`
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to create class type"
+    });
+  }
 };
+
 
 export const updateClassType = async (req, res) => {
     try {

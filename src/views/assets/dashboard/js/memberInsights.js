@@ -77,7 +77,7 @@ function setTheme(theme) {
 }
 
 // Load theme
-setTheme(localStorage.getItem('theme') || 'light');
+setTheme(localStorage.getItem('theme') || 'dark');
 
 toggleBtn.addEventListener('click', () => {
   const current = html.getAttribute('data-bs-theme');

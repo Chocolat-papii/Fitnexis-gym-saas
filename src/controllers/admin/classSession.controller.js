@@ -7,7 +7,7 @@ export const createClassSession = async (req, res) => {
     const session = await classSessionsService.createClassSession(req.body, gymId);
     res.status(201).json({ success: true, message: "Session created", session });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(err.status || 500).json({ success: false, message: err.message });
   }
 };
 
@@ -28,10 +28,10 @@ export const deleteSession = async (req, res) => {
     res.json({ success: true });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
+    if(!err.status)console.error(err);
+    res.status(err.status || 500).json({
       success: false,
-      message: "Failed to delete session"
+      message: err.status ? err.message : "Failed to delete session"
     });
   }
 };
@@ -61,12 +61,29 @@ export const editSession = async (req, res) => {
       session
     });
 
+  
   } catch (err) {
+    if(err.status)return res.status(err.status).json({success:false,message:err.message});
     console.error("UPDATE SESSION ERROR:", err);
 
-    res.status(500).json({
+    if (err.code === "CLASS_TYPE_NOT_FOUND") {
+      return res.status(404).json({
+        success: false,
+        message: "Class type not found for this gym"
+      });
+    }
+
+    if (err.code === "INVALID_SESSION_DATETIME") {
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
+    }
+
+    return res.status(500).json({
       success: false,
-      message: "Failed to update session"
+      message: err.status ? err.message : "Failed to update session"
     });
   }
 };
+

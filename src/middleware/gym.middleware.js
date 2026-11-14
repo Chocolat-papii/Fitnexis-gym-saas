@@ -133,6 +133,7 @@ export const requireGym = async (req, res, next) => {
 
     // attach tenant if found
     if (gym) {
+      if(gym.account_status && gym.account_status !== 'active')return res.status(423).send('This gym account is '+gym.account_status+'. Please contact Fitnexis for assistance.');
       req.gym = gym;
       req.gymId = gym.id;
     }
@@ -143,9 +144,6 @@ export const requireGym = async (req, res, next) => {
     console.error("Gym middleware FULL error:");
     console.error(err);
 
-    return res.status(500).json({
-      error: err.message,
-      stack: err.stack,
-    });
+    return res.status(503).json({error:'The gym workspace is temporarily unavailable.'});
   }
 };

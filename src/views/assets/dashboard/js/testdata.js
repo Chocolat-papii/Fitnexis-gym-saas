@@ -196,6 +196,7 @@ addMemberForm.addEventListener("submit", async (e) => {
   try {
     const payload = {
       firstname: document.getElementById("firstName").value.trim(),
+      password: document.getElementById("memberInitialPassword").value,
       lastname: document.getElementById("lastName").value.trim(),
       email: document.getElementById("email").value.trim(),
       phone: document.getElementById("phone").value.trim(),

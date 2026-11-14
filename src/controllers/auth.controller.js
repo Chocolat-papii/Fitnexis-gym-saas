@@ -2,6 +2,8 @@ import path from "path";
 import bcrypt from "bcrypt";
 import { fileURLToPath } from "url";
 import { db } from "../config/db.js";
+import {audit} from "../services/audit.service.js";
+import {enforceLimit} from "../services/saasBilling.service.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,6 +17,7 @@ export const getSignUpForm = (req, res) => {
 
 // Working
 export const signUp = async (req, res) => {
+  const client=await db.connect();
 
   try {
     const { firstname, lastname, phone, email, password } = req.body;
@@ -25,7 +28,10 @@ export const signUp = async (req, res) => {
         message: "All fields are required." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if(typeof password!=='string'||password.length<12||Buffer.byteLength(password)>72)return res.status(400).json({message:'Use a password of at least 12 characters (maximum 72 bytes).'});
+    if(typeof email!=='string'||!/^\S+@\S+\.\S+$/.test(email)||email.length>255||!gymId)return res.status(400).json({message:'Enter a valid gym email address.'});
+    await client.query('BEGIN');await client.query('SELECT id FROM gyms WHERE id=$1 FOR UPDATE',[gymId]);await enforceLimit(client,gymId,'members');
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const query = `
       INSERT INTO users (firstname, lastname, phone, email, password, gym_id)
@@ -35,7 +41,8 @@ export const signUp = async (req, res) => {
 
     const values = [firstname, lastname, phone, email, hashedPassword, gymId];
 
-    const result = await db.query(query, values);
+    const result = await client.query(query, values);
+    await audit(client,{scope:'gym',id:result.rows[0].id},'member.registered',gymId,String(result.rows[0].id));await client.query('COMMIT');
 
     return res.status(201).json({
       message: "Acccount created successfully!",
@@ -45,6 +52,7 @@ export const signUp = async (req, res) => {
 ;
 
     } catch (err) {
+    await client.query('ROLLBACK');
     // handle duplicate email 
     if (err.code === "23505") {
       return res.status(409).json({ 
@@ -53,11 +61,9 @@ export const signUp = async (req, res) => {
       });
     }
     console.error(err);
-    return res.status(500).json({ 
-      message: "Server error",
+    return res.status(err.status||500).json({
+      message: err.status?err.message:'Server error',
      });
-  }
+  } finally {client.release();}
 
   };
-
-

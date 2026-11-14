@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title><%= meta.title %></title>
+  <meta name="description" content="<%= meta.description %>">
+  <link rel="canonical" href="https://fitnexis.app<%= meta.path %>">
+  <meta property="og:title" content="<%= meta.title %>">
+  <meta property="og:description" content="<%= meta.description %>">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fitnexis.app<%= meta.path %>">
+  <meta property="og:image" content="https://fitnexis.app/assets/landing/images/page/weights-gym.jpg">
+  <link rel="icon" type="image/svg+xml" href="/assets/marketing/favicon.svg">
+  <link rel="stylesheet" href="/assets/marketing/site.css">
+  <link rel="stylesheet" href="/assets/marketing/brand-theme.css">
+  <script src="/assets/marketing/site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="announcement">A stronger future for independent gyms. <a href="/get-started">Explore early access <span aria-hidden="true">↗</span></a></div>
+  <header class="site-header">
+    <a href="/" class="wordmark fitnexis-brand" aria-label="Fitnexis home"><img src="/assets/brand/fitnexis-mark.svg" alt="" width="39" height="34"><span>FITNE<span class="brand-x">X</span>IS</span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-navigation">Menu <span aria-hidden="true">☰</span></button>
+    <nav class="main-navigation" id="main-navigation" aria-label="Main navigation">
+      <% for (const [key, label] of [['features','Features'], ['pricing','Pricing'], ['about','About'], ['faq','FAQ']]) { %>
+        <a href="/<%= key %>" <%- page === key ? 'aria-current="page"' : '' %>><%= label %></a>
+      <% } %>
+      <a href="/contact" <%- page === 'contact' ? 'aria-current="page"' : '' %>>Contact</a>
+      <div class="nav-actions"><a href="/find-gym" class="sign-in">Sign in</a><a href="/get-started" class="button button-dark button-small">Let’s talk <span aria-hidden="true">↗</span></a></div>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1"><%- include('pages/' + page + '.html') %></main>
+  <footer class="site-footer">
+    <div class="footer-top"><div><a class="wordmark fitnexis-brand" href="/"><img src="/assets/brand/fitnexis-mark.svg" alt="" width="39" height="34"><span>FITNE<span class="brand-x">X</span>IS</span></a><p>For the people behind<br>independent gyms.</p></div>
+      <div><h2>Explore</h2><a href="/features">Features</a><a href="/pricing">Pricing</a><a href="/about">Our story</a></div>
+      <div><h2>Let’s connect</h2><a href="/contact?interest=walkthrough">Book a walkthrough</a><a href="/get-started">Request early access</a><a href="/faq">Questions & answers</a></div>
+      <div><h2>Already here?</h2><a href="/find-gym">Find your gym</a><a href="/contact?interest=support">Ask for help</a><a href="/platform/login">Platform administration</a></div>
+    </div>
+    <div class="footer-bottom"><span>© <%= year %> Fitnexis. Built around your gym.</span><span>Independent in spirit. Connected by community.</span></div>
+  </footer>
+</body>
+</html>

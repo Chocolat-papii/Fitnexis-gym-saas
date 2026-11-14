@@ -1,0 +1,51 @@
+/* Visual treatment over the shared marketing layout and its responsive rules. */
+body {
+  background: radial-gradient(ellipse at 92% 10%, #0ea5ff0d, transparent 35%), var(--paper);
+}
+h1, h2, h3 { font-family: var(--fx-heading); font-weight: 700; }
+h1 em, h2 em { font-family: inherit; font-style: normal; font-weight: inherit; color: var(--fx-cyan); }
+.wordmark { letter-spacing: 1.3px; font-size: 23px; }
+.announcement { border-bottom: 1px solid #0ea5ff26; background: #0d1928; }
+.site-header { border-bottom: 1px solid var(--line); }
+.main-navigation > a { color: var(--muted); }
+.menu-toggle { color: var(--ink); }
+.button-dark, .button-lime {
+  background: var(--fx-pulse); color: #fff; border-color: #0ea5ff;
+  box-shadow: 0 5px 24px #0ea5ff20; font-weight: 700;
+}
+.button-dark:hover, .button-lime:hover { background: linear-gradient(115deg, #0ea5ff, #2563eb); }
+.hero { padding-top: 76px; padding-bottom: 105px; }
+.hero h1 { font-weight: 800; font-size: clamp(44px, 4.7vw, 68px); letter-spacing: -2.8px; line-height: 1.1; }
+.hero-description { max-width: 460px; }
+.status-dot { box-shadow: 0 0 12px #06d6ff80; }
+.hero-visual { background: linear-gradient(145deg, #1f3448, #101a28 65%); border: 1px solid #36516a; box-shadow: 0 0 70px #0ea5ff0c; }
+.product-window { box-shadow: 0 20px 40px #0005; border-color: #40546a; }
+.product-sidebar { background: #0d1724; }
+.mini-brand { display: block; width: 30px; height: 27px; background: url('/assets/brand/fitnexis-mark.svg') center/contain no-repeat; }
+.mini-nav { color: var(--fx-muted); }
+.mini-nav.active { background: var(--fx-pulse); color: white; }
+.demo-metrics > div, .chart-card, .floating-note, .sample-list, .pillar-card,
+.plan-card, .comparison-table, .contact-form-wrap, .finder-card { background: var(--fx-surface); }
+.demo-metrics .mint { background: linear-gradient(140deg, #153847, #182b41); }
+.demo-metrics strong { color: var(--fx-text); font-variant-numeric: tabular-nums; }
+.demo-metrics small, .demo-tabs button[aria-selected=true] { color: var(--fx-cyan); }
+.bar, .bar:nth-child(even) { background: linear-gradient(to top, #2563eb, #06d6ff); }
+.bar:nth-child(even) { background: linear-gradient(to top, #1d4ed8, #0ea5ff); }
+.note-tick, .success-check { background: #06d6ff20; color: var(--fx-cyan); }
+.attention-icon { background: #fbbf2420; color: #fbbf24; }
+.outcome-strip { background: #111d2b; }
+.pillar-card { background: linear-gradient(145deg, #1f2937, #131d2b); }
+.pillar-card:hover { border-color: var(--fx-blue); box-shadow: 0 10px 35px #0002; }
+.pillar-icon { color: var(--fx-cyan); background: #0ea5ff12; border: 1px solid #0ea5ff30; }
+.pillar-icon svg { width: 23px; height: 23px; }
+.mini-nav svg { width: 17px; height: 17px; }
+.pillar-icon svg, .mini-nav svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pricing-teaser, .roadmap-band { background: linear-gradient(120deg, #163041, #172132); border: 1px solid var(--line); }
+.closing-cta { background: radial-gradient(ellipse at top right, #0ea5ff25, transparent 60%), #111d2b; border: 1px solid #2b4963; }
+.growth-plan { background: linear-gradient(140deg, #153447, #111b2a); border-color: #0ea5ff80; }
+.site-footer { background: #0d1521; border-top: 1px solid var(--line); }
+.owner-note img { border-color: var(--line); }
+.contact-form input:not([type=checkbox]), .contact-form select, .contact-form textarea, .finder-card input { color-scheme: dark; }
+.form-error { background: #ef444416; color: #ffb4a7; border: 1px solid #ef444440; }
+@media (max-width: 800px) { .hero { padding-top: 40px; padding-bottom: 65px; } }
+@media (max-width: 480px) { .hero h1 { font-size: 43px; letter-spacing: -1.8px; } .wordmark { font-size: 20px; } }

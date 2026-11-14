@@ -1,0 +1,55 @@
+.commercial-panel { padding: 24px; margin-block: 20px; }
+.commercial-panel h2 { margin-bottom: 16px; }
+.commercial-panel h3 { font-size: 15px; margin: 18px 0 12px; }
+.commercial-panel p { line-height: 1.7; }
+.commercial-panel summary { cursor: pointer; font-weight: 600; }
+.commercial-panel code { overflow-wrap: anywhere; }
+.commercial-form { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; margin-block: 18px; }
+.commercial-form label { display: grid; gap: 8px; flex: 1 1 180px; font-size: 12px; }
+.commercial-form input, .commercial-form select, .commercial-form textarea { width: 100%; min-width: 0; font: inherit; padding: 11px; border-radius: 8px; border: 1px solid var(--fx-line); background: var(--fx-carbon); color: var(--fx-text); }
+.commercial-form .primary { margin: 0; min-height: 41px; }
+.commercial-form label:has(input[type=checkbox]) { display: flex; align-items: center; min-height: 41px; }
+.commercial-form input[type=checkbox] { width: auto; accent-color: var(--fx-blue); }
+.commercial-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; }
+.commercial-grid > .panel { margin: 0; }
+.commercial-form fieldset { border: 1px solid var(--fx-line); padding: 16px; border-radius: 8px; width: 100%; }
+.commercial-form legend { font-size: 13px; }
+.management-main { max-width: 1240px; width: calc(100% - 40px); margin: 0 auto; padding-bottom: 50px; }
+.management-main .topbar { gap: 20px; height: auto; min-height: 80px; flex-wrap: wrap; padding-block: 18px; }
+.management-main .topbar nav { display: flex; flex-wrap: wrap; gap: 16px; }
+.mfa-secret { font-size: 18px; letter-spacing: 2px; overflow-wrap: anywhere; padding: 16px 0; }
+.mfa-qr { width: min(248px, 100%); margin: 24px auto 16px; background: #fff; border-radius: 12px; overflow: hidden; }
+.mfa-qr svg { display: block; width: 100%; height: auto; }
+.mfa-manual { margin-block: 20px; font-size: 12px; }
+.mfa-manual summary { cursor: pointer; color: var(--fx-muted); }
+.notice { padding: 14px; border: 1px solid #0ea5ff60; border-radius: 8px; margin-block: 18px; background: #0ea5ff10; }
+.commercial-panel .table-wrap { margin-top: 18px; }
+.commercial-panel form + form { border-top: 1px solid var(--fx-line); padding-top: 18px; }
+.gym-management { padding-bottom: 32px; }
+.gym-management .page-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+.gym-management .page-heading h1 { font-size: 1.75rem; margin-bottom: 8px; }
+.gym-management .eyebrow { color: var(--bs-secondary-color); font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
+.gym-management .panel { background: var(--bs-tertiary-bg); color: var(--bs-body-color); border: 1px solid var(--bs-border-color); border-radius: 1rem; box-shadow: 0 8px 24px #0000000c; }
+.gym-management .commercial-panel h2 { font-size: 1.125rem; }
+.gym-management .commercial-panel:first-of-type { margin-top: 0; }
+.gym-management .commercial-form input, .gym-management .commercial-form select, .gym-management .commercial-form textarea { background: var(--bs-body-bg); color: var(--bs-body-color); border-color: var(--bs-border-color); }
+.gym-management .commercial-form input:focus, .gym-management .commercial-form select:focus, .gym-management .commercial-form textarea:focus { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+.gym-management button { padding: 10px 16px; border: 1px solid var(--bs-border-color); border-radius: 9px; background: var(--bs-secondary-bg); color: var(--bs-body-color); font: inherit; cursor: pointer; }
+.gym-management button.primary { background: var(--fx-pulse); color: #fff; border-color: var(--fx-blue); }
+.gym-management button:disabled { opacity: .6; cursor: not-allowed; }
+.gym-management .footnote { font-size: .8rem; color: var(--bs-secondary-color); line-height: 1.7; }
+.gym-management .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.gym-management .metrics article { background: var(--bs-tertiary-bg); border: 1px solid var(--bs-border-color); border-radius: 1rem; padding: 24px; }
+.gym-management .metrics p, .gym-management .metrics small { color: var(--bs-secondary-color); font-size: .8rem; }
+.gym-management .metrics strong { display: block; font-size: clamp(1.35rem, 2.2vw, 2rem); font-weight: 600; font-variant-numeric: tabular-nums; margin-block: 12px; overflow-wrap: anywhere; }
+.gym-management .table-wrap { overflow-x: auto; }
+.gym-management table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.gym-management th, .gym-management td { padding: 14px 16px; border-bottom: 1px solid var(--bs-border-color); white-space: nowrap; }
+.gym-management th { color: var(--bs-secondary-color); font-size: .75rem; font-weight: 600; }
+.gym-management details > summary { cursor: pointer; }
+.gym-management .commercial-form > span { overflow-wrap: anywhere; min-width: 0; }
+@media(max-width:1199.98px) { .gym-management .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media(max-width:575.98px) { .gym-management .metrics { grid-template-columns: 1fr; } .gym-management .metrics article { padding: 18px; } }
+.plan-description { white-space: pre-line; }
+@media(max-width:800px) { .commercial-grid { grid-template-columns: 1fr; } .commercial-panel { padding: 18px; } }
+@media print { .sidebar,.commercial-form,details { display: none; } .main { margin: 0; } }
