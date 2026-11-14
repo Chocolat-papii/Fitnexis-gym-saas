@@ -15,7 +15,8 @@
 ['classes','classes.read','/admin/class-activities','fa-calendar','Classes'],
 ['members','members.read','/admin/all-members','fa-users','Members'],
 ['billing','billing.read','/admin/billing','fa-credit-card','Membership & Billing'],
-['financials','reports.read','/admin/financials','fa-chart-line','Financial reports']]; %>
+['financials','reports.read','/admin/financials','fa-chart-line','Financial reports'],
+['activity','audit.read','/admin/activity','fa-clock-rotate-left','Member activity']]; %>
 <nav class="d-grid gap-2"><% navItems.forEach(([key,permission,url,icon,label])=>{ if(allowed(permission)){ %><a class="nav-pill text-decoration-none <%= activePage===key?'active':'' %>" href="<%= url %>" <%- activePage===key?'aria-current="page"':'' %>><i class="fa-solid <%= icon %>" aria-hidden="true"></i><span><%= label %></span></a><% }}); %><% if(member.role==='gym_trainer'){ %><a class="nav-pill text-decoration-none" href="/admin/training">Training workspace</a><% } %><a class="nav-pill text-decoration-none <%= activePage==='settings'?'active':'' %>" href="/admin/settings" <%- activePage==='settings'?'aria-current="page"':'' %>><i class="fa-solid fa-gear" aria-hidden="true"></i> Gym settings &amp; security</a></nav>
         
     

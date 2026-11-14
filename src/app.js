@@ -21,6 +21,7 @@ import attendanceRoutes from "./routes/attendance.router.js"
 import { requireGym } from "./middleware/gym.middleware.js";
 import { paystackWebhook } from "./controllers/paystackWebhook.controller.js";
 import { startBillingJobs } from "./services/billingJobs.service.js";
+import {startMemberChangeEmailJobs} from './services/memberChangeNotifications.service.js';
 import platformRoutes from "./routes/platform.routes.js";
 import securityRoutes from './routes/security.routes.js';
 import gymRegistrationRoutes from './routes/gymRegistration.routes.js';
@@ -54,6 +55,7 @@ if (process.env.NODE_ENV !== "production") {
   await seedAdmin();
 }
 startBillingJobs();
+startMemberChangeEmailJobs();
 
 // ----- middlewares ---- //
 app.use(logger);

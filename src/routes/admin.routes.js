@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getMembers, deleteMember, updateMemberTier, createMember, viewMemberDetails, viewAllMembers } from '../controllers/admin/members.controller.js';
+import { getMembers, deleteMember, updateMemberTier, createMember, viewMemberDetails, viewAllMembers, saveMember,memberAccount,memberPassword,memberPlan } from '../controllers/admin/members.controller.js';
 import { getClassActivities, getAllClassTypes, createClassType, updateClassType, deleteClassType } from '../controllers/admin/classActivities.controller.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
@@ -15,6 +15,7 @@ import gymManagementRoutes from './gymManagement.routes.js';
 import {requirePermission} from '../security/roles.js';
 import {requireFeature} from '../services/saasBilling.service.js';
 import {branchAccess} from '../middleware/branchAccess.js';
+import {requireRecentAuth} from './security.routes.js';
 
 const router = Router();
 router.use('/admin', requireGym, requireAuth, requireAdmin, hydrateMember);
@@ -27,7 +28,7 @@ router.use((req,res,next)=>{
   else if(path==='/checkin'||path==='/admin-kiosk'||path==='/search-members')permission='checkins.write';
   else if(path.includes('class-'))permission=read?'classes.read':'classes.write';
   else if(path==='/insights')permission='reports.read';
-  else if(path.startsWith('/member-details'))permission='members.write';
+  else if(path.startsWith('/member-details'))permission=read?'members.read':'members.write';
   else permission=read?'members.read':'members.write';
   requirePermission('gym',permission)(req,res,()=>read?next():billingCsrf(req,res,next));
 });
@@ -47,6 +48,10 @@ router.delete('/api/class-sessions/:id', requireGym, requireAuth, requireAdmin, 
 router.put('/api/class-sessions/:id', requireGym, requireAuth, requireAdmin, billingCsrf, editSession);
 router.get('/api/members', getMembers);
 router.post('/api/members', createMember);
+router.patch('/api/members/:id',saveMember);
+router.post('/api/members/:id/account',memberAccount);
+router.post('/api/members/:id/password',requireRecentAuth,memberPassword);
+router.post('/api/members/:id/membership',requirePermission('gym','billing.write'),memberPlan);
 router.delete('/api/members/:id', deleteMember);
 router.patch('/api/members/:id/tier', updateMemberTier);
 router.get('/insights', viewAdminInsights);

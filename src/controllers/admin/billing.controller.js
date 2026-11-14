@@ -1,6 +1,7 @@
 import { db } from '../../config/db.js';
 import { csrfToken } from '../../middleware/billingCsrf.js';
 import * as billing from '../../services/billing.service.js';
+import {actorFrom} from '../../services/audit.service.js';
 import { verifyAndSettle } from '../../services/paystack.service.js';
 
 const respond = (res, error) => {
@@ -31,8 +32,8 @@ export const getMemberships = action(async req => {
     JOIN users u ON u.id=m.user_id AND u.gym_id=m.gym_id WHERE m.gym_id=$1 ORDER BY m.id DESC LIMIT 200`, [req.gymId]);
   return { memberships: rows };
 });
-export const addMembership = action(async req => ({ membership: await billing.assignMembership(req.gymId, req.body) }));
-export const changeMembership = action(async req => ({ membership: await billing.setMembershipStatus(req.gymId, req.params.id, req.body.status) }));
+export const addMembership = action(async req => ({ membership: await billing.assignMembership(req.gymId, req.body,actorFrom(req)) }));
+export const changeMembership = action(async req => ({ membership: await billing.setMembershipStatus(req.gymId, req.params.id, req.body.status,actorFrom(req)) }));
 export const getMembers = action(async req => {
   const { rows } = await db.query("SELECT id,firstname,lastname,email FROM users WHERE gym_id=$1 AND role='member' ORDER BY firstname,lastname LIMIT 500", [req.gymId]);
   return { members: rows };
@@ -44,7 +45,7 @@ export const verifyPayment = action(async req => verifyAndSettle(req.params.refe
 export const addManualPayment = action(async req => ({ payment: await billing.recordManualPayment(req.gymId, req.user.sub, req.body) }));
 export const runRecurringBilling = action(async req => ({ job: await billing.runBillingCycle(req.gymId) }));
 export const getPlanRequests = action(async req => ({ requests: await billing.listPlanRequests(req.gymId) }));
-export const decidePlanRequest = action(async req => ({ request: await billing.resolvePlanChange(req.gymId, req.params.id, req.body.status) }));
+export const decidePlanRequest = action(async req => ({ request: await billing.resolvePlanChange(req.gymId, req.params.id, req.body.status,actorFrom(req)) }));
 export const getReminders = action(async req => ({ reminders: await billing.listReminders(req.gymId) }));
 export const savePaystackAccount = action(async req => ({ settings: await billing.setPaystackSubaccount(req.gymId, req.body.paystack_subaccount) }));
 export const getPaystackAccount = action(async req => {

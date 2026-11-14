@@ -17,6 +17,7 @@ import { createBooking } from '../src/services/classBooking.service.js';
 import sessionRoutes from '../src/routes/sessions.router.js';
 import bookingRoutes from '../src/routes/classBooking.routes.js';
 import * as billing from '../src/services/billing.service.js';
+import { emailDelivery } from '../src/services/email.service.js';
 import { initiatePaystackCheckout, verifyAndSettle } from '../src/services/paystack.service.js';
 
 const connection = process.env.BILLING_TEST_DATABASE_URL;
@@ -28,6 +29,8 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
   const sql = knex({ client: 'pg', connection });
   const pool = new pg.Pool({ connectionString: connection, options: '-c timezone=UTC' });
   const originalQuery = db.query, originalConnect = db.connect, originalFetch = globalThis.fetch;
+  const originalSendMessage = emailDelivery.sendMessage;
+  emailDelivery.sendMessage = async () => {};
   const originalKey = process.env.PAYSTACK_SECRET_KEY, originalCollection = process.env.ALLOW_PLATFORM_COLLECTION;
   const originalJwtSecret = process.env.JWT_SECRET;
   db.query = pool.query.bind(pool);
@@ -298,7 +301,7 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
   } finally {
     if (server) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     if (gymId) await pool.query('DELETE FROM gyms WHERE id=$1', [gymId]);
-    db.query = originalQuery; db.connect = originalConnect; globalThis.fetch = originalFetch;
+    db.query = originalQuery; db.connect = originalConnect; globalThis.fetch = originalFetch; emailDelivery.sendMessage = originalSendMessage;
     if (originalKey === undefined) delete process.env.PAYSTACK_SECRET_KEY; else process.env.PAYSTACK_SECRET_KEY = originalKey;
     if (originalCollection === undefined) delete process.env.ALLOW_PLATFORM_COLLECTION; else process.env.ALLOW_PLATFORM_COLLECTION = originalCollection;
     if (originalJwtSecret === undefined) delete process.env.JWT_SECRET; else process.env.JWT_SECRET = originalJwtSecret;

@@ -1,286 +1,41 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin • Member Details</title>
-
-  <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-    <!-- SortableJS (Drag & Drop) -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
-
-    <link rel="stylesheet" href="/assets/dashboard/css/stylesdash.css" />
-    <script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script>
-        <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
-
-<script src="/assets/dashboard/js/csrfFetch.js" data-csrf="<%= csrf %>"></script>
-</head>
-<body>
-     <!-- header -->
-      <%- include("partials/header.html") %>
-    <!-- header -->
-
- <div class="app">
-    
-       <!-- Sidebar -->
-    <%- include("partials/sidebar.html") %>
-    <!-- Sidebar -->
-
-      <!-- Main Content -->
-      <main class="content">
-          <div class="container-fluid py-4">
-          <!-- Header -->
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-            <div>
-              <h1 class="h3  mb-1"><%= member.firstname || 'Member' %>'s Details</h1>
-              <div class="">Manage member profile, membership, and engagement.</div>
-            </div>
-
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-secondary"><i class="fa-solid fa-key"></i> Reset Password</button>
-              <button class="btn btn-warning"><i class="fa-solid fa-user-slash"></i> Suspend</button>
-              <button class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete</button>
-              <button class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Changes</button>
-            </div>
-          </div>
-
-          <div class="row g-4">
-
-            <!-- LEFT COLUMN -->
-            <div class="col-lg-8">
-
-              <!-- Basic Info -->
-              <div class="card glass-card rounded-4 shadow-sm mb-4">
-                <div class="card-body">
-                  <h5 class=" mb-3">Basic Information</h5>
-
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                      <label class="form-label small-note">First Name</label>
-                      <input class="form-control" value="<%= member.firstname || 'N/A' %>">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label small-note">Last Name</label>
-                      <input class="form-control" value="<%= member.lastname || 'N/A' %>">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label small-note">Email</label>
-                      <input class="form-control" value="<%= member.email || 'N/A' %>">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label small-note">Phone</label>
-                      <input  class="form-control" value="<%= member.user_phone || 'N/A' %>">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label small-note">Date of Birth</label>
-                      <input  class="form-control" value="<%= member.birthdate || 'N/A' %>">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label small-note">Gender</label>
-                      <input  class="form-control" value="<%= member.gender || 'N/A' %>">
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Address -->
-              <div class="card glass-card rounded-4 shadow-sm mb-4">
-                <div class="card-body">
-                  <h5 class=" mb-3">Address</h5>
-
-                  <div class="row g-3">
-                    <div class="col-12">
-                      <label class="form-label small-note">Street Adress</label>
-                      <input class="form-control" placeholder="Street Address" value="<%= member.street_address || "N/A" %>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label small-note">City</label>
-                      <input class="form-control" placeholder="City" value="<%= member.city || "N/A" %>">
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label small-note">Province</label>
-                      <input class="form-control" placeholder="Province/State" value="<%= member.province || "N/A" %>">
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label small-note">Postal Code</label>
-                      <input class="form-control" placeholder="Postal Code" value="<%= member.postal_code || "N/A" %>">
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Emergency Contact -->
-              <div class="card glass-card rounded-4 shadow-sm mb-4">
-                <div class="card-body">
-                  <h5 class=" mb-3">Emergency Contact</h5>
-
-                  <div class="row g-3">
-                    <div class="col-md-3">
-                      <label class="form-label small-note">Name</label>
-                      <input class="form-control" placeholder="Contact Name" value="<%= member.ecname || "N/A" %>">
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label small-note">Relationship</label>
-                      <input class="form-control" placeholder="Relationship" value="<%= member.relationship || "N/A" %>">
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label small-note">Phone</label>
-                      <input class="form-control" placeholder="Phone" value="<%= member.emergency_phone || "N/A" %>">
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label small-note">Notes</label>
-                      <input class="form-control" placeholder="Notes" value="<%= member.ems_notes || "N/A" %>">
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Health Notes -->
-              <div class="card glass-card rounded-4 shadow-sm mb-4">
-                <div class="card-body">
-                  <h5 class=" mb-3">Health Notes</h5>
-                  <div class="row g-3">
-                    <div class="col-md-4">
-                      <label class="form-label small-note">Share info with trainer</label>
-                      <input class="form-control" placeholder="Contact Name" value="<%= member.share_content_trainer || "N/A" %>">
-                    </div>
-                    <div class="col-md-8">
-                      <label class="form-label small-note">Medical Conditions</label>
-                      <input class="form-control" placeholder="Contact Name" value="<%= member.medical_conditions || "N/A" %>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label small-note">Surgeries, Injuries or Limitations</label>
-                      <input class="form-control" placeholder="Contact Name" value="<%= member.injuries || "N/A" %>">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label small-note">Medication</label>
-                      <input class="form-control" placeholder="Contact Name" value="<%= member.medication || "N/A" %>">
-                    </div>
-                  </div>
-                  
-                  <label class="form-label small-note">Notes</label>
-                  <textarea class="form-control" rows="2" placeholder="Injuries or limitations..."><%= member.health_notes || "N/A" %></textarea>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- RIGHT COLUMN -->
-            <div class="col-lg-4">
-
-              <!-- Membership -->
-              <div class="card glass-card rounded-4 shadow-sm mb-4">
-                <div class="card-body">
-                  <h5 class=" mb-3">Membership</h5>
-
-                  <label class="form-label small-note">Plan</label>
-                  <select class="form-select mb-3">
-                    <option><%= member.tier %></option>
-                    <option>Bronze</option>
-                    <option>Silver</option>
-                    <option>Gold</option>
-                  </select>
-
-                  <label class="form-label small-note">Status</label>
-                  <select class="form-select mb-3">
-                    <option>Active</option>
-                    <option>Suspended</option>
-                    <option>Expired</option>
-                  </select>
-
-                  <label class="form-label small-note">Join Date</label>
-                  <input class="form-control mb-3" value="<%= member.joindate || '' %>">
-
-                  <!-- <label class="form-label small-note">Renewal Date</label>
-                  <input  class="form-control" value="N/A"> -->
-                </div>
-              </div>
-
-              <!-- Engagement Summary -->
-              <div class="card glass-card rounded-4 shadow-sm">
-                <div class="card-body">
-                  <h5 class=" mb-3">Engagement</h5>
-                  <div class="small-note">Total Check-ins</div>
-                  <div class="h4 "><%= member.total_visits || '0' %></div>
-
-                  <div class="small-note mt-3">Visits This Month</div>
-                  <div class="h4 "><%= member.visits_this_month || '0' %></div>
-
-                  <div class="small-note mt-3">Last Attendance</div>
-                  <div class=""><%= member.last_visit || 'Never' %></div>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-          </div>
-          <!-- footer -->
-          <%- include("partials/footer.html") %>
-    <!-- End footer -->
-      </main>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/dashboard/js/dashboard.js"></script>
-
-   
-  <script>
-        // Close sidebar when a link is clicked (mobile)
-      const btn = document.getElementById("toggleSidebar");
-      const sidebar = document.querySelector(".sidebar");
-
-      btn?.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-      });
-</script>
-<script>
-      // Tooltips
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        .forEach(el => new bootstrap.Tooltip(el));
-
-      // =========================
-      // Smooth Theme Toggle
-      // =========================
-      const html = document.documentElement;
-      const toggleBtn = document.getElementById('themeToggle');
-      const icon = document.getElementById('themeIcon');
-
-      function setTheme(theme) {
-        html.setAttribute('data-bs-theme', theme);
-        localStorage.setItem('theme', theme);
-        icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
-      }
-
-      // Load theme
-      setTheme(localStorage.getItem('theme') || 'dark');
-
-      toggleBtn.addEventListener('click', () => {
-        const current = html.getAttribute('data-bs-theme');
-        setTheme(current === 'light' ? 'dark' : 'light');
-      });
-
-      // =========================
-      // Bell Animation
-      // =========================
-      const bellIcon = document.getElementById('bellIcon');
-
-      document.getElementById('bellBtn').addEventListener('click', () => {
-        bellIcon.classList.remove('bell-animate');
-        void bellIcon.offsetWidth;
-        bellIcon.classList.add('bell-animate');
-      });
-    </script>
-
-</body>
-</html>
+<%- include('partials/management-head.html',{title:profile.firstname+' '+profile.lastname,pageStyles:'member-management.css'}) %>
+<body class="bg-body-bg">
+<%- include('partials/header.html') %>
+<div class="app-shell"><%- include('partials/sidebar.html') %>
+<main class="content member-management" id="managedMember" data-member-id="<%= profile.id %>">
+<% const show=value=>value===null||value===undefined||value===''?'Not provided':value; const day=value=>value?new Date(value).toLocaleDateString('en-ZA',{timeZone:'Africa/Johannesburg',day:'2-digit',month:'short',year:'numeric'}):'Not recorded';const inputDay=value=>value?new Date(value).toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'}):'';const cash=value=>new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR'}).format(Number(value||0));const current=memberships[0];const effective=!profile.is_active?'inactive':profile.status==='suspended'?'suspended':profile.status==='paused'||current?.status==='paused'?'paused':profile.status; %>
+<a class="member-back" href="/admin/all-members">← All members</a>
+<header class="members-heading"><div><p class="members-eyebrow">MEMBER PROFILE · #<%= profile.id %></p><h1><%= profile.firstname %> <%= profile.lastname %></h1><p class="small-note">Member since <%= day(profile.joindate) %> <span class="member-state state-<%= effective %>"><%= effective==='inactive'?'Deactivated':effective %></span></p></div><div class="member-actions">
+<% if(canEdit){ %><button type="button" id="openPasswordReset" class="btn btn-outline-secondary">Reset password</button>
+<% if(profile.is_active){ %><button class="btn btn-outline-warning" type="button" data-account="<%= profile.status==='suspended'?'restore':'suspend' %>"><%= profile.status==='suspended'?'Restore access':'Suspend' %></button><button class="btn btn-outline-danger" type="button" data-account="deactivate">Deactivate</button><% }else{ %><button class="btn btn-outline-success" type="button" data-account="reactivate">Reactivate account</button><% } %>
+<button type="submit" form="memberProfileForm" class="btn btn-primary">Save changes</button><% } %></div></header>
+<p id="memberActionStatus" class="members-feedback" role="status"></p>
+<div class="member-profile-layout"><div>
+<section class="card glass-card rounded-4 member-section member-identity"><% if((profile.profile_picture?.startsWith('/member/profile-photo/') || profile.profile_picture?.startsWith('/uploads/profile-pics/'))){ %><img class="member-initials" src="<%= profile.profile_picture %>" alt="<%= profile.firstname %>'s profile picture"><% }else{ %><div class="member-initials" aria-hidden="true"><%= profile.firstname[0] %><%= profile.lastname[0] %></div><% } %><div><h2 class="h5"><%= profile.display_name || profile.firstname+' '+profile.lastname %></h2><p class="small-note mb-1"><%= profile.email %> · <%= profile.phone %></p><p class="small-note mb-0"><%= profile.bio || 'No profile introduction yet.' %></p></div></section>
+<form id="memberProfileForm"><fieldset <%= canEdit?'':'disabled' %>>
+<section class="card glass-card rounded-4 member-section"><div class="member-section-heading"><h2>Basic information</h2><span class="small-note"><%= canEdit?'Editable':'Read-only' %></span></div><div class="member-fields">
+<% for(const [key,label,type,max,required] of [['firstname','First name','text',100,true],['lastname','Last name','text',100,true],['email','Email','email',255,true],['phone','Phone','tel',50,true],['display_name','Display name','text',255,false],['gender','Gender','text',255,false]]){ %><label><%= label %><input class="form-control" type="<%= type %>" name="<%= key %>" maxlength="<%= max %>" value="<%= profile[key]||'' %>" <%= required?'required':'' %>></label><% } %>
+<label>Birth date<input class="form-control" name="birthdate" type="date" value="<%= inputDay(profile.birthdate) %>"></label><label>Join date<input class="form-control" name="joindate" type="date" value="<%= inputDay(profile.joindate) %>" required></label><label class="member-field-wide">About this member<textarea class="form-control" name="bio" rows="2" maxlength="3000"><%= profile.bio||'' %></textarea></label>
+</div><p class="small-note mt-3 mb-0">Changing the email signs out previous sessions. The next sign-in verifies the new email.</p></section>
+<section class="card glass-card rounded-4 member-section"><h2>Contact & address</h2><div class="member-fields"><% for(const [key,label] of [['whatsapp_number','WhatsApp number'],['alt_phone','Alternative phone'],['street_address','Street address'],['city','City'],['province','Province'],['postal_code','Postal code']]){ %><label><%= label %><input class="form-control" name="<%= key %>" value="<%= profile[key]||'' %>" maxlength="255"></label><% } %><label class="member-field-wide">Contact notes<textarea class="form-control" name="notes" rows="2" maxlength="3000"><%= profile.notes||'' %></textarea></label></div></section>
+</fieldset></form>
+<section class="card glass-card rounded-4 member-section"><h2>Emergency contacts</h2><% if(!contacts.length){ %><p class="small-note">No emergency contacts recorded.</p><% } %><% contacts.forEach(contact=>{ %><div class="member-contact"><strong><%= show(contact.ecname) %></strong><span><%= show(contact.relationship) %> · <%= show(contact.phone) %></span><% if(contact.ems_notes){ %><span class="small-note"><%= contact.ems_notes %></span><% } %></div><% }); %><p class="small-note mt-2 mb-0">Contact records supplied on the member's personal details page.</p></section>
+<% if(canEdit){ %>
+<section class="card glass-card rounded-4 member-section"><h2>Health information</h2><p class="small-note">Member-provided records. Trainer sharing: <%= profile.consent_share_trainer?'Consented':'Not consented' %>.</p><dl class="member-facts"><% for(const [key,label] of [['medical_conditions','Medical conditions'],['injuries','Injuries or limitations'],['medication','Medication'],['health_notes','Health notes']]){ %><div><dt><%= label %></dt><dd><%= show(profile[key]) %></dd></div><% } %></dl></section>
+<section class="card glass-card rounded-4 member-section"><h2>Goals & nutrition</h2><p class="small-note">The same records shown in the member's profile, presented read-only.</p><dl class="member-facts"><% for(const [value,label] of [[physique.primary_goal,'Primary goal'],[physique.current_weight,'Current weight (kg)'],[physique.target_weight,'Target weight (kg)'],[physique.height,'Height (cm)'],[dietary.diet_type,'Diet type'],[dietary.allergies,'Allergies'],[dietary.restrictions,'Dietary restrictions'],[dietary.supplements,'Supplements']]){ %><div><dt><%= label %></dt><dd><%= show(value) %></dd></div><% } %></dl></section>
+<details class="card glass-card rounded-4 member-section"><summary>Lifestyle & nutrition details</summary><dl class="member-facts mt-4"><% for(const [record,key,label] of [[physique,'waist','Waist (cm)'],[physique,'protein','Protein target'],[physique,'carbs','Carbohydrate target'],[physique,'fats','Fat target'],[physique,'occupation','Occupation'],[physique,'stress_level','Stress level'],[physique,'sleep_hours','Sleep hours'],[physique,'activity_level','Activity level'],[physique,'exercise_frequency','Exercise frequency'],[physique,'sitting_hours','Sitting hours'],[physique,'current_activities','Current activities'],[physique,'training_styles','Training styles'],[physique,'notes','Lifestyle notes'],[dietary,'meals_per_day','Meals per day'],[dietary,'water_per_day','Water per day'],[dietary,'foods_avoid','Foods avoided'],[dietary,'hydration_goal','Hydration goal'],[dietary,'preferred_checkin_day','Preferred check-in day']]){ %><div><dt><%= label %></dt><dd><%= show(Array.isArray(record[key])?record[key].join(', '):record[key]) %></dd></div><% } %></dl></details>
+<section class="card glass-card rounded-4 member-section"><h2>Communication preferences</h2><p class="small-note">Member-selected preferences, shown read-only.</p><dl class="member-facts"><% for(const [key,label] of [['mail_note','Email notifications'],['sms_note','SMS notifications'],['wa_note','WhatsApp notifications']]){ %><div><dt><%= label %></dt><dd><%= profile[key]?'Enabled':'Not enabled' %></dd></div><% } %></dl></section>
+<% } %>
+</div><aside>
+<section class="card glass-card rounded-4 member-section" id="membership"><h2>Membership</h2><% if(current){ %><p class="member-plan-name"><%= current.plan_name %></p><p class="small-note"><%= cash(current.price) %> / <%= current.billing_cycle.replaceAll('_',' ') %></p><span class="member-state state-<%= current.status %>"><%= current.status.replaceAll('_',' ') %></span><dl class="member-facts mt-3"><div><dt>Started</dt><dd><%= day(current.start_date) %></dd></div><div><dt>Next billing date</dt><dd><%= day(current.next_bill_on) %></dd></div></dl><% }else{ %><p class="small-note">No membership plan assigned.</p><% } %>
+<% if(canBilling){ %><form id="memberPlanForm" class="member-plan-form"><label for="memberPlan">Change plan</label><select id="memberPlan" name="plan_id" class="form-select" required><option value="">Choose an active gym plan</option><% plans.forEach(plan=>{ %><option value="<%= plan.id %>" <%= current?.plan_id===plan.id?'selected':'' %>><%= plan.name %> — <%= cash(plan.price) %> / <%= plan.billing_cycle %></option><% }); %></select><button class="btn btn-primary" type="submit" <%= plans.length?'':'disabled' %>>Apply plan</button><p class="small-note">Effective today. Existing invoices and payments stay unchanged. Recurring billing follows the new plan; this action does not charge a card.</p></form>
+<% if(current&&['active','paused'].includes(current.status)){ %><button type="button" class="btn btn-outline-secondary w-100" data-membership="<%= current.status==='paused'?'resume':'pause' %>"><%= current.status==='paused'?'Resume membership':'Pause membership' %></button><% } %>
+<a class="member-back mt-3 d-block" href="/admin/billing">Open billing workspace →</a><% } %></section>
+<% if(canBilling){ %><section class="card glass-card rounded-4 member-section"><h2>Recent invoices</h2><% if(!invoices.length){ %><p class="small-note">No invoices recorded.</p><% } %><% invoices.forEach(invoice=>{ %><a class="member-invoice" href="/admin/billing/invoices/<%= invoice.id %>" target="_blank" rel="noopener"><strong><%= invoice.invoice_number %></strong><span><%= cash(invoice.balance) %> due <span class="small-note">· <%= invoice.display_status %></span></span></a><% }); %></section><% } %>
+<section class="card glass-card rounded-4 member-section"><h2>Attendance</h2><div class="member-visit"><strong><%= profile.total_visits %></strong><span class="small-note">Total check-ins</span></div><dl class="member-facts"><div><dt>This month</dt><dd><%= profile.visits_this_month %> visits</dd></div><div><dt>Last attendance</dt><dd><%= day(profile.last_visit) %></dd></div></dl><% if(canGym('checkins.write')){ %><button id="memberCheckin" type="button" class="btn btn-outline-primary w-100" <%= effective==='active'?'':'disabled' %>>Check in member</button><% } %></section>
+<section class="card glass-card rounded-4 member-section"><h2>Account access</h2><p class="small-note mb-0">Suspension blocks gym check-ins. Deactivation also disables sign-in. Membership billing is managed separately above.</p></section>
+</aside></div>
+<dialog id="memberPasswordDialog" class="member-dialog"><form id="memberPasswordForm"><header><h2 class="h4">Reset member password</h2><button class="btn-close" type="button" data-close aria-label="Close"></button></header><p class="small-note">Set a temporary password and share it directly with the member. Their existing sessions will be signed out.</p><label>New password<input class="form-control" type="password" name="password" minlength="12" autocomplete="new-password" required></label><label class="mt-3">Confirm new password<input class="form-control" type="password" name="confirm_password" minlength="12" autocomplete="new-password" required></label><p id="passwordResetStatus" class="small-note mt-3" role="status"></p><footer><button type="button" class="btn btn-outline-secondary" data-close>Cancel</button><button class="btn btn-primary" type="submit">Reset password</button></footer></form></dialog>
+<meta name="billing-csrf" content="<%= csrf %>">
+</main></div><%- include('partials/management-scripts.html') %><script src="/assets/dashboard/js/adminMemberProfile.js" defer></script>
+</body></html>

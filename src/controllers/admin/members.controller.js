@@ -1,190 +1,28 @@
-import { db } from "../../config/db.js";
-import bcrypt from "bcrypt";
-import {audit} from '../../services/audit.service.js';
+import {db} from '../../config/db.js';
+import bcrypt from 'bcrypt';
+import {audit,actorFrom} from '../../services/audit.service.js';
 import {enforceLimit} from '../../services/saasBilling.service.js';
-
-
-export const viewAllMembers = async (req, res, next) => {
-   return res.render("admin/admin-dashboard.html", { 
-      activePage: "members",
-      gym: req.gym
-
-   });
+import {hasPermission} from '../../security/roles.js';
+import * as management from '../../services/memberManagement.service.js';
+const fail=(res,error)=>{
+  if(error.code==='23505')return res.status(409).json({message:'That email is already used in this gym.'});
+  if(error.status)return res.status(error.status).json({message:error.message});
+  console.error('Member operation failed:',error.code||error.name);return res.status(500).json({message:'Could not complete this member operation.'});
 };
-
-
-export const viewMemberDetails = async (req, res) => {
-  try {
-    const userId = Number(req.params.id);
-
-    if (Number.isNaN(userId)) {
-        return res.status(400).send("Invalid member id");
-      }
-    const gymId = req.gymId;
-
-    const { rows } = await db.query(`
-      SELECT 
-        u.id,
-        u.firstname,
-        u.lastname,
-        u.email,
-        u.phone AS user_phone,
-        u.tier,
-        to_char(u.joindate, 'DD/MM/YYYY') AS joindate,
-        u.status,
-
-        cd.gender,
-        to_char(cd.birthdate, 'DD/MM/YYYY') AS birthdate,
-        cd.street_address,
-        cd.notes,
-        cd.city,
-        cd.province,
-        cd.postal_code,
-
-        ec.ecname,
-        ec.relationship,
-        ec.phone AS emergency_phone,
-        ec.ems_notes,
-        
-        hr.medical_conditions,
-        hr.injuries,
-        hr.medication,
-        hr.health_notes,
-        
-        a.total_visits,
-        a.visits_this_month,
-        COALESCE(TO_CHAR(a.last_visit, 'DD Mon YYYY, HH24:MI'), 'Never') AS last_visit
-
-      FROM public.users u
-      LEFT JOIN public.member_contact_details cd 
-        ON cd.user_id = u.id
-        AND cd.gym_id = u.gym_id
-      LEFT JOIN public.member_emergency_contacts ec 
-        ON ec.user_id = u.id
-        AND ec.gym_id = u.gym_id
-      LEFT JOIN public.member_health_records hr
-        ON hr.user_id = u.id
-        AND hr.gym_id = u.gym_id
-      LEFT JOIN LATERAL (
-          SELECT 
-            COUNT(*) AS total_visits,
-            COUNT(*) FILTER (
-              WHERE date_trunc('month', check_in_time) = date_trunc('month', NOW())
-            ) AS visits_this_month,
-            MAX(check_in_time) AS last_visit
-          FROM public.attendance
-          WHERE user_id = u.id
-          AND gym_id = u.gym_id
-        ) a ON true
-
-      WHERE u.id = $1
-      AND u.gym_id = $2
-      LIMIT 1
-    `, [userId, gymId]);
-
-
-    const member = rows[0];
-
-    if (!member) {
-      return res.status(404).send("Member not found");
-    }
-
-    res.render("admin/admin-member-details", {
-      activePage: "members",
-      member,
-      gym: req.gym
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
-  }
+export const viewAllMembers=(req,res)=>res.render('admin/admin-dashboard',{activePage:'members',gym:req.gym});
+export const getMembers=async(req,res)=>{try{res.set('Cache-Control','no-store');res.json(await management.memberDirectory(req.gymId,req.query));}catch(error){fail(res,error);}};
+export const viewMemberDetails=async(req,res,next)=>{
+  try{
+    const canEdit=hasPermission('gym',req.user.role,'members.write'),canBilling=hasPermission('gym',req.user.role,'billing.write');
+    const data=await management.managedMember(req.gymId,req.params.id,{billing:canBilling,privateDetails:canEdit});
+    res.set('Cache-Control','no-store');res.render('admin/admin-member-details',{...data,activePage:'members',gym:req.gym,canEdit,canBilling});
+  }catch(error){if(error.status)return res.status(error.status).send(error.message);next(error);}
 };
-
-// - - - quick member actions - - -//
-
-
-export const getMembers = async (req, res) => {
-  try {
-    const gymId = req.gymId;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search || "";
-    const tier = req.query.tier || "";
-    const offset = (page - 1) * limit;
-
-
-    const [dataResult, countResult, statsResult] = await Promise.all([
-  db.query(`
-    SELECT id, firstname, lastname, email, phone, tier, role,
-    to_char(joindate, 'YYYY-MM-DD') AS joindate, gym_id
-    FROM users
-    WHERE 
-      ($1 = '' OR 
-        LOWER(firstname || ' ' || lastname || ' ' || email || ' ' || phone)
-        LIKE LOWER('%' || $1 || '%'))
-      AND
-      ($2 = '' OR tier = $2)
-    AND gym_id = $5
-    AND role = 'member'
-    ORDER BY id ASC
-    LIMIT $3 
-    OFFSET $4
-  `, [search, tier, limit, offset, gymId]),
-
-  db.query(`
-    SELECT COUNT(*) 
-    FROM users
-    WHERE 
-      ($1 = '' OR 
-        LOWER(firstname || ' ' || lastname || ' ' || email || ' ' || phone)
-        LIKE LOWER('%' || $1 || '%'))
-      AND
-      ($2 = '' OR tier = $2)
-      AND gym_id = $3
-      AND role = 'member'
-  `, [search, tier, gymId]),
-
-  db.query(`
-    SELECT 
-      COUNT(*) AS total,
-      COUNT(*) FILTER (WHERE tier = 'Gold') AS gold,
-      COUNT(*) FILTER (WHERE tier = 'Platinum') AS platinum,
-      COUNT(*) FILTER (WHERE tier = 'Bronze') AS bronze
-    FROM users
-    WHERE 
-      ($1 = '' OR 
-        LOWER(firstname || ' ' || lastname || ' ' || email || ' ' || phone)
-        LIKE LOWER('%' || $1 || '%'))
-      AND
-      ($2 = '' OR tier = $2)
-      AND gym_id = $3
-      AND role = 'member'
-  `, [search, tier, gymId])
-]);
-
-    const total = parseInt(countResult.rows[0].count);
-    const stats = statsResult.rows[0];
-
-    return res.json({
-      members: dataResult.rows,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-      stats: {
-        total: parseInt(stats.total),
-        gold: parseInt(stats.gold),
-        platinum: parseInt(stats.platinum),
-        bronze: parseInt(stats.bronze)
-      }
-    });
-
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Failed to load members" });
-  }
-};
-
+const action=fn=>async(req,res)=>{try{res.json(await fn(req));}catch(error){fail(res,error);}};
+export const saveMember=action(req=>management.saveManagedMember(req.gymId,req.params.id,actorFrom(req),req.body));
+export const memberAccount=action(req=>management.setMemberAccount(req.gymId,req.params.id,actorFrom(req),req.body.action));
+export const memberPassword=action(req=>management.resetManagedPassword(req.gymId,req.params.id,actorFrom(req),req.body.password));
+export const memberPlan=action(req=>management.changeManagedPlan(req.gymId,req.params.id,actorFrom(req),req.body));
 
 export const createMember = async (req, res) => {
   const client=await db.connect();
@@ -220,7 +58,7 @@ export const createMember = async (req, res) => {
        RETURNING id, firstname, lastname, email, phone, tier,
         to_char(joindate, 'YYYY-MM-DD') AS joindate
         `,
-      [firstname, lastname, email.trim().toLowerCase(), phone, hashedPassword, safeTier, joindate, gymId]
+      [firstname.trim(), lastname.trim(), email.trim().toLowerCase(), phone.trim(), hashedPassword, safeTier, joindate||null, gymId]
       );
 
       const userId = result.rows[0].id;
@@ -230,7 +68,7 @@ export const createMember = async (req, res) => {
           `INSERT INTO public.member_contact_details
           (user_id, gender, birthdate, notes, gym_id)
           VALUES ($1,$2,$3,$4,$5)`,
-          [userId, gender, birthdate, notes, gymId]
+          [userId, gender||null, birthdate||null, notes||null, gymId]
         );
 
         // Insert emergency contact
@@ -259,35 +97,7 @@ export const createMember = async (req, res) => {
 };
 
 
-export const deleteMember = async (req, res) => {
-  try {
-
-    const id = Number(req.params.id);
-    const gymId = req.gymId;
-
-    if (Number.isNaN(id)) {
-      console.log("BAD ID (not a number):", req.params.id);
-      return res.status(400).json({ message: "Invalid member id" });
-    }
-
-    const result = await db.query(
-      "UPDATE public.users SET is_active=false,auth_version=auth_version+1 WHERE id=$1 AND gym_id=$2 AND role='member' RETURNING id",
-      [id, gymId]
-    );
-
-    console.log("DELETE rowCount:", result.rowCount);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Member not found" });
-    }
-
-    return res.json({ message: "Member deactivated; payment history retained.", id: result.rows[0].id });
-  } catch (err) {
-    console.error("DELETE ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
+export const deleteMember = action(req=>management.setMemberAccount(req.gymId,req.params.id,actorFrom(req),'deactivate'));
 
 export const updateMemberTier = async (req, res) => {
   try {

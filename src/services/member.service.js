@@ -27,7 +27,7 @@ export async function getMemberWithProfile(userId, gymId) {
     
     mec.ecname, 
     mec.relationship, 
-    mec.phone, 
+    mec.phone AS emergency_phone,
     mec.priority, 
     mec.ems_notes, 
     mec.updated_at AS ems_updated_at, 

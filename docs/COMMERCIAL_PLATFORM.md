@@ -4,6 +4,12 @@ Fitnexis uses a dashboard-managed SaaS subscription plus a default **2% commissi
 
 ## Where to use it
 
+The gym's `/admin/all-members` directory shows gym-wide total, suspended, paused and new-this-month member counts, with status filters and links to `/admin/member-details/:id`. Profiles use the same member profile, contact, emergency, health, dietary and lifestyle records as the member portal. Member managers can edit basic/contact details; medical records and communication preferences remain read-only. Staff with read-only member access do not receive health or nutrition details.
+
+Membership changes require `billing.write`, take effect today, and preserve prior invoices and payments. They replace the previous active/paused membership and schedule recurring invoicing on the new plan; no card is charged by the profile action. Pause stops recurring invoicing until resumed; existing invoices remain due. Suspension blocks check-ins, while deactivation also disables sign-in. Neither account action silently cancels billing. Password resets require recent password/email confirmation in gym settings and invalidate the member's previous sessions. Member edits and account/membership actions are audited.
+
+Member profile/account/password/membership changes now also queue an email to the affected member in the same database transaction as their audit event. Billing-page membership assignments, status changes and plan-request decisions use the same notification path. The gym superuser's **Member activity** page (`/admin/activity`) shows actor/member names, timestamps, summaries and per-email send status, with owner-only retry for exhausted failures. Email delivery uses the configured Resend sender, after commit, with a leased queue and automatic retry. Notification content excludes passwords, verification codes and private profile values; email-address changes notify both addresses. Apply the new `member_change_emails` migration before restarting the app.
+
 | Area | Location |
 | --- | --- |
 | Publish SaaS plans, prices, features and limits | `/platform/billing` |

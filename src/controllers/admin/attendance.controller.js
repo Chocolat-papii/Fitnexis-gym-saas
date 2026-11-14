@@ -13,6 +13,7 @@ export const createCheckin = async (req, res) => {
     }
 
     const result = await checkInMember(user_id, admin_id, gymId);
+    if(result?.accessDenied)return res.status(403).json({ok:false,message:'Check-in is unavailable: this member is suspended, paused or deactivated.'});
 
     if (result === null) {
         return res.status(404).json({

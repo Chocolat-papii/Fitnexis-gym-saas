@@ -4,6 +4,22 @@ import { createEmailDelivery } from '../src/services/email.service.js';
 
 const env = { RESEND_API_KEY: 're_test_key', RESEND_FROM: 'Fitnexis <no-reply@example.invalid>' };
 
+test('member notices use Resend with a stable retry key and fail safely', async () => {
+  const requests = [];
+  const delivery = createEmailDelivery({ env, fetch: async (url, options) => {
+    requests.push({ url, ...options });
+    return new Response(JSON.stringify({ id: 'notice-id' }));
+  } });
+  const notice = { to: 'member@example.invalid', subject: 'Account updated', text: 'Your access changed.', messageId: 'member-change/42' };
+  await delivery.sendMessage(notice);
+  await delivery.sendMessage(notice);
+  assert.equal(requests[0].url, 'https://api.resend.com/emails');
+  assert.equal(requests[0].headers['Idempotency-Key'], notice.messageId);
+  assert.equal(requests[1].headers['Idempotency-Key'], notice.messageId);
+  assert.deepEqual(JSON.parse(requests[0].body), { from: env.RESEND_FROM, to: [notice.to], subject: notice.subject, text: notice.text });
+  await assert.rejects(createEmailDelivery({ env, fetch: async () => new Response('private', { status: 429 }) }).sendMessage(notice), { status: 503 });
+});
+
 test('verification emails use the Resend HTTPS API for login and identity confirmation', async () => {
   const requests = [];
   const delivery = createEmailDelivery({ env, fetch: async (url, options) => {
