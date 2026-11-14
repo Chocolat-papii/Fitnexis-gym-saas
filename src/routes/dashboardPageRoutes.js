@@ -15,6 +15,8 @@ import { getPhysiqueLifestyle, updatePhysiqueLifestyle } from "../controllers/me
 import { hydrateMember } from "../middleware/hydrateMember.js";
 import { getMyStats } from "../controllers/member/attendance.controller.js";
 import { requireGym } from "../middleware/gym.middleware.js";
+import {requireFeature} from '../services/saasBilling.service.js';
+import {purchaseMembership} from '../services/membershipCheckout.service.js';
 
 const router = express.Router();
 
@@ -52,7 +54,8 @@ router.get("/stats", requireAuth, getMyStats);
 
 
 router.get("/billing/invoices/:id", requireAuth, memberInvoice);
-router.post("/billing/pay/:id", requireAuth, billingCsrf, startCheckout);
+router.post("/billing/pay/:id", requireAuth, billingCsrf, requireFeature('online_payments'), startCheckout);
+router.post('/billing/purchase',requireAuth,billingCsrf,async(req,res,next)=>{try{const result=await purchaseMembership(req.gymId,Number(req.user.sub),req.body.plan_id);if(req.is('application/json'))return res.status(201).json(result);res.redirect(303,`/member/billing#invoice-${result.invoice_id}`);}catch(error){if(error.status)return res.status(error.status).send(error.message);next(error);}});
 router.post("/billing/requests", requireAuth, billingCsrf, requestChange);
 router.post("/billing/payments/:reference/verify", requireAuth, billingCsrf, verifyPayment);
 router.get("/billing/return", requireAuth, returnFromPaystack);

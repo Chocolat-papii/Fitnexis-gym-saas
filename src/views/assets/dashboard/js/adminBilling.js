@@ -69,7 +69,7 @@
   }
   function renderPayments() {
     const filter = document.getElementById('paymentFilter').value || 'all';
-    rows('billingPayments', payments.filter(payment => filter === 'all' || payment.status === filter), x => `<tr><td>${safe(x.reference)}</td><td>${safe(x.firstname)} ${safe(x.lastname)}</td><td>${money(x.amount)}</td><td>${safe(x.provider.toUpperCase())}</td><td>${status(x.status)}</td><td>${date(x.paid_at)}</td><td>${x.provider === 'paystack' && x.status === 'pending' ? `<button class="btn btn-outline-light btn-sm" data-verify="${safe(x.reference)}">Check status</button>` : ''}</td></tr>`, payments.length ? 'No payments match this status.' : 'No payments recorded yet.');
+    rows('billingPayments', payments.filter(payment => filter === 'all' || payment.status === filter), x => `<tr><td>${safe(x.reference)}</td><td>${safe(x.firstname)} ${safe(x.lastname)}</td><td>${money(x.amount)}</td><td>${safe(x.provider.toUpperCase())}</td><td>${status(x.dispute_status==='open'?'disputed':Number(x.refunded_cents)>0?'refunded':x.status)}${Number(x.refunded_cents)>0?' '+money(Number(x.refunded_cents)/100):''}</td><td>${date(x.paid_at)}</td><td>${x.provider === 'paystack' && x.status === 'pending' ? `<button class="btn btn-outline-light btn-sm" data-verify="${safe(x.reference)}">Check status</button>` : ''}</td></tr>`, payments.length ? 'No payments match this status.' : 'No payments recorded yet.');
   }
   document.getElementById('invoiceFilter').addEventListener('change', renderInvoices);
   document.getElementById('invoiceSearch').addEventListener('input', renderInvoices);
@@ -95,7 +95,7 @@
     else input.removeAttribute('max');
   }
   document.getElementById('paymentInvoice').addEventListener('change', updatePaymentAmount);
-  const forms = { planForm: '/plans', membershipForm: '/memberships', invoiceForm: '/invoices', manualPaymentForm: '/payments/manual', accountForm: '/settings' };
+  const forms = { planForm: '/plans', membershipForm: '/memberships', invoiceForm: '/invoices', manualPaymentForm: '/payments/manual' };
   Object.entries(forms).forEach(([id, path]) => document.getElementById(id).addEventListener('submit', event => {
     event.preventDefault();
     void mutate(event.submitter || event.target.querySelector('[type="submit"]'), async () => {

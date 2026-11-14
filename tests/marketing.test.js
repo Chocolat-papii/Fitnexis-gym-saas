@@ -26,6 +26,7 @@ async function serve() {
 }
 
 test('public pages render, internal links and local assets resolve, and tenant homes stay separate', async () => {
+  const originalQuery=db.query;db.query=async(sql,...args)=>sql.includes('FROM saas_plans')?{rows:[]}:sql.includes('FROM platform_billing_config')?{rows:[{commission_bps:200,fee_bearer:'subaccount'}]}:originalQuery.call(db,sql,...args);
   const app = await serve();
   try {
     const routes = ['/', '/features', '/about', '/pricing', '/faq', '/contact', '/find-gym'];
@@ -72,7 +73,7 @@ test('public pages render, internal links and local assets resolve, and tenant h
     assert.ok(xml.includes('https://fitnexis.app/features'));
     assert.ok(!xml.includes('/platform'));
     assert.ok((await (await app.request('/robots.txt')).text()).includes('Disallow: /platform'));
-  } finally { await app.close(); }
+  } finally { db.query=originalQuery; await app.close(); }
 });
 
 test('contact stores validated enquiries, handles errors, and exposes a protected review inbox', async () => {
@@ -88,7 +89,7 @@ test('contact stores validated enquiries, handles errors, and exposes a protecte
       saved.push(params);
       return { rows: [] };
     }
-    if (sql.includes('s.id=$1')) return { rows: [{ id: 1, name: 'Platform owner', session_id: 'session-id' }] };
+    if (sql.includes('s.id=$1')) return { rows: [{ id: 1, name: 'Platform owner', role:'fitnexis_super_admin', session_id: 'session-id' }] };
     if (sql.startsWith('SELECT id,name,email')) return { rows: [{ id: 1, name: saved[0][0], email: saved[0][1], gym_name: saved[0][2], interest: saved[0][3], message: saved[0][4], created_at: new Date(), reviewed_at: null }] };
     if (sql.startsWith('SELECT COUNT(*)')) return { rows: [{ total: '1', unread: '1' }] };
     if (sql.startsWith('UPDATE platform_enquiries')) { reviewed = true; return { rowCount: params[0] === '1' ? 1 : 0 }; }

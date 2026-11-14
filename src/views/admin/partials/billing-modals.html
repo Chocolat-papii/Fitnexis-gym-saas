@@ -7,7 +7,8 @@
       
 <label for="planName">Plan name</label><input class="form-control" id="planName" name="name" required maxlength="100" placeholder="e.g. Silver">
 <label for="planPrice">Price (ZAR)</label><input class="form-control" id="planPrice" name="price" required type="number" min="0" step="0.01">
-<label for="planCycle">Billing cycle</label><select class="form-select" id="planCycle" name="billing_cycle"><option value="once_off">Once-off</option><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select>
+<label for="planCycle">Billing cycle</label><select class="form-select" id="planCycle" name="billing_cycle"><option value="once_off">Once-off</option><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option><option value="quarterly">Quarterly</option><option value="custom">Custom days</option></select>
+<label for="planCustomDays">Custom interval in days (for custom memberships)</label><input class="form-control" id="planCustomDays" name="custom_days" type="number" min="1" max="3660">
 <label for="planDescription">Description</label><textarea class="form-control" id="planDescription" name="description" rows="2" maxlength="500"></textarea>
 
     </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Create plan</button></div></form>
@@ -57,12 +58,7 @@
 <div class="modal fade billing-modal" id="accountModal" tabindex="-1" aria-labelledby="accountModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
     <div class="modal-header"><h2 class="modal-title fs-5" id="accountModalTitle">Payment settings</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-    <form id="accountForm"><div class="modal-body">
-      <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
-      <p class="billing-note">Enter the settlement account code provided when your gym was onboarded with Paystack.</p>
-<label for="paystackAccount">Paystack subaccount code</label><input class="form-control" id="paystackAccount" name="paystack_subaccount" pattern="ACCT_[A-Za-z0-9]{6,80}" placeholder="ACCT_..." required>
-
-    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Save settings</button></div></form>
+    <div class="modal-body"><p class="billing-note">The gym owner manages bank verification and online payment activation in Gym settings.</p><label for="paystackAccount">Linked payment account</label><input class="form-control" id="paystackAccount" readonly><a href="/admin/settings" class="btn btn-primary mt-3">Open gym settings</a></div>
   </div></div>
 </div>
 <div class="modal fade billing-modal" id="requestsModal" tabindex="-1" aria-labelledby="requestsModalTitle" aria-hidden="true">

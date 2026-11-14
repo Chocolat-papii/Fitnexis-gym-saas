@@ -38,6 +38,7 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     await sql.migrate.latest({ directory: './migrations' });
     const { rows: [gym] } = await pool.query("INSERT INTO gyms(name,slug) VALUES('Billing test',$1) RETURNING id", [`billing-${Date.now()}`]);
     gymId = gym.id;
+    await pool.query('INSERT INTO gym_subscriptions(gym_id) VALUES($1)',[gymId]);
     const { rows: [user] } = await pool.query("INSERT INTO users(firstname,lastname,phone,email,gym_id) VALUES('Test','Member','000','member@example.invalid',$1) RETURNING id", [gymId]);
     const { rows: [admin] } = await pool.query("INSERT INTO users(firstname,lastname,phone,email,role,gym_id) VALUES('Test','Admin','001','admin@example.invalid','admin',$1) RETURNING id", [gymId]);
     const plan = await billing.createPlan(gymId, { name: 'Monthly', price: '100', billing_cycle: 'monthly' });
@@ -56,6 +57,7 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
 
     process.env.PAYSTACK_SECRET_KEY = 'sk_test_placeholder';
     process.env.ALLOW_PLATFORM_COLLECTION = 'true';
+    await pool.query("INSERT INTO gym_payment_settings(gym_id,paystack_subaccount,payout_eligible,provider_mode,onboarding_status) VALUES($1,'ACCT_test123',true,'test','ready')",[gymId]);
     let initializedReference, verifyStatus = 'success', verifyAmount = 7000;
     globalThis.fetch = async (path, options) => {
       if (path.endsWith('/initialize')) {
@@ -64,7 +66,7 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
         initializedReference = body.reference;
         return { ok: true, json: async () => ({ status: true, data: { reference: body.reference, authorization_url: 'https://checkout.paystack.com/test-checkout' } }) };
       }
-      return { ok: true, json: async () => ({ status: true, data: { reference: path.split('/').at(-1), amount: verifyAmount, currency: 'ZAR', status: verifyStatus } }) };
+      return { ok: true, json: async () => ({ status: true, data: { reference: path.split('/').at(-1), amount: verifyAmount, currency: 'ZAR', domain:'test', status: verifyStatus } }) };
     };
     const checkout = await initiatePaystackCheckout(gymId, user.id, invoice.id);
     assert.equal(checkout.reference, initializedReference);
@@ -166,7 +168,7 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
         onlineReference = body.reference;
         return { ok: true, json: async () => ({ status: true, data: { reference: onlineReference, authorization_url: 'https://checkout.paystack.com/session-test' } }) };
       }
-      return { ok: true, json: async () => ({ status: true, data: { reference: onlineReference, currency: 'ZAR', amount: 1000, status: 'success' } }) };
+      return { ok: true, json: async () => ({ status: true, data: { reference: onlineReference, currency: 'ZAR', domain:'test', amount: 1000, status: 'success' } }) };
     };
     await initiatePaystackCheckout(gymId, user.id, onlineBooking.invoice_id);
     await verifyAndSettle(onlineReference);
@@ -196,8 +198,10 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     server = app.listen(0, '127.0.0.1');
     await new Promise(resolve => server.once('listening', resolve));
     const base = `http://127.0.0.1:${server.address().port}`;
-    const memberToken = jwt.sign({ sub: String(user.id), gymId, role: 'member' }, process.env.JWT_SECRET);
-    const adminToken = jwt.sign({ sub: String(admin.id), gymId, role: 'admin' }, process.env.JWT_SECRET);
+    const {rows:[memberSession]}=await pool.query("INSERT INTO gym_auth_sessions(user_id,gym_id,expires_at) VALUES($1,$2,NOW()+INTERVAL '2 hours') RETURNING id",[user.id,gymId]);
+    const {rows:[adminSession]}=await pool.query("INSERT INTO gym_auth_sessions(user_id,gym_id,expires_at) VALUES($1,$2,NOW()+INTERVAL '2 hours') RETURNING id",[admin.id,gymId]);
+    const memberToken = jwt.sign({ sub: String(user.id), gymId, role: 'member',version:1 }, process.env.JWT_SECRET,{audience:'fitnexis-gym',issuer:'fitnexis',jwtid:memberSession.id});
+    const adminToken = jwt.sign({ sub: String(admin.id), gymId, role: 'admin',version:1 }, process.env.JWT_SECRET,{audience:'fitnexis-gym',issuer:'fitnexis',jwtid:adminSession.id});
     const headers = { cookie: `token=${memberToken}` };
     assert.equal((await originalFetch(`${base}/member/billing`)).status, 401);
     const memberPage = await originalFetch(`${base}/member/billing`, { headers });
@@ -214,11 +218,11 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     assert.ok(activitiesHtml.includes('id="sessionIsPaid"'));
     const adminCsrf = activitiesHtml.match(/name="billing-csrf" content="([a-f0-9]+)"/)[1];
     const classResponse = await originalFetch(`${base}/admin/api/class-types`, {
-      method: 'POST', headers: { ...adminHeaders, 'Content-Type': 'application/json' },
+      method: 'POST', headers: { ...adminHeaders, 'Content-Type': 'application/json', 'x-billing-csrf':adminCsrf },
       body: JSON.stringify({ name: 'Salsa', description: 'Dance class', default_duration_minutes: 60, gym_id: '00000000-0000-0000-0000-000000000000' })
     });
     assert.equal(classResponse.status, 201, 'Class creation passes the gym ID as the service second argument');
-    const createdClass = await classResponse.json();
+    const createdClass = (await classResponse.json()).data;
     assert.equal(createdClass.gym_id, gymId, 'The browser cannot choose the class tenant');
     assert.equal((await pool.query('SELECT gym_id FROM class_types WHERE id=$1', [createdClass.id])).rows[0].gym_id, gymId);
     const createPlanResponse = await originalFetch(`${base}/admin/billing/plans`, { method: 'POST', headers: { ...adminHeaders, 'Content-Type': 'application/json', 'x-billing-csrf': adminCsrf }, body: JSON.stringify({ name: 'HTTP weekly plan', billing_cycle: 'weekly', price: '150' }) });
@@ -239,12 +243,58 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     const timetable = await originalFetch(`${base}/api/sessions`, { headers });
     assert.equal(timetable.status, 200);
     assert.equal((await timetable.json()).find(row => row.id === paidSession.id).enrolled, true, 'Authenticated timetable reports confirmed bookings');
+    const pastSession=await sessions.createClassSession({...sessionData,date:'2020-01-06',time:'09:00'},gymId);
+    const paidPast=await sessions.createClassSession({...sessionData,date:'2020-01-07',time:'10:00',is_paid:true,price:'25'},gymId);
+    const unjoinedPast=await sessions.createClassSession({...sessionData,date:'2020-01-08',time:'11:00'},gymId);
+    for(const session of [pastSession,paidPast])await pool.query("INSERT INTO class_bookings(session_id,user_id,gym_id,booking_status) VALUES($1,$2,$3,'booked')",[session.id,user.id,gymId]);
+    for(const identityHeaders of [headers,adminHeaders]){
+      const response=await originalFetch(`${base}/api/sessions`,{headers:identityHeaders});
+      assert.equal(response.status,200);
+      assert.ok(!(await response.json()).some(row=>row.id===pastSession.id),'History is separate from the active timetable');
+    }
+    assert.equal((await originalFetch(`${base}/api/sessions/history`)).status,401);
+    const historyResponse=await originalFetch(`${base}/api/sessions/history`,{headers});
+    const memberHistory=await historyResponse.json();
+    assert.deepEqual(memberHistory.sessions.map(s=>s.id).sort((a,b)=>a-b),[pastSession.id,paidPast.id].sort((a,b)=>a-b),'Member history includes only their free and paid signups');
+    const memberDetail=await (await originalFetch(`${base}/api/sessions/history/${pastSession.id}`,{headers})).json();
+    assert.equal(memberDetail.can_view_signups,false);assert.equal(memberDetail.session.my_booking_status,'booked');
+    for(const privateKey of ['signups','capacity','trainer_name','signup_count','waitlist_enabled','created_at'])assert.ok(!(privateKey in memberDetail.session),'Member detail excludes '+privateKey);
+    assert.equal((await originalFetch(`${base}/api/sessions/history/${unjoinedPast.id}`,{headers})).status,404);
+    assert.equal((await originalFetch(`${base}/api/sessions/history/${paidSession.id}`,{headers:adminHeaders})).status,404,'Upcoming sessions cannot be opened as history');
+    const adminHistory=await (await originalFetch(`${base}/api/sessions/history`,{headers:adminHeaders})).json();
+    assert.ok(adminHistory.sessions.some(s=>s.id===unjoinedPast.id));
+    const adminDetail=await (await originalFetch(`${base}/api/sessions/history/${pastSession.id}`,{headers:adminHeaders})).json();
+    assert.equal(adminDetail.can_view_signups,true);assert.equal(adminDetail.session.signups.length,1);assert.equal(adminDetail.session.signups[0].firstname,'Test');assert.equal(adminDetail.session.capacity,2);
+    await assert.rejects(()=>sessions.updateSession(pastSession.id,sessionData,gymId),/read-only/);
+    await assert.rejects(()=>sessions.deleteSession(pastSession.id,gymId),/read-only/);
+    await assert.rejects(()=>sessions.deleteSession(unjoinedPast.id,gymId),/read-only/);
+    const historyWriteHeaders={...adminHeaders,'Content-Type':'application/json','x-billing-csrf':adminCsrf};
+    assert.equal((await originalFetch(`${base}/admin/api/class-sessions/${pastSession.id}`,{method:'PUT',headers:historyWriteHeaders,body:JSON.stringify(sessionData)})).status,409);
+    assert.equal((await originalFetch(`${base}/admin/api/class-sessions/${pastSession.id}`,{method:'DELETE',headers:historyWriteHeaders})).status,409);
+    assert.equal((await originalFetch(`${base}/api/sessions/history?page=0`,{headers})).status,400);
+    const {rows:[privateBranch]}=await pool.query("INSERT INTO gym_branches(gym_id,name) VALUES($1,'Private history branch') RETURNING id",[gymId]);
+    await pool.query('UPDATE class_sessions SET branch_id=$1 WHERE id=$2',[privateBranch.id,unjoinedPast.id]);
+    assert.equal((await originalFetch(`${base}/api/sessions/history/${unjoinedPast.id}`,{headers:adminHeaders})).status,404,'Staff cannot inspect history outside their branch access');
+    const restrictedHistory=await (await originalFetch(`${base}/api/sessions/history`,{headers:adminHeaders})).json();
+    assert.ok(!restrictedHistory.sessions.some(s=>s.id===unjoinedPast.id));
+    await pool.query('INSERT INTO staff_branch_access(gym_id,user_id,branch_id) VALUES($1,$2,$3)',[gymId,admin.id,privateBranch.id]);
+    assert.equal((await originalFetch(`${base}/api/sessions/history/${unjoinedPast.id}`,{headers:adminHeaders})).status,200);
+    await pool.query(`INSERT INTO class_sessions(class_type_id,gym_id,starts_at,ends_at,status)
+      SELECT $1,$2,'2019-01-01'::timestamptz+n*INTERVAL '1 day','2019-01-01'::timestamptz+n*INTERVAL '1 day'+INTERVAL '1 hour','completed' FROM generate_series(1,21) n`,[type.id,gymId]);
+    const historyPageOne=await (await originalFetch(`${base}/api/sessions/history`,{headers:adminHeaders})).json();
+    const historyPageTwo=await (await originalFetch(`${base}/api/sessions/history?page=2`,{headers:adminHeaders})).json();
+    assert.equal(historyPageOne.sessions.length,20);assert.equal(historyPageOne.has_more,true);assert.equal(historyPageTwo.has_more,false);assert.ok(historyPageTwo.sessions.length>0);
+    assert.ok(historyPageTwo.sessions.every(s=>!historyPageOne.sessions.some(first=>first.id===s.id)),'History pages do not overlap');
+    const publicTimetable=await originalFetch(`${base}/api/sessions`);
+    assert.ok(!(await publicTimetable.json()).some(row=>row.id===pastSession.id),'Public timetable still shows upcoming sessions only');
+    await assert.rejects(()=>createBooking(unjoinedPast.id,user.id,gymId),/no longer available/);
     assert.equal((await originalFetch(`${base}/admin/billing`, { headers })).status, 403);
     assert.equal((await originalFetch(`${base}/admin/billing`, { headers: { cookie: `token=${adminToken}` } })).status, 200);
     assert.equal((await originalFetch(`${base}/member/billing/requests`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ plan_id: plan.id }) })).status, 403);
     assert.equal((await originalFetch(`${base}/member/billing/requests`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json', 'x-billing-csrf': csrf }, body: JSON.stringify({ plan_id: plan.id }) })).status, 201);
-    const wrongGymToken = jwt.sign({ sub: String(user.id), gymId: 'another-gym', role: 'member' }, process.env.JWT_SECRET);
+    const wrongGymToken = jwt.sign({ sub: String(user.id), gymId: 'another-gym', role: 'member' }, process.env.JWT_SECRET,{audience:'fitnexis-gym',issuer:'fitnexis'});
     assert.equal((await originalFetch(`${base}/member/billing`, { headers: { cookie: `token=${wrongGymToken}` } })).status, 403);
+    assert.equal((await originalFetch(`${base}/api/sessions/history`, { headers: { cookie: `token=${wrongGymToken}` } })).status, 403);
   } finally {
     if (server) await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     if (gymId) await pool.query('DELETE FROM gyms WHERE id=$1', [gymId]);

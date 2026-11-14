@@ -28,7 +28,7 @@ export const deleteSession = async (req, res) => {
     res.json({ success: true });
 
   } catch (err) {
-    console.error(err);
+    if(!err.status)console.error(err);
     res.status(err.status || 500).json({
       success: false,
       message: err.status ? err.message : "Failed to delete session"
@@ -63,6 +63,7 @@ export const editSession = async (req, res) => {
 
   
   } catch (err) {
+    if(err.status)return res.status(err.status).json({success:false,message:err.message});
     console.error("UPDATE SESSION ERROR:", err);
 
     if (err.code === "CLASS_TYPE_NOT_FOUND") {

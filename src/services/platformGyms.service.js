@@ -1,12 +1,14 @@
 import bcrypt from 'bcrypt';
 import { db } from '../config/db.js';
+import {audit} from './audit.service.js';
 
 export const gymFields = ['name', 'slug', 'gymMail', 'address', 'firstname', 'lastname', 'phone', 'email'];
 export function gymFormValues(input = {}) {
   return Object.fromEntries(gymFields.map(key => [key, typeof input[key] === 'string' ? input[key].trim() : '']));
 }
 
-export async function createPlatformGym(input = {}) {
+export async function createPlatformGym(input = {}, actor = {scope:'system'}, {pending=false,planId=null}={}) {
+  if(pending&&input.authorized_owner!=='yes')throw Object.assign(new Error('Confirm that you are authorized to register this gym.'),{status:400});
   const values = gymFormValues(input);
   values.slug = values.slug.toLowerCase();
   values.email = values.email.toLowerCase();
@@ -31,11 +33,19 @@ export async function createPlatformGym(input = {}) {
   const client = await db.connect();
   try {
     await client.query('BEGIN');
-    const { rows: [gym] } = await client.query(`INSERT INTO gyms(name,slug,email,address)
-      VALUES($1,$2,$3,$4) RETURNING id`, [values.name, values.slug, values.gymMail, values.address || null]);
-    await client.query(`INSERT INTO users(firstname,lastname,phone,email,password,role,gym_id)
-      VALUES($1,$2,$3,$4,$5,'admin',$6)`,
+    const { rows: [gym] } = await client.query(`INSERT INTO gyms(name,slug,email,address,account_status)
+      VALUES($1,$2,$3,$4,$5) RETURNING id`, [values.name, values.slug, values.gymMail, values.address || null,pending?'pending':'active']);
+    const {rows:[owner]}=await client.query(`INSERT INTO users(firstname,lastname,phone,email,password,role,gym_id)
+      VALUES($1,$2,$3,$4,$5,'gym_super_admin',$6) RETURNING id`,
     [values.firstname, values.lastname, values.phone, values.email, hash, gym.id]);
+    await client.query('UPDATE gyms SET owner_id=$2 WHERE id=$1',[gym.id,owner.id]);
+    await client.query('INSERT INTO gym_subscriptions(gym_id) VALUES($1)',[gym.id]);
+    if(planId){
+      const {rows:[plan]}=await client.query('SELECT id FROM saas_plans WHERE id=$1 AND is_active=true',[planId]);
+      if(!plan)throw Object.assign(new Error('Select an available subscription plan.'),{status:400});
+      await client.query('UPDATE gym_subscriptions SET pending_plan_id=$2 WHERE gym_id=$1',[gym.id,plan.id]);
+    }
+    await audit(client,actor,'gym.created',gym.id,gym.id,{owner_id:owner.id,status:pending?'pending':'active'});
     await client.query('COMMIT');
     return gym;
   } catch (error) {

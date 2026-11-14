@@ -9,9 +9,11 @@ const submissions = new Map();
 const interests = ['early-access', 'walkthrough', 'pricing', 'support'];
 const emptyValues = { name: '', email: '', gym_name: '', interest: 'early-access', message: '' };
 
-export function renderMarketing(req, res, page, extra = {}) {
+export async function renderMarketing(req, res, page, extra = {}) {
   const meta = pages[page];
-  return res.render('marketing/layout', { page, meta, pillars, faqs, year: new Date().getFullYear(), ...extra });
+  const {rows:saasPlans}=page==='pricing'?await db.query('SELECT id,name,price_cents,interval,features,limits FROM saas_plans WHERE is_active=true ORDER BY price_cents,id'):{rows:[]};
+  const {rows:[pricingPolicy]}=page==='pricing'?await db.query('SELECT commission_bps,fee_bearer FROM platform_billing_config WHERE id=1'):{rows:[]};
+  return res.render('marketing/layout', { page, meta, pillars, faqs, saasPlans, pricingPolicy:pricingPolicy||{commission_bps:200,fee_bearer:'subaccount'}, year: new Date().getFullYear(), ...extra });
 }
 
 export const marketingPage = page => (req, res) => renderMarketing(req, res, page);

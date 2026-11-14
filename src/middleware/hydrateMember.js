@@ -1,6 +1,8 @@
 import { getMemberWithProfile } from "../services/member.service.js";
 import * as dietaryService from "../services/memberDietary.service.js";
 import * as physiqueService  from '../services/physiqueLifestyleService.js';
+import {csrfToken} from './billingCsrf.js';
+import {hasPermission} from '../security/roles.js';
 
 export const hydrateMember = async (req, res, next) => {
   try {
@@ -20,6 +22,8 @@ export const hydrateMember = async (req, res, next) => {
 
 
     res.locals.member = member;
+    res.locals.csrf = csrfToken(req);
+    res.locals.canGym = permission => hasPermission('gym', req.user.role, permission);
     return next();
   } catch (err) {
     console.error("HYDRATE MEMBER ERROR:", err);

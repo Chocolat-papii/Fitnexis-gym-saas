@@ -5,6 +5,11 @@ import { randomBytes } from 'node:crypto';
 import { db } from '../config/db.js';
 import { platformOverview } from '../services/platform.service.js';
 import { createPlatformGym, gymFormValues } from '../services/platformGyms.service.js';
+import {beginMfa} from '../services/mfa.service.js';
+import {mfaCookieName,gymCookieOptions} from '../services/authSessions.service.js';
+import {platformCommercialRoutes} from './platformCommercial.routes.js';
+import {requireRecentAuth} from './security.routes.js';
+import {requirePermission,hasPermission} from '../security/roles.js';
 
 const router = Router();
 const production = process.env.NODE_ENV === 'production';
@@ -16,13 +21,14 @@ const attempts = new Map();
 router.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
   res.set('X-Frame-Options', 'DENY');
-  res.set('Content-Security-Policy', "default-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
+  res.set('Content-Security-Policy', "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
   let csrf = req.cookies[csrfCookie];
   if (!csrf || !/^[a-f0-9]{64}$/.test(csrf)) {
     csrf = randomBytes(32).toString('hex');
     res.cookie(csrfCookie, csrf, cookieOptions);
   }
   res.locals.csrf = csrf;
+  res.locals.reauthCodeSent=req.query.code==='sent';
   next();
 });
 
@@ -41,9 +47,9 @@ export async function requirePlatformAdmin(req, res, next) {
   } catch {
     return res.redirect('/platform/login');
   }
-  const { rows } = await db.query(`SELECT a.id,a.name,a.email,s.id AS session_id
+  const { rows } = await db.query(`SELECT a.id,a.name,a.email,a.role,s.id AS session_id,s.reauth_until
     FROM platform_sessions s JOIN platform_admins a ON a.id=s.admin_id
-    WHERE s.id=$1 AND a.id=$2 AND a.is_active=true AND s.logged_out_at IS NULL AND s.expires_at>NOW()`,
+    WHERE s.id=$1 AND a.id=$2 AND a.is_active=true AND s.mfa_verified=true AND s.logged_out_at IS NULL AND s.expires_at>NOW()`,
   [claims.jti, claims.sub]);
   if (!rows[0]) return res.redirect('/platform/login');
   req.platformAdmin = rows[0];
@@ -71,28 +77,26 @@ router.post('/login', csrfCheck, async (req, res) => {
   // A valid dummy hash keeps unknown-email attempts on the password comparison path.
   const valid = await bcrypt.compare(password, admin?.password || '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxuBUa.KI8L3YNYD70.jP4N.qKu');
   if (!admin || !valid) return res.status(401).render('platform/login', { error: 'Invalid email or password.' });
-  const { rows: [session] } = await db.query(`INSERT INTO platform_sessions(admin_id,expires_at)
-    VALUES($1,NOW()+INTERVAL '2 hours') RETURNING id`, [admin.id]);
-  const token = jwt.sign({}, process.env.JWT_SECRET, { algorithm: 'HS256', subject: String(admin.id),
-    jwtid: session.id, audience: 'fitnexis-platform', issuer: 'fitnexis', expiresIn: '2h' });
+  const challenge=await beginMfa('platform',admin);
+  res.cookie(mfaCookieName('platform'),challenge,{...gymCookieOptions,sameSite:'strict',maxAge:300000});
   attempts.delete(key);
-  res.cookie(sessionCookie, token, { ...cookieOptions, maxAge: 2 * 60 * 60 * 1000 });
-  res.cookie(csrfCookie, randomBytes(32).toString('hex'), cookieOptions);
-  res.redirect('/platform');
+  res.redirect('/security/mfa/platform');
 });
 
 router.use(requirePlatformAdmin);
 router.use((req, res, next) => {
   res.locals.admin = req.platformAdmin;
+  res.locals.canPermission=p=>hasPermission('platform',req.platformAdmin.role,p);
   res.locals.section = 'overview';
   next();
 });
-router.get('/gyms/new', (req, res) => {
+router.use(platformCommercialRoutes(csrfCheck));
+router.get('/gyms/new', requirePermission('platform','gyms.manage'), (req, res) => {
   res.render('platform/new-gym', { section: 'new-gym', values: gymFormValues(), error: null });
 });
-router.post('/gyms', csrfCheck, async (req, res) => {
+router.post('/gyms', requirePermission('platform','gyms.manage'), csrfCheck, requireRecentAuth, async (req, res) => {
   try {
-    await createPlatformGym(req.body);
+    await createPlatformGym(req.body,{scope:'platform',id:req.platformAdmin.id});
     res.redirect(303, '/platform?created=1#gyms');
   } catch (error) {
     if (![400, 409].includes(error.status)) throw error;
@@ -101,8 +105,8 @@ router.post('/gyms', csrfCheck, async (req, res) => {
     });
   }
 });
-router.get('/billing', (req, res) => res.render('platform/billing', { section: 'billing' }));
-router.get('/enquiries', async (req, res) => {
+
+router.get('/enquiries', requirePermission('platform','enquiries.manage'), async (req, res) => {
   const page = Math.min(100000, Math.max(1, Number.parseInt(req.query.page, 10) || 1));
   const [{ rows }, { rows: [counts] }] = await Promise.all([
     db.query('SELECT id,name,email,gym_name,interest,message,created_at,reviewed_at FROM platform_enquiries ORDER BY created_at DESC,id DESC LIMIT 25 OFFSET $1', [(page - 1) * 25]),
@@ -110,13 +114,13 @@ router.get('/enquiries', async (req, res) => {
   ]);
   res.render('platform/enquiries', { section: 'enquiries', enquiries: rows, counts, page });
 });
-router.post('/enquiries/:id/review', csrfCheck, async (req, res) => {
+router.post('/enquiries/:id/review', requirePermission('platform','enquiries.manage'), csrfCheck, async (req, res) => {
   if (!/^[1-9]\d{0,8}$/.test(req.params.id)) return res.status(400).send('Invalid enquiry.');
   const result = await db.query('UPDATE platform_enquiries SET reviewed_at=COALESCE(reviewed_at,NOW()) WHERE id=$1', [req.params.id]);
   if (!result.rowCount) return res.status(404).send('Enquiry not found.');
   res.redirect(303, '/platform/enquiries');
 });
-router.get('/', async (req, res) => {
+router.get('/', requirePermission('platform','billing.read'), async (req, res) => {
   const search = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 150) : '';
   const page = Math.min(100000, Math.max(1, Number.parseInt(req.query.page, 10) || 1));
   const data = await platformOverview(search, page);

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,7 +14,8 @@
     <script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script>
 
     
-  </head>
+  <script src="/assets/dashboard/js/csrfFetch.js" data-csrf="<%= csrf %>"></script>
+</head>
 
   <body class="bg-body-bg">
 
@@ -181,7 +182,7 @@
           </div>
 
           <div class="modal-body">
-            <form id="addMemberForm" class="needs-validation" novalidate>
+            <form id="addMemberForm" class="needs-validation" novalidate><div class="mb-3"><label class="form-label" for="memberInitialPassword">Initial member password</label><input class="form-control" id="memberInitialPassword" type="password" minlength="12" autocomplete="new-password" required></div>
               <div class="row g-3">
                 <div class="col-md-6">
                   <label class="form-label small-note">First name</label>
@@ -304,7 +305,7 @@
       }
 
       // Load theme
-      setTheme(localStorage.getItem('theme') || 'light');
+      setTheme(localStorage.getItem('theme') || 'dark');
 
       toggleBtn.addEventListener('click', () => {
         const current = html.getAttribute('data-bs-theme');

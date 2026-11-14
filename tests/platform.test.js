@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import { fileURLToPath } from 'node:url';
 import { db } from '../src/config/db.js';
 import router from '../src/routes/platform.routes.js';
+import {emailDelivery} from '../src/services/email.service.js';
 import { platformOverview } from '../src/services/platform.service.js';
 import { createPlatformGym } from '../src/services/platformGyms.service.js';
 import landingRoutes from '../src/routes/landingPageRoutes.js';
@@ -25,7 +26,7 @@ test('gym creation validates before connecting and rolls back failed administrat
     query: async (sql, params) => {
       calls.push({ sql, params });
       if (failure && sql.includes('INSERT INTO users')) throw Object.assign(new Error('insert failed'), { code: '23505' });
-      return { rows: sql.includes('INSERT INTO gyms') ? [{ id: 'new-id' }] : [] };
+      return { rows: sql.includes('INSERT INTO gyms') ? [{ id: 'new-id' }] : sql.includes('INSERT INTO users') ? [{id:7}] : [] };
     },
     release: () => released++
   });
@@ -36,11 +37,12 @@ test('gym creation validates before connecting and rolls back failed administrat
     assert.equal(calls.length, 0);
     assert.deepEqual(await createPlatformGym({ ...gymInput, slug: ' NEW-GYM ', email: ' ADMIN@example.invalid ' }), { id: 'new-id' });
     assert.equal(calls[0].sql, 'BEGIN');
-    assert.deepEqual(calls[1].params, ['New Gym', 'new-gym', 'contact@example.invalid', '123 Main Road']);
+    assert.deepEqual(calls[1].params, ['New Gym', 'new-gym', 'contact@example.invalid', '123 Main Road','active']);
     assert.equal(calls[2].params[3], 'admin@example.invalid');
     assert.equal(calls[2].params[5], 'new-id');
     assert.equal(await bcrypt.compare(gymInput.password, calls[2].params[4]), true);
-    assert.equal(calls[3].sql, 'COMMIT');
+    assert.ok(calls[3].sql.includes('UPDATE gyms SET owner_id'));
+    assert.equal(calls.at(-1).sql, 'COMMIT');
     assert.equal(released, 1);
     failure = true;
     calls.length = 0;
@@ -71,11 +73,14 @@ test('platform overview parameterizes search and pagination', async () => {
 
 test('platform authentication, rendering, CSRF and revocable sessions', async () => {
   const original = db.query;
+  const originalSend=emailDelivery.sendCode;
+  emailDelivery.sendCode=async()=>{};
   const originalConnect = db.connect;
   let gymWrites = 0;
   let duplicateGym = false;
   db.connect = async () => ({
     query: async sql => {
+      if(sql.includes('FROM mfa_challenges'))return {rows:[]};
       if (sql.includes('INSERT INTO gyms')) {
         if (duplicateGym) throw Object.assign(new Error('duplicate'), { code: '23505' });
         gymWrites++;
@@ -86,14 +91,15 @@ test('platform authentication, rendering, CSRF and revocable sessions', async ()
   });
   const secret = process.env.JWT_SECRET;
   process.env.JWT_SECRET = 'platform-test-only-secret';
+  process.env.SECURITY_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
   const password = await bcrypt.hash('test-password-123', 4);
   const id = 'ef1c2944-df29-470e-8f58-57556141acdd';
   let revoked = false;
   let disabled = false;
   db.query = async (sql, params) => {
-    if (sql.includes('SELECT * FROM platform_admins')) return { rows: params[0] === 'owner@example.invalid' ? [{ id: 1, password }] : [] };
+    if (sql.includes('SELECT * FROM platform_admins')) return { rows: (params[0] === 'owner@example.invalid'||params[0]===1) ? [{ id: 1, email:'owner@example.invalid', password }] : [] };
     if (sql.includes('INSERT INTO platform_sessions')) return { rows: [{ id }] };
-    if (sql.includes('s.id=$1')) return { rows: revoked || disabled ? [] : [{ id: 1, name: 'Owner <script>', session_id: id }] };
+    if (sql.includes('s.id=$1')) return { rows: revoked || disabled ? [] : [{ id: 1, name: 'Owner <script>', role:'fitnexis_super_admin', reauth_until:new Date(Date.now()+600000), session_id: id }] };
     if (sql.includes('UPDATE platform_sessions')) { revoked = true; return { rows: [] }; }
     if (sql.includes('LIMIT 25')) return { rows: [{ name: '<script>alert(1)</script>', slug: 'test', members: '2', active_members: '1', checkins: '4', collected: '100.00', created_at: new Date() }] };
     if (sql.includes('matching_gyms')) return { rows: [{ gyms: '1', matching_gyms: '1', members: '2', active_members: '1', checkins: '4', collected: '100' }] };
@@ -131,8 +137,10 @@ test('platform authentication, rendering, CSRF and revocable sessions', async ()
     assert.equal((await post('/login', { _csrf: csrf, email: 'owner@example.invalid', password: 'wrong' })).status, 401);
     const signedIn = await post('/login', { _csrf: csrf, email: ' OWNER@example.invalid ', password: 'test-password-123' });
     assert.equal(signedIn.status, 302);
-    const cookies = signedIn.headers.getSetCookie().map(value => value.split(';')[0]).join('; ');
-    const rotatedCsrf = signedIn.headers.getSetCookie().find(value => value.startsWith('fitnexis_platform_csrf=')).split(';')[0].split('=')[1];
+    assert.equal(signedIn.headers.get('location'),'/security/mfa/platform');
+    const verifiedToken=jwt.sign({},process.env.JWT_SECRET,{audience:'fitnexis-platform',issuer:'fitnexis',subject:'1',jwtid:id,expiresIn:'2h'});
+    const cookies = 'fitnexis_platform='+verifiedToken+'; '+csrfPair;
+    const rotatedCsrf = csrf;
     const dashboard = await request('', { headers: { cookie: cookies } });
     assert.equal(dashboard.status, 200);
     const html = await dashboard.text();
@@ -145,7 +153,7 @@ test('platform authentication, rendering, CSRF and revocable sessions', async ()
     assert.ok((await registration.text()).includes('name="gymMail"'));
     const billing = await request('/billing', { headers: { cookie: cookies } });
     assert.equal(billing.status, 200);
-    assert.ok((await billing.text()).includes('Coming soon'));
+    assert.ok((await billing.text()).includes('Platform billing'));
     assert.equal((await post('/gyms', { ...gymInput, _csrf: 'wrong' }, cookies)).status, 403);
     assert.equal(gymWrites, 0);
     const invalid = await post('/gyms', { ...gymInput, _csrf: rotatedCsrf, email: 'invalid' }, cookies);
@@ -165,7 +173,7 @@ test('platform authentication, rendering, CSRF and revocable sessions', async ()
     disabled = true;
     assert.equal((await request('', { headers: { cookie: cookies } })).headers.get('location'), '/platform/login');
     disabled = false;
-    assert.equal((await post('/logout', { _csrf: csrf }, cookies)).status, 403);
+    assert.equal((await post('/logout', { _csrf: 'wrong' }, cookies)).status, 403);
     assert.equal((await post('/logout', { _csrf: rotatedCsrf }, cookies)).status, 302);
     assert.equal(revoked, true);
     assert.equal((await request('', { headers: { cookie: cookies } })).headers.get('location'), '/platform/login');
@@ -175,8 +183,8 @@ test('platform authentication, rendering, CSRF and revocable sessions', async ()
     assert.equal((await post('/login', { _csrf: csrf, email: 'nobody@example.invalid', password: 'wrong' })).status, 429);
   } finally {
     db.query = original;
-    db.connect = originalConnect;
+    db.connect = originalConnect;emailDelivery.sendCode=originalSend;
     if (secret === undefined) delete process.env.JWT_SECRET; else process.env.JWT_SECRET = secret;
-    await new Promise(resolve => server.close(resolve));
+    await new Promise(resolve => {server.close(resolve);server.closeAllConnections();});
   }
 });

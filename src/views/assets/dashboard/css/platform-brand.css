@@ -1,0 +1,32 @@
+body { background: radial-gradient(ellipse at 90% 0%, #0ea5ff0b, transparent 45%), var(--fx-bg); color: var(--fx-text); font-family: var(--fx-font); }
+h1, h2 { font-family: var(--fx-heading); font-weight: 700; }
+.sidebar { background: #0e1825; border-right: 1px solid var(--fx-line); }
+.brand.fitnexis-brand { display: inline-flex; font-size: 20px; letter-spacing: 1px; }
+.brand.fitnexis-brand span { color: inherit; font: inherit; margin: 0; letter-spacing: inherit; vertical-align: baseline; }
+.brand.fitnexis-brand .brand-x { color: var(--fx-cyan); }
+.brand img { width: 32px; height: 30px; }
+.sidebar nav a { border: 1px solid transparent; }
+.sidebar nav a:hover { background: #163047; border-color: #245675; }
+.sidebar nav .selected { background: var(--fx-pulse); color: white; border-color: #0ea5ff; }
+.metrics article, .panel, .login-card { background: linear-gradient(135deg, #1f2937, #151f2d); border-color: var(--fx-line); box-shadow: 0 6px 24px #0000000f; }
+.metrics .accent { background: linear-gradient(135deg, #15394c, #182538); border-color: #285b76; }
+.metrics strong { font-variant-numeric: tabular-nums; }
+.badge { background: #182b3e; color: var(--fx-cyan); border-color: #2c4960; }
+.pill, .avatar { background: #103a48; color: #67e8f9; }
+.neutral { background: #263241; color: #b8c5d4; }
+button, .refresh { background: #182331; color: var(--fx-text); border-color: var(--fx-line); }
+.primary { background: var(--fx-pulse); color: #fff; border-color: #0ea5ff; font-weight: 600; }
+.primary:hover { filter: brightness(1.1); }
+.logout { background: transparent; color: var(--fx-muted); }
+input, .gym-form textarea { background: #111827; color: var(--fx-text); border-color: var(--fx-line); }
+input:focus, .gym-form textarea:focus { outline: 2px solid var(--fx-blue); outline-offset: 2px; }
+th { background: #111d2c; color: #a9b8ca; }
+.login-page { background: radial-gradient(ellipse at 20% 0%, #0ea5ff1a, transparent 55%), #0b111b; }
+.login-card .brand { margin-bottom: 36px; }
+.login-password-field { display: flex; align-items: stretch; gap: 8px; }
+.login-password-field input { flex: 1; min-width: 0; width: 100%; }
+.login-password-field button { background: #111827; color: var(--fx-text); border-color: var(--fx-line); min-width: 64px; }
+.login-password-field button:hover { color: var(--fx-cyan, #06d6ff); }
+.login-password-field button[hidden] { display: none; }
+.success { background: #064e3b40; color: #6ee7b7; border-color: #34d39940; }
+.error { background: #7f1d1d30; color: #ffb4a7; }

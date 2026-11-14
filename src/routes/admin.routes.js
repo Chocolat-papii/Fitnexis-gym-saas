@@ -11,9 +11,29 @@ import { requireGym } from '../middleware/gym.middleware.js';
 import { hydrateMember } from '../middleware/hydrateMember.js';
 import * as billing from '../controllers/admin/billing.controller.js';
 import { billingCsrf } from '../middleware/billingCsrf.js';
+import gymManagementRoutes from './gymManagement.routes.js';
+import {requirePermission} from '../security/roles.js';
+import {requireFeature} from '../services/saasBilling.service.js';
+import {branchAccess} from '../middleware/branchAccess.js';
 
 const router = Router();
 router.use('/admin', requireGym, requireAuth, requireAdmin, hydrateMember);
+router.use(gymManagementRoutes);
+router.use((req,res,next)=>{
+  const read=['GET','HEAD'].includes(req.method),path=req.path;
+  let permission;
+  if(path.startsWith('/billing/settings'))permission=read?'billing.read':'payments.configure';
+  else if(path.startsWith('/billing'))permission=read?'billing.read':'billing.write';
+  else if(path==='/checkin'||path==='/admin-kiosk'||path==='/search-members')permission='checkins.write';
+  else if(path.includes('class-'))permission=read?'classes.read':'classes.write';
+  else if(path==='/insights')permission='reports.read';
+  else if(path.startsWith('/member-details'))permission='members.write';
+  else permission=read?'members.read':'members.write';
+  requirePermission('gym',permission)(req,res,()=>read?next():billingCsrf(req,res,next));
+});
+router.use('/insights',requireFeature('financial_reports'));
+router.use((req,res,next)=>req.path.includes('class-')?requireFeature('classes')(req,res,next):next());
+router.use(branchAccess);
 
 router.get('/class-activities', getClassActivities);
 router.get('/all-members', viewAllMembers);

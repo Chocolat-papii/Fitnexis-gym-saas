@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -59,6 +59,7 @@
         }
 
     </style>
+<script src="/assets/dashboard/js/csrfFetch.js" data-csrf="<%= csrf %>"></script>
 </head>
 
 
@@ -207,7 +208,7 @@ const icon = document.getElementById('themeIcon');
 }
 
 // Load theme
-setTheme(localStorage.getItem('theme') || 'light');
+setTheme(localStorage.getItem('theme') || 'dark');
 
 toggleBtn.addEventListener('click', () => {
   const current = html.getAttribute('data-bs-theme');

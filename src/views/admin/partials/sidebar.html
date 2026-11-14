@@ -1,4 +1,5 @@
  <aside class="sidebar glass-card">
+      <a class="fitnexis-brand sidebar-brand" href="/admin/insights" aria-label="Fitnexis dashboard"><img src="/assets/brand/fitnexis-mark.svg" alt="" width="39" height="34"><span>FITNE<span class="brand-x">X</span>IS</span></a>
         <div class="d-flex align-items-center gap-3 admin">
             <!-- <div class="brand-badge">MMS</div> -->
             <div class="admin">
@@ -8,38 +9,14 @@
         </div>
         <hr class="small-note admin">
     
-        <nav class="d-grid gap-2">
-      <!-- <a class="small-note nav-pill text-decoration-none <%= activePage === 'admin' ? 'active' : '' %>" href="/admin/dashboard">
-        <span><i class="fas fa-home"></i></span> <span>Overview</span>
-      </a> -->
-      <a class="small-note nav-pill text-decoration-none <%= activePage === 'kiosk' ? 'active' : '' %>" href="/admin/admin-kiosk">
-        <span><i class="fas fa-user-check"></i></span> <span>Check-in Kiosk</span>
-      </a>
-      <a class="small-note nav-pill text-decoration-none <%= activePage === 'insights' ? 'active' : '' %>" href="/admin/insights">
-        <span><i class="fa-solid fa-chart-area"></i></span> <span>Insights</span>
-      </a>
-      <a class="small-note nav-pill text-decoration-none <%= activePage === 'classes' ? 'active' : '' %>" href="/admin/class-activities">
-        <span><i class="fa-regular fa-calendar"></i></span> <span>Classes</span>
-      </a>
-      <a class="small-note nav-pill text-decoration-none <%= activePage === 'members' ? 'active' : '' %>" href="/admin/all-members">
-        <span><i class="fa-solid fa-users"></i></span> <span>Members</span>
-      </a>
-      <!-- <a class="nav-pill text-decoration-none <%= activePage === 'member-details' ? 'active' : '' %>" href="/admin/personal-details">
-        <span><i class="fa-solid fa-id-card"></i></span> <span>Personal Details</span>
-      </a>
-      <a class="nav-pill text-decoration-none <%= activePage === 'edit-profile' ? 'active' : '' %>" href="/admin/edit-profile">
-        <span><i class="fa-solid fa-user-gear"></i></span> <span>Edit Profile</span>
-      </a> -->
-      <a class="small-note nav-pill text-decoration-none <%= activePage === 'billing' ? 'active' : '' %>" href="/admin/billing">
-        <span><i class="fa-solid fa-credit-card"></i></span> <span>Billing</span>
-      </a>
-      <!-- <a class="small-note nav-pill text-decoration-none <%= activePage === 'reports' ? 'active' : '' %>" href="/admin/reports">
-        <span><i class="fa-solid fa-chart-area"></i></span> <span>Reports</span>
-      </a>
-      <a class="small-note nav-pill text-decoration-none" href="/logout">
-        <span><i class="fa-solid fa-gears"></i></span> <span>Settings</span>
-      </a> -->
-    </nav>
+        <% const allowed=typeof canGym==='function'?canGym:()=>true; const navItems=[
+['kiosk','checkins.write','/admin/admin-kiosk','fa-user-check','Check-in Kiosk'],
+['insights','reports.read','/admin/insights','fa-chart-area','Insights'],
+['classes','classes.read','/admin/class-activities','fa-calendar','Classes'],
+['members','members.read','/admin/all-members','fa-users','Members'],
+['billing','billing.read','/admin/billing','fa-credit-card','Membership & Billing'],
+['financials','reports.read','/admin/financials','fa-chart-line','Financial reports']]; %>
+<nav class="d-grid gap-2"><% navItems.forEach(([key,permission,url,icon,label])=>{ if(allowed(permission)){ %><a class="nav-pill text-decoration-none <%= activePage===key?'active':'' %>" href="<%= url %>" <%- activePage===key?'aria-current="page"':'' %>><i class="fa-solid <%= icon %>" aria-hidden="true"></i><span><%= label %></span></a><% }}); %><% if(member.role==='gym_trainer'){ %><a class="nav-pill text-decoration-none" href="/admin/training">Training workspace</a><% } %><a class="nav-pill text-decoration-none <%= activePage==='settings'?'active':'' %>" href="/admin/settings" <%- activePage==='settings'?'aria-current="page"':'' %>><i class="fa-solid fa-gear" aria-hidden="true"></i> Gym settings &amp; security</a></nav>
         
     
     

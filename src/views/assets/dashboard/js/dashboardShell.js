@@ -11,7 +11,7 @@
   }
   let saved;
   try { saved = localStorage.getItem('theme'); } catch { /* Use the default theme. */ }
-  setTheme(saved === 'dark' ? 'dark' : 'light');
+  setTheme(saved === 'light' ? 'light' : 'dark');
   themeButton?.addEventListener('click', () => setTheme(root.dataset.bsTheme === 'dark' ? 'light' : 'dark'));
 
   const toggle = document.getElementById('toggleSidebar');

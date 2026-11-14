@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="17" fill="#223c30"/><path d="M39 13h8v9h-6c-4 0-6 2-6 6v3h11v9H35v15H24V40h-7v-9h7v-4c0-9 5-14 15-14Z" fill="#d8ef97"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" fill="none">
+  <defs>
+    <linearGradient id="pulse" x1="18" y1="91" x2="119" y2="9" gradientUnits="userSpaceOnUse"><stop stop-color="#06D6FF"/><stop offset=".48" stop-color="#0EA5FF"/><stop offset="1" stop-color="#00E5E8"/></linearGradient>
+    <linearGradient id="fold" x1="58" y1="34" x2="34" y2="99" gradientUnits="userSpaceOnUse"><stop stop-color="#06257A"/><stop offset=".5" stop-color="#0052ED"/><stop offset="1" stop-color="#06D6FF"/></linearGradient>
+  </defs>
+  <path d="M5 100 37 30C45 12 60 4 79 4H139L128 24C123 33 117 35 107 35H75C44 35 27 55 5 100Z" fill="url(#pulse)"/>
+  <path d="M5 100 37 30C45 12 60 4 79 4H139L128 24C123 33 117 35 107 35H75C44 35 27 55 5 100Z" stroke="#06D6FF" stroke-width=".5"/>
+  <path d="M5 100H25C38 100 47 94 53 81L66 53C70 46 76 43 85 43H112L101 62C97 69 92 71 83 71H69C62 71 57 75 53 82L50 88C46 96 39 100 25 100Z" fill="url(#pulse)"/>
+  <path d="M5 100 26 56C39 42 54 35 75 35H90C77 35 69 43 64 54L52 81C46 95 38 100 25 100Z" fill="url(#fold)"/>
+</svg>

@@ -114,7 +114,7 @@ export const updatePassword = async (req, res) => {
     const hash = await bcrypt.hash(newPassword, 10);
 
     await db.query(
-      `UPDATE public.users SET password = $1 WHERE id = $2 AND gym_id = $3`,
+      `UPDATE public.users SET password = $1, auth_version=auth_version+1 WHERE id = $2 AND gym_id = $3`,
       [hash, userId, gymId]
     );
 

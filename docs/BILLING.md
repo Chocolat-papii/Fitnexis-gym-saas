@@ -1,5 +1,7 @@
 # Fitnexis Billing & Payments
 
+The commercial-platform extension is documented in [COMMERCIAL_PLATFORM.md](COMMERCIAL_PLATFORM.md). It adds the user hierarchy/MFA, dashboard-managed SaaS plans, bank onboarding, commission accounting, refunds, and owner/platform financial controls. Apply the new migrations before running this version. Its setup and security rules supersede older manual subaccount instructions below.
+
 ## What is implemented
 
 - Gym-specific pricing plans, plan activation and membership assignment.
@@ -18,10 +20,10 @@
 ## Before enabling
 
 1. Back up PostgreSQL and run `npm run migrate` in staging before production.
-2. Set `PAYSTACK_SECRET_KEY=sk_test_...` in your server environment (never in source control).
+2. Set `PAYSTACK_MODE=test`, `PAYSTACK_TEST_SECRET_KEY=sk_test_...` and a base64-encoded 32-byte `SECURITY_ENCRYPTION_KEY` in the server environment (never in source control).
 3. In the Paystack dashboard configure webhook URL `https://YOUR-APP-HOST/api/billing/paystack/webhook`.
 4. Optionally set `PAYSTACK_CALLBACK_URL=https://YOUR-GYM-HOST/member/billing/return`. For multi-tenant custom domains configure the callback to the same host that owns the member's login session. Without an explicit callback, Paystack uses the account's dashboard settings and payment status is reconciled by webhooks.
-5. Under `/admin/billing`, configure the gym's Paystack subaccount. Online payments are disabled unless a subaccount is set. For explicit platform-wide collections only, set `ALLOW_PLATFORM_COLLECTION=true`.
+5. The gym owner completes bank validation and subaccount onboarding under `/admin/settings`. Online payments require a verified, active ZAR subaccount in the correct environment and a subscription with online payments enabled. `ALLOW_PLATFORM_COLLECTION` no longer bypasses eligibility or split routing.
 6. Set `ENABLE_BILLING_JOBS=true` on exactly one **worker** process to generate due invoices every 30 minutes. In multi-instance deployments, use an external scheduled job or one dedicated worker; row locks and unique indexes prevent duplicate invoices but multiple workers waste work.
 7. `npm test` runs unit and template tests. The PostgreSQL lifecycle test runs when `BILLING_TEST_DATABASE_URL` points at an isolated local database (see below). Complete Paystack test-mode checkout on the deployed gym domain before accepting real payments.
 

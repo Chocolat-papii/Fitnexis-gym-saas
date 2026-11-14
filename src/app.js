@@ -22,6 +22,8 @@ import { requireGym } from "./middleware/gym.middleware.js";
 import { paystackWebhook } from "./controllers/paystackWebhook.controller.js";
 import { startBillingJobs } from "./services/billingJobs.service.js";
 import platformRoutes from "./routes/platform.routes.js";
+import securityRoutes from './routes/security.routes.js';
+import gymRegistrationRoutes from './routes/gymRegistration.routes.js';
 
 
 
@@ -30,6 +32,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 const app = express();
+app.set('trust proxy', 1);
+app.use((req,res,next)=>{
+  if(process.env.NODE_ENV==='production'&&!req.secure)return res.status(426).send('Use HTTPS to access Fitnexis.');
+  res.set('X-Content-Type-Options','nosniff');
+  if(req.secure)res.set('Strict-Transport-Security','max-age=31536000');
+  next();
+});
 // Raw body must be preserved for Paystack HMAC verification.
 app.post("/api/billing/paystack/webhook", express.raw({ type: "application/json", limit: "200kb" }), paystackWebhook);
 
@@ -63,6 +72,8 @@ app.use(express.static(path.join(process.cwd(), "public")));
 // Platform administration has its own identity and must not inherit a gym context.
 app.use('/platform', platformRoutes);
 app.use(requireGym);
+app.use('/security', securityRoutes);
+app.use('/join', gymRegistrationRoutes);
 
 //
 app.use((req,res,next)=>{

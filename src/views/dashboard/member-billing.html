@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="en" data-bs-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Membership & Billing · Fitnexis</title><meta name="billing-csrf" content="<%= csrf %>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="/assets/dashboard/css/stylesdash.css">
@@ -30,6 +30,9 @@
   </nav>
   <% if (result && updates[result]) { %><div class="alert alert-info" role="status"><%= updates[result] %></div><% } %>
   <div class="alert alert-info d-none" role="status" id="billingMessage"></div>
+  <% if(!billing.membership || ['cancelled','replaced'].includes(billing.membership.status)) { %>
+  <section class="billing-card"><h2>Choose a membership</h2><form method="post" action="/member/billing/purchase"><input type="hidden" name="_csrf" value="<%= csrf %>"><label for="purchasePlan">Membership plan</label><select class="form-select" id="purchasePlan" name="plan_id" required><option value="">Select your plan</option><% billing.plans.forEach(plan=>{ %><option value="<%= plan.id %>"><%= plan.name %> — <%= fmt(plan.price) %> / <%= cycleLabel(plan.billing_cycle) %></option><% }); %></select><button class="btn btn-primary mt-3">Create membership invoice</button></form><p class="billing-note mt-2">A paid membership becomes active only after its invoice is fully settled.</p></section><% } %>
+  <% if((billing.notifications||[]).length) { %><section class="billing-card"><h2>Payment updates</h2><% billing.notifications.forEach(n=>{ %><p class="billing-note"><%= n.message %></p><% }); %></section><% } %>
   <section class="row g-3 mb-4 billing-summary" aria-label="Your billing summary">
     <div class="col-md-4"><div class="billing-card"><div class="billing-note">Your membership</div><div class="h4 mt-2 mb-1"><%= billing.membership?.plan_name || 'No plan assigned' %></div><div class="billing-stat-caption"><%= billing.membership ? fmt(billing.membership.plan_price) + ' / ' + cycleLabel(billing.membership.billing_cycle) : 'Contact your gym to get started' %></div></div></div>
     <div class="col-md-4"><div class="billing-card"><div class="billing-note">Membership status</div><div class="mt-2 mb-2"><span class="billing-status billing-status-<%= billing.membership?.status || 'inactive' %>"><%= billing.membership?.status || 'Not active' %></span></div><div class="billing-stat-caption">Next billing date: <%= billing.membership?.status === 'active' && billing.membership.next_bill_on ? dateFmt(billing.membership.next_bill_on) : 'Not scheduled' %></div></div></div>
@@ -56,7 +59,7 @@
 </tbody></table></div></section>
       <section class="tab-pane fade" id="memberPaymentsPanel" role="tabpanel" aria-labelledby="memberPaymentsTab" tabindex="0"><h2 class="h5 mb-1">Payment history</h2><p class="billing-note">Latest 200 payments. Check pending payments here if you left checkout before returning.</p><div class="billing-table"><table class="table table-hover"><thead><tr><th>Invoice</th><th>Reference</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Action</th></tr></thead><tbody>
 <% if (!billing.payments.length) { %><tr><td class="billing-empty" colspan="7">No payments recorded yet.</td></tr><% } %>
-<% billing.payments.forEach(payment => { %><tr><td><%= payment.invoice_number %></td><td><%= payment.reference %></td><td><%= fmt(payment.amount) %></td><td><%= payment.provider.toUpperCase() %></td><td><span class="billing-status billing-status-<%= payment.status %>"><%= payment.status %></span></td><td><%= dateFmt(payment.paid_at || payment.created_at) %></td><td>
+<% billing.payments.forEach(payment => { %><tr><td><%= payment.invoice_number %></td><td><%= payment.reference %></td><td><%= fmt(payment.amount) %></td><td><%= payment.provider.toUpperCase() %></td><td><span class="billing-status billing-status-<%= payment.status %>"><%= payment.dispute_status==='open'?'disputed':Number(payment.refunded_cents)>0?'refunded '+fmt(Number(payment.refunded_cents)/100):payment.status %></span></td><td><%= dateFmt(payment.paid_at || payment.created_at) %></td><td>
 <% if (payment.provider==='paystack' && payment.status==='pending') { %><button class="btn btn-outline-light btn-sm" type="button" data-verify="<%= payment.reference %>">Check status</button><% } %></td></tr><% }) %>
 </tbody></table></div></section>
       <section class="tab-pane fade" id="memberRequestsPanel" role="tabpanel" aria-labelledby="memberRequestsTab" tabindex="0"><h2 class="h5 mb-1">Plan-change requests</h2><p class="billing-note">Your latest 20 requests and your gym's decisions.</p><div class="billing-table"><table class="table table-hover"><thead><tr><th>Requested plan</th><th>Date</th><th>Status</th></tr></thead><tbody>

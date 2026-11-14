@@ -1,3 +1,5 @@
+@import url('/assets/brand/brand.css');
+
 body  {
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -413,3 +415,104 @@ display: none;
             bottom: 20%;
         }
       }
+
+/* Bootstrap tokens keep tables, forms, billing, and modals in the same system. */
+:root:not([data-bs-theme="light"]), [data-bs-theme="dark"] {
+  --bs-body-bg: var(--fx-bg);
+  --bs-body-color: var(--fx-text);
+  --bs-body-color-rgb: 248, 250, 252;
+  --bs-body-bg-rgb: 11, 17, 27;
+  --bs-secondary-color: var(--fx-muted);
+  --bs-secondary-bg: #162131;
+  --bs-tertiary-bg: var(--fx-charcoal);
+  --bs-border-color: var(--fx-slate);
+  --bs-emphasis-color: #fff;
+  --bs-primary: #0ea5ff;
+  --bs-primary-rgb: 14, 165, 255;
+  --bs-primary-bg-subtle: #123047;
+  --bs-primary-border-subtle: #245675;
+  --bs-primary-text-emphasis: #6cddff;
+  --bs-link-color: #58cdff;
+  --bs-link-color-rgb: 88, 205, 255;
+  --bs-link-hover-color: #98eaff;
+  --bs-link-hover-color-rgb: 152, 234, 255;
+  --bs-heading-color: var(--fx-text);
+  --bs-body-font-family: var(--fx-font);
+  color-scheme: dark;
+}
+[data-bs-theme="light"] {
+  --fx-bg: #f1f5f9;
+  --fx-text: #111827;
+  --fx-muted: #526478;
+  --fx-surface: #fff;
+  --fx-line: #cbd5e1;
+  --bs-primary-rgb: 2, 132, 199;
+  --bs-primary: #0284c7;
+  --bs-primary-bg-subtle: #e0f2fe;
+  --bs-primary-border-subtle: #7dd3fc;
+  --bs-link-color: #0369a1;
+  --bs-body-font-family: var(--fx-font);
+  color-scheme: light;
+}
+body { font-family: var(--fx-font); }
+h1, h2, h3, h4, h5, h6 { font-family: var(--fx-heading); letter-spacing: -.025em; }
+.bg-body-bg { background: radial-gradient(ellipse at 95% 0%, #0ea5ff0b, transparent 45%), var(--bs-body-bg); }
+.header { min-height: 76px; margin: 0 20px; border-top: 0; box-shadow: 0 8px 35px #00000012; }
+.header > button:first-child { color: var(--bs-body-color); font-family: var(--fx-heading); font-size: 1.1rem !important; }
+.header > button:first-child::before {
+  content: ""; display: inline-block; width: 34px; height: 30px; margin-right: 10px;
+  background: url('/assets/brand/fitnexis-mark.svg') center/contain no-repeat; vertical-align: middle;
+}
+.glass-card, [data-bs-theme] .glass-card, .billing-card {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--bs-tertiary-bg) 97%, var(--bs-body-color)), var(--bs-tertiary-bg));
+  border-color: var(--bs-border-color);
+  box-shadow: 0 8px 24px #0000000c;
+}
+.sidebar { border-radius: 18px; top: 96px; max-height: calc(100dvh - 116px); }
+.sidebar-brand { margin: 6px 0 28px; font-size: 20px; }
+.sidebar-brand img { width: 34px; }
+.nav-pill { padding: 12px 14px; border-radius: 9px; font-size: .875rem; }
+.nav-pill i { color: var(--bs-link-color); width: 19px; text-align: center; }
+.nav-pill:hover { background: var(--bs-primary-bg-subtle); }
+.nav-pill.active { background: var(--fx-pulse); border-color: #0ea5ff; color: #fff; box-shadow: 0 4px 18px #0ea5ff1f; }
+.nav-pill.active i { color: #fff; }
+.small-note { color: var(--bs-secondary-color); }
+.nav-pill.small-note, .content h1.small-note { color: var(--bs-body-color); }
+.nav-pill.active.small-note { color: #fff; }
+.btn { border-radius: 9px; font-weight: 500; }
+.btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #0284c7;
+  --bs-btn-border-color: #0ea5ff;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #2563eb;
+  --bs-btn-hover-border-color: #06d6ff;
+  --bs-btn-active-bg: #1d4ed8;
+  --bs-btn-active-border-color: #0ea5ff;
+  --bs-btn-disabled-bg: #334155;
+  --bs-btn-disabled-border-color: #475569;
+  background-image: var(--fx-pulse);
+  box-shadow: 0 3px 15px #0ea5ff15;
+}
+.btn-primary:hover { background-image: linear-gradient(115deg, #0284c7, #2563eb); }
+.btn-primary:disabled { background-image: none; }
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-link-color);
+  --bs-btn-border-color: #0ea5ff80;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #0369a1;
+  --bs-btn-hover-border-color: #0ea5ff;
+  --bs-btn-active-bg: #0369a1;
+}
+.form-control, .form-select { border-radius: 8px; }
+.form-control:focus, .form-select:focus { border-color: var(--fx-blue); box-shadow: 0 0 0 .2rem #0ea5ff26; }
+.form-check-input:checked { background-color: #0284c7; border-color: #0ea5ff; }
+.progress-bar { background: var(--fx-pulse); }
+.table { --bs-table-border-color: var(--bs-border-color); --bs-table-hover-bg: var(--bs-primary-bg-subtle); }
+.table thead th { font-size: .75rem; font-weight: 600; padding-block: 14px; }
+.table td { padding-block: 14px; }
+.display-6, .billing-stat, #total-visits, #visits-month { font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+.icon-btn { color: var(--bs-body-color); border-color: var(--bs-border-color) !important; border-radius: 10px; }
+.dropdown-menu, .modal-content { --bs-dropdown-bg: var(--bs-tertiary-bg); background-color: var(--bs-tertiary-bg); border-color: var(--bs-border-color); }
+@media (max-width: 991.98px) { .header { margin-inline: 14px; } .sidebar { top: 84px; max-height: calc(100dvh - 100px); } }
+@media (max-width: 480px) { .header { margin-inline: 8px; padding-inline: 8px !important; } .header > button:first-child { font-size: .9rem !important; } }

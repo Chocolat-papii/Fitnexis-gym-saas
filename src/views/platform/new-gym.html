@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fitnexis · Add gym</title><link rel="stylesheet" href="/assets/dashboard/css/platform.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Fitnexis · Add gym</title><link rel="stylesheet" href="/assets/dashboard/css/platform.css"><link rel="stylesheet" href="/assets/dashboard/css/platform-brand.css"><link rel="stylesheet" href="/assets/dashboard/css/commercial.css"></head>
 <body>
 <%- include('partials/sidebar.html') %>
 <main class="main">
   <header class="topbar"><span>Workspace <span class="muted">/ Add gym</span></span><span class="badge">Fitnexis platform</span></header>
   <div class="page-heading"><div><p class="eyebrow">GROW YOUR NETWORK</p><h1>Add a gym.</h1><p class="muted">Create the gym and its first administrator together.</p></div><a class="refresh" href="/platform#gyms">Back to gym directory</a></div>
+  <%- include('partials/reauth.html') %>
   <% if(error) { %><p class="error" role="alert"><%= error %></p><% } %>
   <form class="panel gym-form" action="/platform/gyms" method="post">
     <input type="hidden" name="_csrf" value="<%= csrf %>">

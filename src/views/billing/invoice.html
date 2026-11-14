@@ -7,5 +7,5 @@
 <div class="total">Paid: R <%= Number(invoice.paid_amount).toFixed(2) %><br>Balance due: R <%= Number(invoice.balance).toFixed(2) %></div>
 <h2>Payment receipts</h2><table><thead><tr><th>Method</th><th>Reference</th><th>Date</th><th>Amount</th></tr></thead><tbody>
 <% if (!payments.length) { %><tr><td colspan="4">No confirmed payments recorded.</td></tr><% } %>
-<% payments.forEach(p=>{ %><tr><td><%= p.provider.toUpperCase() %></td><td><%= p.reference %></td><td><%= p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-ZA') : '—' %></td><td>R <%= Number(p.amount).toFixed(2) %></td></tr><% }) %>
+<% payments.forEach(p=>{ %><tr><td><%= p.provider.toUpperCase() %></td><td><%= p.reference %></td><td><%= p.paid_at ? new Date(p.paid_at).toLocaleDateString('en-ZA') : '—' %></td><td>R <%= Number(p.amount).toFixed(2) %><% if(Number(p.refunded_cents)>0){ %><br>Refunded: R <%= (Number(p.refunded_cents)/100).toFixed(2) %><% } %></td></tr><% }) %>
 </tbody></table><footer>Invoice and receipt records generated from confirmed billing transactions. Please retain for your records.</footer></body></html>

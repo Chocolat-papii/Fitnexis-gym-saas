@@ -9,7 +9,8 @@ export const getClassActivities = async (req, res, next) => {
 
     const gymId = req.gymId;
     const classTypes = await classTypesService.getAll(gymId);
-    const sessions = await sessionsService.getAllSessions(gymId);
+    const allSessions = await sessionsService.getAllSessions(gymId,req.user?.role==='gym_super_admin'?null:req.user?.sub);
+    const sessions = allSessions.filter(session=>session.status==='scheduled'&&new Date(session.ends_at||session.starts_at)>new Date());
 
     return res.render("admin/admin-class-activities", {
         activePage: "classes",

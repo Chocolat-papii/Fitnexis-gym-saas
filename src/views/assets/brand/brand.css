@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap');
+
+/* Fitnexis charcoal identity. Shared by marketing and both application shells. */
+:root {
+  --fx-blue: #0ea5ff;
+  --fx-deep-blue: #2563eb;
+  --fx-cyan: #06d6ff;
+  --fx-carbon: #111827;
+  --fx-charcoal: #1f2937;
+  --fx-slate: #334155;
+  --fx-text: #f8fafc;
+  --fx-muted: #a9b8ca;
+  --fx-bg: #0b111b;
+  --fx-surface: #182331;
+  --fx-line: #334155;
+  --fx-pulse: linear-gradient(115deg, #06d6ff 0%, #0ea5ff 48%, #2563eb 100%);
+  --fx-font: Inter, "Segoe UI", Arial, sans-serif;
+  --fx-heading: Montserrat, Inter, "Segoe UI", Arial, sans-serif;
+  color-scheme: dark;
+}
+.fitnexis-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--fx-text);
+  font: 700 22px/1 var(--fx-heading);
+  letter-spacing: 1.3px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.fitnexis-brand img { width: 39px; height: 34px; flex-shrink: 0; }
+.fitnexis-brand .brand-x { color: var(--fx-cyan); }
+:focus-visible { outline: 2px solid var(--fx-cyan); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}

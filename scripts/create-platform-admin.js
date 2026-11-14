@@ -10,7 +10,7 @@ try {
     throw new Error('Set PLATFORM_ADMIN_EMAIL and PLATFORM_ADMIN_PASSWORD (12 characters minimum, 72 bytes maximum).');
   }
   const hash = await bcrypt.hash(password, 12);
-  const result = await db.query(`INSERT INTO platform_admins(email,name,password) VALUES($1,$2,$3)
+  const result = await db.query(`INSERT INTO platform_admins(email,name,password,role) SELECT $1,$2,$3,CASE WHEN EXISTS(SELECT 1 FROM platform_admins) THEN 'fitnexis_admin' ELSE 'fitnexis_super_admin' END
     ON CONFLICT(email) DO NOTHING RETURNING id`, [email, name, hash]);
   console.log(result.rowCount ? 'Platform admin created.' : 'Platform admin already exists; credentials unchanged.');
 } catch (err) {

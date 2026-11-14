@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="billing-csrf" content="<%= csrf %>">
@@ -17,8 +17,10 @@
 
 
     <link rel="stylesheet" href="../assets/dashboard/css/stylesdash.css" />
+    <link rel="stylesheet" href="/assets/dashboard/css/session-history.css" />
     <script src="https://kit.fontawesome.com/e6d1f98a15.js" crossorigin="anonymous"></script>
 
+<script src="/assets/dashboard/js/csrfFetch.js" data-csrf="<%= csrf %>"></script>
 </head>
 
 <body class="bg-body-bg">
@@ -42,7 +44,7 @@
                 <i class="fas fa-plus-circle"></i> Create Class
             </button>
         </div>
-         <hr class="small-note">
+        <hr class="small-note">
 
         <!-- ACTIVITY CARDS -->
         <div class="row g-4 mb-5">
@@ -235,9 +237,11 @@
 
         
         <!-- DRAG & DROP TIMETABLE -->
-        <h2 class="mb-4 mt-3 small-note">Weekly Timetable Summary</h2>
+        <h2 class="mb-4 mt-3 small-note">Session timetable</h2>
+        <p class="small-note">Upcoming sessions grouped by weekday. Previous sessions are listed in the history below.</p>
          <hr class="small-note">
         <div class="mb-4"></div>
+        <p id="timetableStatus" class="small-note mb-3" role="status">Loading sessions...</p>
         <div class="small-note row d-flex g-3 timetable-wrapper">
         
             <div class="col-md-3">
@@ -276,6 +280,7 @@
             </div>
         
         </div>
+        <%- include('../partials/session-history.html', {historyMember:false}) %>
         <!-- footer -->
           <%- include("partials/footer.html") %>
     <!-- End footer -->
@@ -436,15 +441,8 @@
 <script src="/assets/dashboard/js/dashboardShell.js"></script>
 <script src="../assets/dashboard/js/adminClassActivity.js" defer></script>
 <script src="../assets/dashboard/js/classSessionHandler.js"></script>
-<script src="../assets/public/timetable.js"></script>
-<script>
-    async function loadTimetable() {
-    const res = await fetch("/api/sessions");
-    const sessions = await res.json();
-    renderTimetable(sessions, "admin"); // pass "admin" role
-    }
-    loadTimetable();
-</script>
+<script src="/assets/public/timetable.js" data-role="admin" defer></script>
+<script src="/assets/dashboard/js/sessionHistory.js" defer></script>
 
 
 </body>

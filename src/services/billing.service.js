@@ -2,6 +2,8 @@ import { db } from '../config/db.js';
 import { billingToday, dateOnly } from './billingDates.js';
 import { billingCycles, normalizeBillingCycle, nextBillingDate } from './billingCycles.js';
 import { confirmPaidSessionBooking } from './sessionBilling.service.js';
+import {audit,notify} from './audit.service.js';
+import {paystackKey,paystackMode} from './paystackClient.js';
 
 export const billingError = (message, status = 400) => Object.assign(new Error(message), { status });
 export const positiveId = value => Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
@@ -36,21 +38,22 @@ export async function memberBilling(gymId, userId) {
     WHERE m.gym_id=$1 AND m.user_id=$2 ORDER BY (m.status='active') DESC,m.id DESC LIMIT 1`, [gymId, userId]);
   const { rows: invoices } = await db.query(`${invoiceSql} WHERE i.gym_id=$1 AND i.user_id=$2 ORDER BY i.id DESC LIMIT 200`, [gymId, userId]);
   const { rows: plans } = await db.query('SELECT id,name,price,billing_cycle FROM plans WHERE gym_id=$1 AND is_active=true ORDER BY price,name', [gymId]);
-  const { rows: payments } = await db.query(`SELECT p.id,p.invoice_id,p.reference,p.amount,p.provider,p.status,p.paid_at,p.created_at,
+  const { rows: payments } = await db.query(`SELECT p.id,p.invoice_id,p.reference,p.amount,p.provider,p.status,p.paid_at,p.created_at,p.refunded_cents,p.dispute_status,
     i.invoice_number FROM payments p JOIN invoices i ON i.id=p.invoice_id AND i.gym_id=p.gym_id
     WHERE p.gym_id=$1 AND i.user_id=$2 ORDER BY p.id DESC LIMIT 200`, [gymId, userId]);
   const { rows: requests } = await db.query(`SELECT r.id,r.status,r.created_at,p.name AS plan_name
     FROM billing_plan_requests r JOIN plans p ON p.id=r.plan_id AND p.gym_id=r.gym_id
     WHERE r.gym_id=$1 AND r.user_id=$2 ORDER BY r.id DESC LIMIT 20`, [gymId, userId]);
-  const { rows: [settings] } = await db.query('SELECT paystack_subaccount FROM gym_payment_settings WHERE gym_id=$1', [gymId]);
+  const { rows: [settings] } = await db.query('SELECT paystack_subaccount,payout_eligible,provider_mode FROM gym_payment_settings WHERE gym_id=$1', [gymId]);
   const { rows: [summary] } = await db.query(`SELECT
     COALESCE(SUM(GREATEST(i.amount-COALESCE(p.paid,0),0)),0)::numeric(12,2) AS outstanding,
     MIN(i.due_at) FILTER (WHERE i.amount>COALESCE(p.paid,0)) AS next_due
     FROM invoices i LEFT JOIN LATERAL (SELECT SUM(amount) AS paid FROM payments
       WHERE invoice_id=i.id AND gym_id=i.gym_id AND status='succeeded') p ON true
     WHERE i.gym_id=$1 AND i.user_id=$2 AND i.status<>'void'`, [gymId, userId]);
-  return { membership: memberships[0] || null, invoices, plans, payments, requests, summary,
-    onlinePaymentsEnabled: Boolean(process.env.PAYSTACK_SECRET_KEY && (settings?.paystack_subaccount || process.env.ALLOW_PLATFORM_COLLECTION === 'true')) };
+  const {rows:notifications}=await db.query("SELECT message,created_at FROM platform_notifications WHERE gym_id=$1 AND user_id=$2 AND audience='member' ORDER BY id DESC LIMIT 20",[gymId,userId]);
+  return { membership: memberships[0] || null, invoices, plans, payments, requests, summary, notifications,
+    onlinePaymentsEnabled: Boolean(settings?.payout_eligible && settings.provider_mode===paystackMode() && settings.paystack_subaccount && (paystackMode()!=='live'||process.env.PAYSTACK_ZA_SPLITS_APPROVED==='true') && (()=>{try{return Boolean(paystackKey());}catch{return false;}})()) };
 }
 
 export async function billingOverview(gymId) {
@@ -91,7 +94,7 @@ export async function invoiceDetail(gymId, invoiceId, userId = null) {
   if (!id) throw billingError('Invalid invoice');
   const { rows: [invoice] } = await db.query(`${invoiceSql} WHERE i.id=$1 AND i.gym_id=$2 AND ($3::int IS NULL OR i.user_id=$3)`, [id, gymId, userId]);
   if (!invoice) throw billingError('Invoice not found', 404);
-  const { rows: payments } = await db.query(`SELECT id,provider,reference,amount,currency,status,paid_at FROM payments
+  const { rows: payments } = await db.query(`SELECT id,provider,reference,amount,currency,status,paid_at,refunded_cents FROM payments
     WHERE invoice_id=$1 AND gym_id=$2 AND status='succeeded' ORDER BY id`, [id, gymId]);
   return { invoice, payments };
 }
@@ -141,19 +144,22 @@ export async function recordManualPayment(gymId, adminId, { invoice_id, amount, 
       await client.query("UPDATE invoices SET status='paid',updated_at=NOW() WHERE id=$1 AND gym_id=$2", [invoiceId, gymId]);
       await confirmPaidSessionBooking(client, gymId, invoiceId);
     }
+    await audit(client,{scope:'gym',id:Number(adminId)},'payment.manual_recorded',gymId,ref,{amount:sum,provider});
+    await notify(client,{gymId,userId:invoice.user_id,audience:'member',kind:'payment_success',key:'manual:'+gymId+':'+ref,message:'Your gym has recorded your '+provider.toUpperCase()+' payment.'});
     await client.query('COMMIT'); return payment;
   } catch (error) { await client.query('ROLLBACK'); if (error.code === '23505') throw billingError('Payment reference already used', 409); throw error; }
   finally { client.release(); }
 }
 
-export async function createPlan(gymId, { name, price, billing_cycle = 'monthly', description = '' }) {
+export async function createPlan(gymId, { name, price, billing_cycle = 'monthly', description = '', custom_days=null }) {
   const planName = String(name || '').trim();
   billing_cycle = normalizeBillingCycle(billing_cycle);
   if (!planName || planName.length > 100 || !billingCycles.includes(billing_cycle)) throw billingError('Invalid plan');
   const amount = amountValue(price, { allowZero: true });
   try {
-    const { rows: [plan] } = await db.query(`INSERT INTO plans(name,price,billing_cycle,description,gym_id)
-      VALUES ($1,$2,$3,$4,$5) RETURNING *`, [planName, amount, billing_cycle, String(description).slice(0, 500), gymId]);
+    if(billing_cycle==='custom'&&(!Number.isSafeInteger(Number(custom_days))||Number(custom_days)<1||Number(custom_days)>3660))throw billingError('Custom memberships need an interval of 1–3660 days');
+    const { rows: [plan] } = await db.query(`INSERT INTO plans(name,price,billing_cycle,description,gym_id,custom_days)
+      VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`, [planName, amount, billing_cycle, String(description).slice(0, 500), gymId,billing_cycle==='custom'?Number(custom_days):null]);
     return plan;
   } catch (error) { if (error.code === '23505') throw billingError('Plan already exists', 409); throw error; }
 }
@@ -267,7 +273,7 @@ export async function runBillingCycle(gymId, today = billingToday()) {
     const client = await db.connect();
     try {
       await client.query('BEGIN');
-      const { rows: [membership] } = await client.query(`SELECT m.*,p.price,p.name,p.billing_cycle FROM memberships m
+      const { rows: [membership] } = await client.query(`SELECT m.*,p.price,p.name,p.billing_cycle,p.custom_days FROM memberships m
         JOIN plans p ON p.id=m.plan_id AND p.gym_id=m.gym_id
         WHERE m.id=$1 AND m.gym_id=$2 AND m.status='active' AND p.is_active=true FOR UPDATE OF m`, [row.id, gymId]);
       // Catch up missed periods in one run, with a bounded transaction for old accounts.
@@ -275,7 +281,7 @@ export async function runBillingCycle(gymId, today = billingToday()) {
       while (membership?.auto_invoice && membership.next_bill_on && dateOnly(membership.next_bill_on) <= date
         && (!membership.end_date || dateOnly(membership.next_bill_on) <= dateOnly(membership.end_date)) && periods++ < 120) {
         const period = dateOnly(membership.next_bill_on);
-        const next = advancePeriod(period, membership.billing_cycle, dateOnly(membership.start_date));
+        const next = advancePeriod(period, membership.billing_cycle, dateOnly(membership.start_date), membership.custom_days);
         const { rows: [invoice] } = await client.query(`INSERT INTO invoices(gym_id,user_id,membership_id,amount,currency,status,due_at,period_start,description)
           VALUES($1,$2,$3,$4,'ZAR',$5,($6::date::timestamp AT TIME ZONE 'Africa/Johannesburg'),$7,$8)
           ON CONFLICT (gym_id,membership_id,period_start) WHERE membership_id IS NOT NULL AND period_start IS NOT NULL DO NOTHING RETURNING id`,
@@ -317,15 +323,11 @@ export async function listReminders(gymId) {
 }
 
 export async function setPaystackSubaccount(gymId, code) {
-  const val = String(code || '').trim();
-  if (!/^ACCT_[a-zA-Z0-9]{6,80}$/.test(val)) throw billingError('Invalid Paystack subaccount code');
-  const { rows: [settings] } = await db.query(`INSERT INTO gym_payment_settings(gym_id,paystack_subaccount)
-    VALUES($1,$2) ON CONFLICT(gym_id) DO UPDATE SET paystack_subaccount=$2,updated_at=NOW() RETURNING gym_id,paystack_subaccount`, [gymId, val]);
-  return settings;
+  throw billingError('Payment accounts must be verified in Gym settings. Direct subaccount assignment is disabled.',409);
 }
 
 export async function listPayments(gymId) {
-  const { rows } = await db.query(`SELECT p.id,p.invoice_id,p.amount,p.currency,p.provider,p.reference,p.status,p.paid_at,
+  const { rows } = await db.query(`SELECT p.id,p.invoice_id,p.amount,p.currency,p.provider,p.reference,p.status,p.paid_at,p.refunded_cents,p.dispute_status,
     i.invoice_number,u.firstname,u.lastname FROM payments p JOIN invoices i ON i.id=p.invoice_id AND i.gym_id=p.gym_id
     JOIN users u ON u.id=i.user_id AND u.gym_id=p.gym_id WHERE p.gym_id=$1 ORDER BY p.id DESC LIMIT 200`, [gymId]);
   return rows;

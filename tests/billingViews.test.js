@@ -48,10 +48,12 @@ test('Admin billing renders the shared shell and payment status action column', 
   assert.ok(!html.includes('table-dark'));
   const ids = [...html.replace(/<!--[\s\S]*?-->/g, '').matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(ids.length, new Set(ids).size, 'Modal, form and record IDs are unique');
-  for (const [modal, form] of [['planModal','planForm'], ['membershipModal','membershipForm'], ['invoiceModal','invoiceForm'], ['paymentModal','manualPaymentForm'], ['accountModal','accountForm']]) {
+  for (const [modal, form] of [['planModal','planForm'], ['membershipModal','membershipForm'], ['invoiceModal','invoiceForm'], ['paymentModal','manualPaymentForm']]) {
     assert.ok(html.includes(`data-bs-target="#${modal}"`));
     assert.ok(html.indexOf(`id="${form}"`) > html.indexOf('</main>'), 'Forms live in modals outside the dashboard');
   }
+  assert.ok(html.includes('id="paystackAccount" readonly'));
+  assert.ok(html.includes('Open gym settings'));
   assert.ok(html.includes('id="collectionMethods"'));
   assert.ok(html.includes('id="invoiceFilter"'));
   assert.ok(html.includes('id="paymentFilter"'));

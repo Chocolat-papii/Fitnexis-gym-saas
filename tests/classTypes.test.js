@@ -16,7 +16,7 @@ test('Class creation passes the authenticated gym to the insert and ignores a br
     await createClassType({ gymId: 'authenticated-gym', body: { name: 'Salsa', description: 'Dance class', default_duration_minutes: 60, gym_id: 'forged-gym' } }, response);
     assert.equal(response.statusCode, 201);
     assert.equal(inserted[3], 'authenticated-gym');
-    assert.equal(response.body.gym_id, 'authenticated-gym');
+    assert.equal(response.body.data.gym_id, 'authenticated-gym');
     assert.equal(response.body.message, 'Class created successfully.');
   } finally { db.query = original; }
 });

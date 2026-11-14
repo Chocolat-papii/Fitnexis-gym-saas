@@ -1,6 +1,7 @@
 import { db } from "../config/db.js";
 
 export const getSessions = async (req, res) => {
+  res.set('Cache-Control', 'no-store');
 
   const user_id = req.user?.sub || null;
   const gymId = req.gymId;
@@ -9,6 +10,8 @@ export const getSessions = async (req, res) => {
     SELECT 
       s.id,
       s.starts_at,
+      s.ends_at,
+      s.starts_at<=NOW() AS has_started,
       TO_CHAR(s.starts_at AT TIME ZONE 'Africa/Johannesburg','HH24:MI') AS time,
       TRIM(TO_CHAR(s.starts_at AT TIME ZONE 'Africa/Johannesburg','Day')) AS day,
       s.capacity,
@@ -29,7 +32,8 @@ export const getSessions = async (req, res) => {
       AND b.user_id = $1::int
       AND b.gym_id = $2
       WHERE s.gym_id = $2
-      AND s.status='scheduled' AND s.starts_at>NOW()
+      AND s.status='scheduled' AND COALESCE(s.ends_at,s.starts_at)>NOW()
+      AND (s.starts_at>NOW() OR $1::int IS NOT NULL)
     ORDER BY s.starts_at
   `,[user_id, gymId]);
 

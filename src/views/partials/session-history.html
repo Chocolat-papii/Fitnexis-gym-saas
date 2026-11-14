@@ -1,0 +1,17 @@
+<section class="card glass-card rounded-4 shadow-sm mt-4 session-history" aria-labelledby="sessionHistoryHeading">
+  <div class="card-body">
+    <header class="history-heading">
+      <div><p class="history-eyebrow">PAST CLASSES</p><h2 id="sessionHistoryHeading"><%= historyMember ? 'Your session history' : 'Session history' %></h2>
+      <p class="history-intro"><%= historyMember ? 'The free and paid sessions you signed up for.' : 'A record of past, completed and cancelled sessions.' %> Select a session to take a closer look.</p></div>
+      <span class="history-readonly"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Read-only</span>
+    </header>
+    <section id="sessionHistoryDetail" class="history-detail" aria-label="Selected session details" tabindex="-1" hidden></section>
+    <p id="sessionHistoryStatus" class="history-list-status" role="status">Loading session history...</p>
+    <div id="sessionHistoryList" class="history-list"></div>
+    <nav class="history-pagination" aria-label="Session history pages">
+      <button type="button" id="sessionHistoryPrevious" class="btn btn-sm btn-outline-secondary" disabled>Previous</button>
+      <span id="sessionHistoryPage" class="small-note">Page 1</span>
+      <button type="button" id="sessionHistoryNext" class="btn btn-sm btn-outline-secondary" disabled>Next</button>
+    </nav>
+  </div>
+</section>
