@@ -2,6 +2,8 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import { db } from "../../config/db.js";
+import { profilePhotoStorage, profilePhotoUrl } from '../../services/profilePhoto.service.js';
+import { hasPermission } from '../../security/roles.js';
 
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -16,9 +18,11 @@ export const viewEditProfile = async (req, res, next) =>  {
 // general member Account/ profile updates
 
 export const updateMemberProfile = async (req, res) => {
+  const userId = req.user?.sub;
+  const gymId = req.gymId;
+  if (!userId || !gymId) return res.status(401).json({ ok: false, message: 'Please sign in again.' });
+  let uploaded, previousPhoto, connection, committed = false;
   try {
-    const userId = req.user.sub;
-    const gymId = req.gymId;
 
     const display_name = req.body.display_name || null;
     const bio = req.body.bio || null;
@@ -28,12 +32,19 @@ export const updateMemberProfile = async (req, res) => {
     const sms_note  = req.body.sms_note === "on";
     const wa_note   = req.body.wa_note === "on";
 
-    // if file uploaded, save the public path
-    const profile_picture = req.file
-  ? `/uploads/profile-pics/${req.file.filename}`
-  : null;
+    if (req.file) {
+      uploaded = await profilePhotoStorage.upload(req.file, gymId, userId);
+      connection = await db.connect();
+      await connection.query('BEGIN');
+      // Serialize replacements, including the first profile insert.
+      const owner = await connection.query('SELECT id FROM users WHERE id=$1 AND gym_id=$2 FOR UPDATE', [userId, gymId]);
+      if (!owner.rows.length) throw Object.assign(new Error('Member not found.'), { status: 404 });
+      const { rows } = await connection.query('SELECT profile_picture FROM member_profile WHERE user_id=$1 AND gym_id=$2', [userId, gymId]);
+      previousPhoto = rows[0]?.profile_picture;
+    }
+    const profile_picture = uploaded || null;
 
-    await db.query(
+    await (connection || db).query(
       `
       INSERT INTO public.member_profile (user_id, profile_picture, display_name, bio, mail_note, sms_note, wa_note, gym_id)
       VALUES ($1, COALESCE($2, '/images/profile-pic.jpg'), $3, $4, $5, $6, $7,$8)
@@ -50,13 +61,44 @@ export const updateMemberProfile = async (req, res) => {
       [userId, profile_picture, display_name, bio, mail_note, sms_note, wa_note, gymId]
     );
 
-    return res.status(200).json({ ok: true, message: "Profile updated" });
+    if (connection) await connection.query('COMMIT');
+    committed = true;
+    if (previousPhoto?.startsWith('supabase://')) {
+      try { await profilePhotoStorage.remove(previousPhoto, gymId, userId); }
+      catch { console.error('Previous profile photo cleanup failed.'); }
+    }
+    return res.status(200).json({ ok: true, message: "Profile updated", ...(uploaded ? { profile_picture: profilePhotoUrl(uploaded, userId) } : {}) });
   } catch (err) {
-    console.error("PROFILE UPDATE ERROR:", err);          // full error
-    console.error("CODE:", err.code, "MSG:", err.message); // pg errors have code/message
-    return res.status(500).send("Server error updating profile");
+    if (connection && !committed) {
+      try { await connection.query('ROLLBACK'); } catch { /* Connection may have closed. */ }
+    }
+    if (uploaded && !committed) {
+      try { await profilePhotoStorage.remove(uploaded, gymId, userId); }
+      catch { console.error('Uncommitted profile photo cleanup failed.'); }
+    }
+    const status = [400, 403, 404, 503].includes(err.status) ? err.status : 500;
+    return res.status(status).json({ ok: false, message: status === 500 ? 'Could not update profile. Please try again.' : err.message });
+  } finally {
+    connection?.release();
   }
 };
+
+export async function viewProfilePhoto(req, res) {
+  res.set('Cache-Control', 'private, no-store');
+  const userId = req.params.userId;
+  if (!/^[1-9]\d*$/.test(userId)) return res.sendStatus(404);
+  if (String(req.user?.sub) !== userId && !hasPermission('gym', req.user?.role, 'members.read')) return res.sendStatus(403);
+  try {
+    const { rows } = await db.query('SELECT profile_picture FROM member_profile WHERE user_id=$1 AND gym_id=$2', [userId, req.gymId]);
+    const reference = rows[0]?.profile_picture;
+    if (!reference?.startsWith('supabase://')) return res.redirect(302, '/images/profile-pic.jpg');
+    const url = await profilePhotoStorage.signedUrl(reference, req.gymId, userId);
+    res.set('Referrer-Policy', 'no-referrer');
+    return res.redirect(302, url);
+  } catch (error) {
+    return res.status(error.status === 404 ? 404 : 503).send('Photo unavailable.');
+  }
+}
 
 
 // password updates/change
