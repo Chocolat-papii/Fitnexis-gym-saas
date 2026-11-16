@@ -5,7 +5,7 @@ import { viewMemberPortal } from "../controllers/member/portal.controller.js";
 import { viewMemberActivities } from "../controllers/member/activities.controller.js";
 import { getMemberDietary, updateMemberDietary, viewMemberNutrition } from "../controllers/member/nutrition.controller.js";
 import { deleteEmergencyContact, getEmergencyContacts, updateEmsDetails, updateHealthRecord, updatePersonalDetails, viewMemberPersonalDetails } from "../controllers/member/personalDetails.controller.js";
-import { viewEditProfile, updateMemberProfile, updatePassword } from "../controllers/member/editProfile.controller.js";
+import { viewEditProfile, updateMemberProfile, updatePassword, viewProfilePhoto } from "../controllers/member/editProfile.controller.js";
 import { viewMemberBlling, memberInvoice, startCheckout, requestChange, returnFromPaystack, verifyPayment } from "../controllers/member/billing.controller.js";
 import { billingCsrf } from "../middleware/billingCsrf.js";
 import { viewMemberReports } from "../controllers/member/reports.controller.js";
@@ -17,6 +17,8 @@ import { getMyStats } from "../controllers/member/attendance.controller.js";
 import { requireGym } from "../middleware/gym.middleware.js";
 import {requireFeature} from '../services/saasBilling.service.js';
 import {purchaseMembership} from '../services/membershipCheckout.service.js';
+import { sameOrigin } from '../middleware/sameOrigin.js';
+import { rateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
@@ -38,7 +40,8 @@ router.post("/physiqueLifestyle", requireAuth, updatePhysiqueLifestyle)
 
 
 // update edit profile routes
-router.post("/member-profile-update", requireAuth, uploadProfilePic.single("profile_picture"), updateMemberProfile);
+router.post("/member-profile-update", requireAuth, sameOrigin, rateLimit('profile-updates', 20, 15), uploadProfilePic, updateMemberProfile);
+router.get('/profile-photo/:userId', requireAuth, viewProfilePhoto);
 router.post("/member-password-update", requireAuth, updatePassword);
 
 // member dashboard/portals

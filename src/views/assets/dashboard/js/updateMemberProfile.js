@@ -38,15 +38,16 @@
       body: fd,
     });
 
-    // Show real response
-    const text = await res.text();
-    console.log("SAVE PROFILE:", res.status, res.statusText, res.url, text);
+    const result = await res.json();
 
     if (!res.ok) {
-      showPopup(`Could not save profile status ${res.status})`, "info");
+      showPopup(result.message || 'Could not save profile. Please try again.', "info");
       return;
     }
 
+    if (result.profile_picture) {
+      document.getElementById('profilePreview').src = result.profile_picture;
+    }
     showPopup("Profile saved successfully", "success")
   } catch (err) {
     console.error(err);
