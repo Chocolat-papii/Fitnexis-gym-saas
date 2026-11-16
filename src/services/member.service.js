@@ -1,4 +1,5 @@
 import { db } from "../config/db.js";
+import { profilePhotoUrl } from './profilePhoto.service.js';
 
 export async function getMemberWithProfile(userId, gymId) {
  const { rows } = await db.query(
@@ -62,6 +63,7 @@ export async function getMemberWithProfile(userId, gymId) {
   `,
   [userId, gymId]
 );
+  if (rows[0]) rows[0].profile_picture = profilePhotoUrl(rows[0].profile_picture, rows[0].id);
   return rows[0];
 }
 
@@ -95,5 +97,5 @@ export const searchMembers = async (query, gymId) => {
   [`%${query}%`, gymId]
 );
 
-  return result.rows;
+  return result.rows.map(member => ({ ...member, profile_picture: profilePhotoUrl(member.profile_picture, member.id) }));
 };
