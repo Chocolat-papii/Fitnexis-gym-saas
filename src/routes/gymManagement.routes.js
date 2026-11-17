@@ -11,8 +11,24 @@ import {subscriptionAccess,selectSaasPlan,cancelSubscription,initializeSaasCheck
 import {financialSummary,financialCsv} from '../services/financialReporting.service.js';
 import {requestRefund,reconcileRefund} from '../services/refunds.service.js';
 import {effectiveCommission} from '../services/commission.service.js';
+import {gymMemberActivity} from '../services/gymMemberActivity.service.js';
+import {retryMemberChangeEmail,deliverMemberChangeEmails} from '../services/memberChangeNotifications.service.js';
+import {rateLimit} from '../middleware/rateLimit.js';
 
 const router=Router(),can=p=>requirePermission('gym',p);
+router.get('/activity',can('audit.read'),async(req,res,next)=>{
+  try{res.set('Cache-Control','no-store');res.render('admin/member-activity',{...await gymMemberActivity(req.gymId,req.query),activePage:'activity',gym:req.gym,csrf:csrfToken(req)});}
+  catch(error){if(error.status)return res.status(error.status).send(error.message);next(error);}
+});
+router.post('/activity/emails/:id/retry',can('audit.read'),billingCsrf,rateLimit('member-email-retry',10,1),async(req,res,next)=>{
+  try{
+    if(!/^[1-9]\d{0,18}$/.test(req.params.id))return res.sendStatus(400);
+    const job=await retryMemberChangeEmail(req.gymId,req.params.id,actorFrom(req));
+    // The queue remains retryable even if this immediate delivery pass is interrupted.
+    try{await deliverMemberChangeEmails({eventId:job.event_id,gymId:req.gymId,limit:2});}catch{}
+    res.redirect(303,'/admin/activity');
+  }catch(error){if(error.status)return res.status(error.status).send(error.message);next(error);}
+});
 const action=(fn,redirect='/admin/settings')=>async(req,res,next)=>{try{const data=await fn(req);if(req.is('application/json'))return res.json(data||{ok:true});res.redirect(303,redirect);}catch(error){if(error.code==='23505')return res.status(409).send('That record already exists.');if(error.status)return res.status(error.status).send(error.message);next(error);}};
 router.get('/training',async(req,res,next)=>{try{
   if(req.user.role!=='gym_trainer'&&!hasPermission('gym',req.user.role,'staff.manage'))return res.sendStatus(403);

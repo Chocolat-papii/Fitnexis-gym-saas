@@ -26,6 +26,12 @@ Codes, API keys and provider response bodies are not logged or returned to users
 
 ## Sensitive changes
 
+The same Resend HTTPS integration also sends transactional member-account notices after gym staff save profile changes, suspend/restore access, deactivate/reactivate an account, reset a password, change a plan, or pause/resume a membership. These are account/security notices, independent of optional communication preferences. Passwords, sign-in codes and private profile values are never included. Email-address changes notify both the previous and new address. Saving an unchanged profile does not send another notice.
+
+Run `npm.cmd run migrate` after this update, then restart the server. The member change, audit entry and email queue record commit together. Email is attempted after commit. Failed sends do not undo a successful change: a worker retries automatically with backoff, up to five attempts. The worker starts with the app and does not depend on billing jobs being enabled. Resend API acceptance appears as **Sent**; it does not confirm inbox delivery. Resend deduplicates retries with a stable idempotency key for 24 hours. A retry after that window may deliver a duplicate. The worker runs while the host is awake; Render Free can delay retries while sleeping.
+
+The gym superuser can open **Member activity** at `/admin/activity` to see who made each change, when, a summary and notification status. Only the gym superuser has access to this gym-scoped, read-only audit trail. Failed emails can be retried there after resolving delivery problems; sent emails cannot be resent through the retry button.
+
 In gym settings or platform identity confirmation, select **Send confirmation code**, then submit your password and the emailed code. This grants five minutes to complete sensitive changes. Confirmation codes cannot be used as sign-in codes or for another account. Codes expire after five minutes, allow five attempts, and work once. Wait one minute between code requests; resending invalidates the previous code.
 
 The email-code issuance cooldown is enforced in PostgreSQL across server processes. Existing IP rate limiting remains process-local; use shared gateway rate limiting for a production cluster. Protect administrator mailboxes. Automated password recovery is outside this change.

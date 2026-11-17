@@ -3,6 +3,7 @@ import { billingToday, dateOnly } from './billingDates.js';
 import { billingCycles, normalizeBillingCycle, nextBillingDate } from './billingCycles.js';
 import { confirmPaidSessionBooking } from './sessionBilling.service.js';
 import {audit,notify} from './audit.service.js';
+import {recordMemberChange,completeMemberChange} from './memberChangeNotifications.service.js';
 import {paystackKey,paystackMode} from './paystackClient.js';
 
 export const billingError = (message, status = 400) => Object.assign(new Error(message), { status });
@@ -175,28 +176,34 @@ export async function updatePlan(gymId, planId, { price, is_active }) {
   return plan;
 }
 
-export async function assignMembership(gymId, { user_id, plan_id, start_date }) {
+export async function assignMembership(gymId, { user_id, plan_id, start_date },actor=null) {
   const userId = positiveId(user_id), planId = positiveId(plan_id);
   if (!userId || !planId) throw billingError('Invalid member or plan');
   const start = start_date ? isoDate(start_date) : billingToday();
   const client = await db.connect();
+  let changed;
   try {
     await client.query('BEGIN');
-    const { rows: [member] } = await client.query("SELECT id FROM users WHERE id=$1 AND gym_id=$2 AND role='member' FOR UPDATE", [userId, gymId]);
-    const { rows: [plan] } = await client.query('SELECT id FROM plans WHERE id=$1 AND gym_id=$2 AND is_active=true', [planId, gymId]);
+    const { rows: [member] } = await client.query("SELECT id,firstname,lastname,email FROM users WHERE id=$1 AND gym_id=$2 AND role='member' FOR UPDATE", [userId, gymId]);
+    const { rows: [plan] } = await client.query('SELECT id,name,price,billing_cycle FROM plans WHERE id=$1 AND gym_id=$2 AND is_active=true', [planId, gymId]);
     if (!member || !plan) throw billingError('Member or active plan not found', 404);
     await client.query("UPDATE memberships SET status='replaced',updated_at=NOW() WHERE user_id=$1 AND gym_id=$2 AND status IN ('active','paused')", [userId, gymId]);
     const { rows: [membership] } = await client.query(`INSERT INTO memberships(user_id,plan_id,gym_id,start_date,status,next_bill_on,auto_invoice)
       VALUES ($1,$2,$3,$4,'active',$4,true) RETURNING *`, [userId, planId, gymId, start]);
-    await client.query('COMMIT'); return membership;
+    const eventId=actor?await recordMemberChange(client,actor,gymId,member,'member.membership_changed',{
+      summary:`Your gym assigned the ${plan.name} membership, starting ${start}, at ZAR ${plan.price} per ${plan.billing_cycle}. Existing invoices and payments remain unchanged.`,
+      details:{action:'assign_plan',to_plan:plan.name,price:plan.price,billing_cycle:plan.billing_cycle,effective_on:start}}):null;
+    await client.query('COMMIT'); changed=eventId?{...membership,message:'Membership assigned.',notification_event_id:eventId}:membership;
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  return changed.notification_event_id?completeMemberChange(changed):changed;
 }
 
-export async function setMembershipStatus(gymId, membershipId, status) {
+export async function setMembershipStatus(gymId, membershipId, status,actor=null) {
   if (!['active', 'paused', 'cancelled'].includes(status)) throw billingError('Invalid status');
   const id = positiveId(membershipId);
   if (!id) throw billingError('Invalid membership');
   const client = await db.connect();
+  let changed;
   try {
     await client.query('BEGIN');
     const { rows: [owner] } = await client.query('SELECT user_id FROM memberships WHERE id=$1 AND gym_id=$2', [id, gymId]);
@@ -206,9 +213,16 @@ export async function setMembershipStatus(gymId, membershipId, status) {
       next_bill_on=CASE WHEN status='paused' AND $1::varchar='active' AND auto_invoice THEN GREATEST(next_bill_on,$4::date) ELSE next_bill_on END
       WHERE id=$2 AND gym_id=$3 AND status IN ('active','paused') RETURNING *`, [status, id, gymId, billingToday()]);
     if (!membership) throw billingError('Cancelled or replaced memberships cannot be changed', 409);
+    let eventId=null;
+    if(actor){
+      const {rows:[member]}=await client.query("SELECT id,firstname,lastname,email FROM users WHERE id=$1 AND gym_id=$2 AND role='member'",[owner.user_id,gymId]);
+      eventId=await recordMemberChange(client,actor,gymId,member,'member.membership_changed',{
+        summary:`Your membership has been ${status==='active'?'resumed':status}. Existing invoices remain unchanged.`,details:{action:status==='active'?'resume':status==='paused'?'pause':'cancel',membership_id:membership.id,after_status:status}});
+    }
     await client.query('COMMIT');
-    return membership;
+    changed=eventId?{...membership,message:'Membership updated.',notification_event_id:eventId}:membership;
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  return changed.notification_event_id?completeMemberChange(changed):changed;
 }
 
 export async function requestPlanChange(gymId, userId, { plan_id, reason = '' }) {
@@ -230,11 +244,12 @@ export async function requestPlanChange(gymId, userId, { plan_id, reason = '' })
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
-export async function resolvePlanChange(gymId, requestId, status) {
+export async function resolvePlanChange(gymId, requestId, status,actor=null) {
   if (!['approved', 'rejected'].includes(status)) throw billingError('Invalid decision');
   const id = positiveId(requestId);
   if (!id) throw billingError('Invalid request');
   const client = await db.connect();
+  let changed;
   try {
     await client.query('BEGIN');
     const { rows: [request] } = await client.query(`SELECT * FROM billing_plan_requests WHERE id=$1 AND gym_id=$2 FOR UPDATE`, [id, gymId]);
@@ -249,8 +264,16 @@ export async function resolvePlanChange(gymId, requestId, status) {
         VALUES($1,$2,$3,'active',$4)`, [gymId, request.user_id, request.plan_id, billingToday()]);
     }
     const { rows: [updated] } = await client.query('UPDATE billing_plan_requests SET status=$1,resolved_at=NOW() WHERE id=$2 RETURNING *', [status, id]);
-    await client.query('COMMIT'); return updated;
+    let eventId=null;
+    if(actor){
+      const {rows:[member]}=await client.query("SELECT id,firstname,lastname,email FROM users WHERE id=$1 AND gym_id=$2 AND role='member'",[request.user_id,gymId]);
+      const {rows:[plan]}=await client.query('SELECT name FROM plans WHERE id=$1 AND gym_id=$2',[request.plan_id,gymId]);
+      eventId=await recordMemberChange(client,actor,gymId,member,'member.membership_changed',{
+        summary:`Your plan change request for ${plan.name} has been ${status}. Existing invoices and payments remain unchanged.`,details:{action:'plan_request_'+status,plan_name:plan.name}});
+    }
+    await client.query('COMMIT'); changed=eventId?{...updated,message:'Plan request updated.',notification_event_id:eventId}:updated;
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  return changed.notification_event_id?completeMemberChange(changed):changed;
 }
 
 export async function listPlanRequests(gymId) {

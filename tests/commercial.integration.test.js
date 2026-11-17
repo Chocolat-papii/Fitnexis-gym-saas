@@ -36,7 +36,8 @@ const connection=process.env.COMMERCIAL_TEST_DATABASE_URL;
 test('commercial platform: real migrations, MFA, RBAC, bank onboarding, subscriptions, commission snapshots, refunds and audit trails',{skip:!connection},async()=>{
   const url=new URL(connection);assert.ok(['127.0.0.1','localhost'].includes(url.hostname));assert.match(url.pathname,/^\/fitnexis_billing_test_[a-z0-9_]+$/);
   const sql=knex({client:'pg',connection}),pool=new pg.Pool({connectionString:connection});
-  const sentCodes=new Map(),originalSend=emailDelivery.sendCode;emailDelivery.sendCode=async(email,code)=>{sentCodes.set(email,code);};
+  const sentCodes=new Map(),originalSend=emailDelivery.sendCode,originalMessage=emailDelivery.sendMessage;emailDelivery.sendCode=async(email,code)=>{sentCodes.set(email,code);};
+  emailDelivery.sendMessage=async()=>{};
   const previous={query:db.query,connect:db.connect,fetch:globalThis.fetch,env:{...process.env}};
   db.query=pool.query.bind(pool);db.connect=pool.connect.bind(pool);
   Object.assign(process.env,{JWT_SECRET:'commercial-integration-test-only',SECURITY_ENCRYPTION_KEY:Buffer.alloc(32,9).toString('base64'),PAYSTACK_MODE:'test',PAYSTACK_TEST_SECRET_KEY:'sk_test_commercial_fixture'});
@@ -176,7 +177,7 @@ test('commercial platform: real migrations, MFA, RBAC, bank onboarding, subscrip
     for(const gymId of createdGyms)await pool.query('DELETE FROM gyms WHERE id=$1',[gymId]);
     if(platformId)await pool.query('DELETE FROM platform_admins WHERE id=$1',[platformId]);
     if(planIds.length)await pool.query('DELETE FROM saas_plans WHERE id=ANY($1::int[])',[planIds]);
-    emailDelivery.sendCode=originalSend;db.query=previous.query;db.connect=previous.connect;globalThis.fetch=previous.fetch;
+    emailDelivery.sendCode=originalSend;emailDelivery.sendMessage=originalMessage;db.query=previous.query;db.connect=previous.connect;globalThis.fetch=previous.fetch;
     for(const key of ['JWT_SECRET','SECURITY_ENCRYPTION_KEY','PAYSTACK_MODE','PAYSTACK_TEST_SECRET_KEY'])if(previous.env[key]===undefined)delete process.env[key];else process.env[key]=previous.env[key];
     await pool.end();await sql.destroy();
   }

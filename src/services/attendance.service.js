@@ -4,16 +4,19 @@ import { db } from "../config/db.js";
 export const checkInMember = async (user_id, admin_id, gymId) => {
   // Confirm the selected user belongs to this gym.
   const memberResult = await db.query(
-    `SELECT id
-     FROM users
-     WHERE id = $1
-       AND gym_id = $2`,
+    `SELECT u.id,u.is_active,u.status,
+      (SELECT m.status FROM memberships m WHERE m.user_id=u.id AND m.gym_id=u.gym_id ORDER BY m.id DESC LIMIT 1) AS membership_status
+     FROM users u
+     WHERE u.id = $1
+       AND u.gym_id = $2 AND u.role='member'`,
     [user_id, gymId]
   );
 
   if (memberResult.rows.length === 0) {
     return { memberNotFound: true };
   }
+  const member=memberResult.rows[0];
+  if(member.is_active===false||['suspended','paused'].includes(String(member.status).toLowerCase())||member.membership_status==='paused')return {accessDenied:true};
 
   // Keep your existing duplicate-check query below this point.
   const alreadyChecked = await db.query(
