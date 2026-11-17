@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 // Preview profile image
   document.getElementById("profileImage")?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
@@ -11,7 +12,7 @@
 
 
 // - - - save personal details information button - - - /
-document.getElementById("savePersonalBtn")?.addEventListener("click", async () => {
+document.getElementById("savePersonalBtn")?.addEventListener("click", fitnexisLoading.wrap(async () => {
     try {
     // If you're uploading a file, use FormData:
     const data = {
@@ -57,14 +58,14 @@ document.getElementById("savePersonalBtn")?.addEventListener("click", async () =
      //console.error("CODE:", err.code, "MSG:", err.message); pg errors have code/message
     showPopup("Server error updating your personal details", "error");
   }
-});
+}));
 
 
 // - - - Emergency Contact details - - - //
 
 // -- post Emergency Contact details --
 
-document.getElementById("saveEmergencyBtn")?.addEventListener("click", async () => {
+document.getElementById("saveEmergencyBtn")?.addEventListener("click", fitnexisLoading.wrap(async () => {
   try {
     const data = {
       ecname: document.getElementById("ecName")?.value?.trim(),
@@ -112,7 +113,7 @@ document.getElementById("saveEmergencyBtn")?.addEventListener("click", async () 
     console.error("FULL ERROR:", err);
     showPopup("Server error updating your emergency contact details", "error");
   }
-});
+}));
 
 
 function renderEmergencyRow(data) {
@@ -172,7 +173,7 @@ async function loadEmergencyContacts() {
 
 //delete contact on emergency table
 
-document.addEventListener("click", async function (e) {
+document.addEventListener("click", fitnexisLoading.wrap(async function (e) {
   if (e.target.classList.contains("delete-btn")) {
     const row = e.target.closest("tr");
     const id = row.getAttribute("data-id");
@@ -189,7 +190,7 @@ document.addEventListener("click", async function (e) {
         showPopup("Emergency contact successfully deleted!", "success");
     }
   }
-});
+}, { selector: ".delete-btn" }));
 
 
 // edit emeregency table 
@@ -255,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.querySelector('[data-bs-target="#saveMedInfo"]');
 
   if (saveBtn) {
-    saveBtn.addEventListener("click", async () => {
+    saveBtn.addEventListener("click", fitnexisLoading.wrap(async () => {
 
       const data = {
         medicalConditions: document.getElementById("medicalConditions").value,
@@ -288,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         showPopup("Server error occurred.", "error");
       }
-    });
+    }));
   }
 });
 

@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
   // Close sidebar when a link is clicked (mobile)
       document.querySelectorAll(".sidebar a").forEach(a => {
         a.addEventListener("click", () => {
@@ -27,7 +28,7 @@
   
   //  - - - member physique hamdler
 
-  document.getElementById("saveNutritionBtn").addEventListener("click", async () => {
+  document.getElementById("saveNutritionBtn").addEventListener("click", fitnexisLoading.wrap(async () => {
 
   const currentActivities = Array.from(
     document.querySelectorAll('.btn-check:checked')
@@ -79,15 +80,15 @@ try {
       showPopup(result.message, "error");
     }
   } catch (err) {
-    showPopup(result.message, "error");
+    showPopup("Could not save these details. Please try again.", "error");
   }
 
-});
+}));
 
 
   // - - - Dietary info Handler- - - //
 
-  document.getElementById("saveDietBtn").addEventListener("click", async () => {
+  document.getElementById("saveDietBtn").addEventListener("click", fitnexisLoading.wrap(async () => {
   const payload = {
     diet_type: document.getElementById("dietType").value || null,
     meals_per_day: document.getElementById("mealsPerDay").value || null,
@@ -119,9 +120,9 @@ try {
     }
 
   } catch (err) {
-    showPopup(data.message, "error");
+    showPopup("Could not save these details. Please try again.", "error");
   }
-});
+}));
   
 
 

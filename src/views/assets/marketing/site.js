@@ -47,19 +47,3 @@ tabs.forEach((tab, index) => {
     }
   });
 });
-
-document.querySelectorAll('form[method="post"]').forEach(form => {
-  form.addEventListener('submit', () => {
-    const button = form.querySelector('button[type="submit"]');
-    if (button) {
-      button.disabled = true;
-      button.textContent = 'Sending your enquiry…';
-    }
-  });
-});
-// Restore the button when a browser returns to the form through its back cache.
-window.addEventListener('pageshow', event => {
-  if (!event.persisted) return;
-  const button = document.querySelector('.contact-form button[type="submit"]');
-  if (button) { button.disabled = false; button.textContent = 'Send my enquiry ↗'; }
-});

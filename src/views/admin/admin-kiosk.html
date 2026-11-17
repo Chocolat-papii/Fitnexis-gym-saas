@@ -60,6 +60,8 @@
 
     </style>
 <script src="/assets/dashboard/js/csrfFetch.js" data-csrf="<%= csrf %>"></script>
+<link rel="stylesheet" href="/assets/shared/loading.css">
+<script src="/assets/shared/loading.js"></script>
 </head>
 
 
@@ -72,10 +74,10 @@
                     <div class="d-flex justify-content-between align-items-center px-3 glass-card rounded-bottom-4 shadow-sm header mb-4">
             
                         <!-- Exit -->
-                        <button class="exit-btn btn fw-bold fs-4 border rounded-circle gl" onclick="exitKiosk()">✕</button>
+                        <button class="exit-btn btn fw-bold fs-4 border rounded-circle gl" onclick="window.FitnexisLoading.start(this); exitKiosk()">✕</button>
             
                         <!-- Logo -->
-                        <button class="btn fw-bold fs-4 border-0 gl" onclick="goHome()">
+                        <button class="btn fw-bold fs-4 border-0 gl" onclick="window.FitnexisLoading.start(this); goHome()">
                                     <%= gym.name %>
                                 </button>
                         <!-- <h2 class="nav-brand"><a href="/"><img src="../assets/landing/images/icon/mfc-2.png" alt="Mash Fitness" style="height: 35px;"
@@ -248,7 +250,7 @@ toggleBtn.addEventListener('click', () => {
                     <img src="${m.profile_image || '/images/profile-pic.jpg'}" class="rounded-circle" width="40" height="40"/>
                     <span>${m.firstname} ${m.lastname}</span>
                 </div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button onclick="checkIn(${m.id})" class="btn rounded-pill btn-success">Check In</button>
+                <button onclick="checkIn(${m.id}, this)" class="btn rounded-pill btn-success">Check In</button>
                 </div>
             `).join("");
         }
@@ -256,7 +258,9 @@ toggleBtn.addEventListener('click', () => {
 const successSound = document.getElementById("successSound");
 const errorSound = document.getElementById("errorSound");
 
-async function checkIn(userId) {
+async function checkIn(userId, button) {
+  if (button?.getAttribute('aria-busy') === 'true') return;
+  const stopLoading = window.FitnexisLoading.start(button);
   try {
     const res = await fetch("/admin/checkin", {
       method: "POST",
@@ -293,7 +297,7 @@ async function checkIn(userId) {
     errorSound.play();
 
     showToast("❌ Check-in failed");
-  }
+  } finally { stopLoading(); }
 }
 
 function showToast(message) {

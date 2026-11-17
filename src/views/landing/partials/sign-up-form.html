@@ -85,7 +85,9 @@
 
 
         </style>
-  </head>
+  <link rel="stylesheet" href="/assets/shared/loading.css">
+<script src="/assets/shared/loading.js"></script>
+</head>
 
 <body class="former" style="height: 100%;">
 
@@ -370,8 +372,9 @@
       });
     </script>
     <script>
-      document.getElementById("signupForm").addEventListener("submit", async function (e) {
+      document.getElementById("signupForm").addEventListener("submit", window.FitnexisLoading.wrap(async function (e) {
         e.preventDefault();
+        if (!this.reportValidity()) return;
 
         const formObject = Object.fromEntries(new FormData(this)); // Convert FormData to plain object
 
@@ -394,7 +397,7 @@
             window.location = data.redirect;
           }
         }, 5000);
-      });
+      }));
     </script>
 
       <!-- jQuery -->
