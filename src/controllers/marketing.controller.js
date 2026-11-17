@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { db } from '../config/db.js';
 import { pages, pillars, faqs } from '../config/marketing.js';
+import { buildSeo } from '../config/seo.js';
 
 const production = process.env.NODE_ENV === 'production';
 const cookieName = production ? '__Host-fitnexis_enquiry' : 'fitnexis_enquiry';
@@ -11,9 +12,12 @@ const emptyValues = { name: '', email: '', gym_name: '', interest: 'early-access
 
 export async function renderMarketing(req, res, page, extra = {}) {
   const meta = pages[page];
+  const seo = buildSeo(page, meta, faqs, { noindex: req.hostname !== 'fitnexis.app' || res.statusCode >= 400 || req.path === '/contact/thank-you' });
+  res.set('Content-Language', 'en-ZA');
+  res.set('X-Robots-Tag', seo.robots);
   const {rows:saasPlans}=page==='pricing'?await db.query('SELECT id,name,price_cents,interval,features,limits FROM saas_plans WHERE is_active=true ORDER BY price_cents,id'):{rows:[]};
   const {rows:[pricingPolicy]}=page==='pricing'?await db.query('SELECT commission_bps,fee_bearer FROM platform_billing_config WHERE id=1'):{rows:[]};
-  return res.render('marketing/layout', { page, meta, pillars, faqs, saasPlans, pricingPolicy:pricingPolicy||{commission_bps:200,fee_bearer:'subaccount'}, year: new Date().getFullYear(), ...extra });
+  return res.render('marketing/layout', { page, meta, seo, pillars, faqs, saasPlans, pricingPolicy:pricingPolicy||{commission_bps:200,fee_bearer:'subaccount'}, year: new Date().getFullYear(), ...extra });
 }
 
 export const marketingPage = page => (req, res) => renderMarketing(req, res, page);

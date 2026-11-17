@@ -13,6 +13,8 @@ Use **Add gym** (`/platform/gyms/new`) to register a gym and its first gym admin
 
 The old public `/register-gym` page and `/register` POST endpoint have been removed. Register gyms from the platform workspace instead.
 
+Gym creation also requires recent identity confirmation. On **Add gym**, use **Send confirmation code**, then enter your platform administrator password and the emailed code in the confirmation panel. Confirmation completes on the same page without clearing the gym fields; the gym administrator's initial password is a separate field. Submit **Create gym and administrator** within five minutes. If confirmation expires, the server keeps non-password gym fields and asks for confirmation again instead of sending you to billing. Passwords and email codes are not saved as drafts in browser storage. JSON requests remain blocked with HTTP 428 until confirmation succeeds.
+
 **Billing** (`/platform/billing`) is a protected placeholder for future Fitnexis subscription plans, invoices and payments. It does not create subscriptions or collect charges yet. The existing gym member billing pages are unchanged. No additional migration is required for gym registration or the platform billing placeholder.
 
 Website enquiries are available at `/platform/enquiries`. Apply `202611100001_platform_enquiries.js` to enable the public contact form and this inbox. Administrators can read visitor requests and mark them reviewed; no outbound messages are sent automatically. See `docs/MARKETING_SITE.md` for public website setup and content.

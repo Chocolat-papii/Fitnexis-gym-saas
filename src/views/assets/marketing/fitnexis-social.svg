@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630"><defs><linearGradient id="background" x2="1" y2="1"><stop stop-color="#14283d"/><stop offset="1" stop-color="#090f19"/></linearGradient></defs><rect width="1200" height="630" fill="url(#background)"/><circle cx="1190" cy="65" r="265" fill="#0ea5ff" opacity=".07"/><circle cx="1190" cy="65" r="190" fill="none" stroke="#06d6ff" stroke-opacity=".13"/><svg x="72" y="58" width="96" height="72" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 104" fill="none">
+  <defs>
+    <linearGradient id="pulse" x1="18" y1="91" x2="119" y2="9" gradientUnits="userSpaceOnUse"><stop stop-color="#06D6FF"/><stop offset=".48" stop-color="#0EA5FF"/><stop offset="1" stop-color="#00E5E8"/></linearGradient>
+    <linearGradient id="fold" x1="58" y1="34" x2="34" y2="99" gradientUnits="userSpaceOnUse"><stop stop-color="#06257A"/><stop offset=".5" stop-color="#0052ED"/><stop offset="1" stop-color="#06D6FF"/></linearGradient>
+  </defs>
+  <path d="M5 100 37 30C45 12 60 4 79 4H139L128 24C123 33 117 35 107 35H75C44 35 27 55 5 100Z" fill="url(#pulse)"/>
+  <path d="M5 100 37 30C45 12 60 4 79 4H139L128 24C123 33 117 35 107 35H75C44 35 27 55 5 100Z" stroke="#06D6FF" stroke-width=".5"/>
+  <path d="M5 100H25C38 100 47 94 53 81L66 53C70 46 76 43 85 43H112L101 62C97 69 92 71 83 71H69C62 71 57 75 53 82L50 88C46 96 39 100 25 100Z" fill="url(#pulse)"/>
+  <path d="M5 100 26 56C39 42 54 35 75 35H90C77 35 69 43 64 54L52 81C46 95 38 100 25 100Z" fill="url(#fold)"/>
+</svg>
+<g font-family="Segoe UI,Arial,sans-serif"><text x="190" y="113" fill="#f8fafc" font-size="52" font-weight="800" letter-spacing="-2">FITNEXIS</text><text x="72" y="267" fill="#f8fafc" font-size="74" font-weight="750" letter-spacing="-3">A stronger gym.</text><text x="72" y="354" fill="#06d6ff" font-size="74" font-weight="750" letter-spacing="-3">A clearer workspace.</text><text x="76" y="427" fill="#b6c6d8" font-size="27">Members / Attendance / Billing / Classes</text><path d="M76 494H1124" stroke="#334a60"/><text x="76" y="552" fill="#b6c6d8" font-size="19" letter-spacing="2">GYM MANAGEMENT SOFTWARE</text><text x="1124" y="552" fill="#f8fafc" font-size="25" text-anchor="end">fitnexis.app</text></g></svg>

@@ -6,9 +6,11 @@
 <main class="main">
   <header class="topbar"><span>Workspace <span class="muted">/ Add gym</span></span><span class="badge">Fitnexis platform</span></header>
   <div class="page-heading"><div><p class="eyebrow">GROW YOUR NETWORK</p><h1>Add a gym.</h1><p class="muted">Create the gym and its first administrator together.</p></div><a class="refresh" href="/platform#gyms">Back to gym directory</a></div>
-  <%- include('partials/reauth.html') %>
+  <% const confirmationUntil = typeof reauthUntil === 'number' ? reauthUntil : 0; %>
+  <p class="muted">Confirm your identity before creating a gym. You can request and enter the email code here without losing your gym details.</p>
+  <%- include('partials/reauth.html', { reauthReturnTo: '/platform/gyms/new', reauthRequired: confirmationUntil <= Date.now() }) %>
   <% if(error) { %><p class="error" role="alert"><%= error %></p><% } %>
-  <form class="panel gym-form" action="/platform/gyms" method="post">
+  <form class="panel gym-form" action="/platform/gyms" method="post" data-gym-form data-reauth-until="<%= confirmationUntil %>">
     <input type="hidden" name="_csrf" value="<%= csrf %>">
     <div class="form-columns">
       <fieldset><legend>Gym details</legend>
@@ -27,7 +29,9 @@
         <p class="footnote" id="password-help">At least 12 characters, up to 72 UTF-8 bytes. Share the credentials securely with the gym administrator.</p>
       </fieldset>
     </div>
+    <p role="status" aria-live="polite" data-gym-status></p>
     <div class="form-actions"><a class="refresh" href="/platform#gyms">Cancel</a><button class="primary" type="submit">Create gym and administrator</button></div>
   </form>
 </main>
+<script src="/assets/dashboard/js/platformGymForm.js" defer></script>
 </body></html>

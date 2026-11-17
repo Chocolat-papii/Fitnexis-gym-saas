@@ -8,7 +8,7 @@ import { createPlatformGym, gymFormValues } from '../services/platformGyms.servi
 import {beginMfa} from '../services/mfa.service.js';
 import {mfaCookieName,gymCookieOptions} from '../services/authSessions.service.js';
 import {platformCommercialRoutes} from './platformCommercial.routes.js';
-import {requireRecentAuth} from './security.routes.js';
+import {requireRecentAuth,hasRecentAuth} from './security.routes.js';
 import {requirePermission,hasPermission} from '../security/roles.js';
 
 const router = Router();
@@ -88,13 +88,20 @@ router.use((req, res, next) => {
   res.locals.admin = req.platformAdmin;
   res.locals.canPermission=p=>hasPermission('platform',req.platformAdmin.role,p);
   res.locals.section = 'overview';
+  res.locals.reauthUntil = hasRecentAuth(req) ? new Date(req.platformAdmin.reauth_until).getTime() : 0;
   next();
 });
 router.use(platformCommercialRoutes(csrfCheck));
 router.get('/gyms/new', requirePermission('platform','gyms.manage'), (req, res) => {
   res.render('platform/new-gym', { section: 'new-gym', values: gymFormValues(), error: null });
 });
-router.post('/gyms', requirePermission('platform','gyms.manage'), csrfCheck, requireRecentAuth, async (req, res) => {
+router.post('/gyms', requirePermission('platform','gyms.manage'), csrfCheck, (req, res, next) => {
+  if (hasRecentAuth(req) || req.is('application/json')) return requireRecentAuth(req, res, next);
+  return res.status(428).render('platform/new-gym', {
+    section: 'new-gym', values: gymFormValues(req.body),
+    error: 'Confirm your identity below before creating this gym. Your gym details have been kept; re-enter the gym administrator password before submitting again.'
+  });
+}, async (req, res) => {
   try {
     await createPlatformGym(req.body,{scope:'platform',id:req.platformAdmin.id});
     res.redirect(303, '/platform?created=1#gyms');

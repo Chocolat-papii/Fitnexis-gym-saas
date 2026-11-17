@@ -24,6 +24,7 @@ import { startBillingJobs } from "./services/billingJobs.service.js";
 import platformRoutes from "./routes/platform.routes.js";
 import securityRoutes from './routes/security.routes.js';
 import gymRegistrationRoutes from './routes/gymRegistration.routes.js';
+import { seoHeaders } from './config/seo.js';
 
 
 
@@ -33,6 +34,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config();
 const app = express();
 app.set('trust proxy', 1);
+app.use(seoHeaders);
 app.use((req,res,next)=>{
   if(process.env.NODE_ENV==='production'&&!req.secure)return res.status(426).send('Use HTTPS to access Fitnexis.');
   res.set('X-Content-Type-Options','nosniff');

@@ -65,8 +65,9 @@ router.post('/reauthenticate',rateLimit('gym-reauth'),requireAuth,billingCsrf,as
     await audit(db,actorFrom(req),'security.reauthenticated',req.gymId);if(req.is('application/json'))res.json({ok:true});else res.redirect(303,'/admin/settings');
   }catch(error){if(error.status)return res.status(error.status).json({error:error.message});next(error);}
 });
+export const hasRecentAuth=req=>new Date((req.platformAdmin||req.user)?.reauth_until||0)>new Date();
 export const requireRecentAuth=(req,res,next)=>{
-  if(new Date((req.platformAdmin||req.user)?.reauth_until||0)>new Date())return next();
+  if(hasRecentAuth(req))return next();
   const message='Confirm your password and a fresh email code before continuing.';
   if(req.is('application/json'))return res.status(428).json({error:'reauthentication_required',message});
   return res.status(428).render('security/confirm-identity',{destination:req.platformAdmin?'/platform/billing':'/admin/settings'});

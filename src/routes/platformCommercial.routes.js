@@ -17,18 +17,23 @@ import {reconcileSettlement} from '../services/paymentReconciliation.service.js'
 
 export function platformCommercialRoutes(csrfCheck) {
   const router=Router(),can=permission=>requirePermission('platform',permission);
+  const reauthDestination=req=>req.body.return_to==='/platform/gyms/new'?'/platform/gyms/new':'/platform/billing';
   const run=(fn,redirect='/platform/billing')=>async(req,res,next)=>{try{const data=await fn(req);if(req.is('application/json'))return res.json(data||{ok:true});res.redirect(303,redirect);}catch(error){if(error.code==='23505')return res.status(409).send('That record already exists.');if(error.status)return res.status(error.status).send(error.message);next(error);}};
   router.post('/reauthenticate/code',rateLimit('platform-reauth-code',5),csrfCheck,async(req,res,next)=>{
     try{const token=await beginMfa('platform',req.platformAdmin,'reauth');
       res.cookie(mfaCookieName('platform-reauth'),token,{...gymCookieOptions,sameSite:'strict',maxAge:300000});
-      res.redirect(303,'/platform/billing?code=sent');
-    }catch(error){if(error.status)return res.status(error.status).send(error.message);next(error);}
+      if(req.is('application/json'))return res.json({ok:true,message:'Confirmation code sent. Check your email.'});
+      res.redirect(303,reauthDestination(req)+'?code=sent');
+    }catch(error){if(error.status)return req.is('application/json')?res.status(error.status).json({error:error.message}):res.status(error.status).send(error.message);next(error);}
   });
-  router.post('/reauthenticate',rateLimit('platform-reauth'),csrfCheck,run(async req=>{
+  router.post('/reauthenticate',rateLimit('platform-reauth'),csrfCheck,async(req,res,next)=>{try{
     await reauthenticate('platform',req.platformAdmin.id,req.body.password,req.body.code,req.cookies[mfaCookieName('platform-reauth')]);
-    await db.query("UPDATE platform_sessions SET reauth_until=NOW()+INTERVAL '5 minutes' WHERE id=$1",[req.platformAdmin.session_id]);
+    const {rows:[session]}=await db.query("UPDATE platform_sessions SET reauth_until=NOW()+INTERVAL '5 minutes' WHERE id=$1 AND logged_out_at IS NULL AND expires_at>NOW() RETURNING reauth_until",[req.platformAdmin.session_id]);
+    if(!session)return req.is('application/json')?res.status(401).json({error:'Session expired. Sign in again.'}):res.status(401).send('Session expired. Sign in again.');
     await audit(db,actorFrom(req),'security.reauthenticated');
-  }));
+    if(req.is('application/json'))return res.json({ok:true,reauthUntil:new Date(session.reauth_until).getTime(),message:'Identity confirmed for five minutes.'});
+    res.redirect(303,reauthDestination(req));
+  }catch(error){if(error.status)return req.is('application/json')?res.status(error.status).json({error:error.message}):res.status(error.status).send(error.message);next(error);}});
   router.get('/billing',can('billing.read'),async(req,res,next)=>{try{
     const [finance,{rows:plans},{rows:[config]},{rows:invoices},{rows:refunds}]=await Promise.all([
       financialSummary(),db.query('SELECT * FROM saas_plans ORDER BY id DESC'),db.query('SELECT * FROM platform_billing_config WHERE id=1'),
