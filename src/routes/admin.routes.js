@@ -1,3 +1,5 @@
+import notificationRoutes from './notifications.routes.js';
+import {adminPaymentProofRoutes} from './paymentProofs.routes.js';
 import { Router } from 'express';
 import { getMembers, deleteMember, updateMemberTier, createMember, viewMemberDetails, viewAllMembers, saveMember,memberAccount,memberPassword,memberPlan } from '../controllers/admin/members.controller.js';
 import { getClassActivities, getAllClassTypes, createClassType, updateClassType, deleteClassType } from '../controllers/admin/classActivities.controller.js';
@@ -19,6 +21,8 @@ import {requireRecentAuth} from './security.routes.js';
 
 const router = Router();
 router.use('/admin', requireGym, requireAuth, requireAdmin, hydrateMember);
+router.use('/notifications',notificationRoutes);
+router.use('/billing',adminPaymentProofRoutes);
 router.use(gymManagementRoutes);
 router.use((req,res,next)=>{
   const read=['GET','HEAD'].includes(req.method),path=req.path;

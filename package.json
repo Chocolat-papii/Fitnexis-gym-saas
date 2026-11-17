@@ -13,7 +13,8 @@
     "supabase:db:setup": "node scripts/setup-supabase-db.js",
     "supabase:storage:setup": "node scripts/setup-profile-storage.js",
     "supabase:storage:migrate": "node scripts/migrate-profile-photos.js",
-    "supabase:storage:check": "node scripts/check-profile-storage.js"
+    "supabase:storage:check": "node scripts/check-profile-storage.js",
+    "supabase:proofs:setup": "node scripts/setup-payment-proof-storage.js"
   },
   "engines": {
     "node": "22.0"

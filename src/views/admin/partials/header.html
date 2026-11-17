@@ -18,52 +18,12 @@
       <i id="themeIcon" class="bi bi-moon"></i>
     </button>
 
-    <!-- Notifications -->
-    <div class="dropdown">
-      <!--<button id="bellBtn" class="btn icon-btn position-relative border" data-bs-toggle="dropdown" data-bs-auto-close="outside">
-        <i id="bellIcon" class="bi bi-bell"></i>
-         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-          3
-        </span> 
-      </button>-->
-
-      <!-- Notification Panel -->
-      <div class="dropdown-menu dropdown-menu-end p-0 shadow" style="width: 300px; z-index: 999; transform: translate3d(40px, 62px, 0px);">
-
-        <div class="p-3 border-bottom fw-semibold">
-          Notifications
-        </div>
-
-        <div class="list-group list-group-flush">
-
-          <div class="list-group-item notification-item">
-            <small class="text-muted">2 min ago</small><br>
-            New user registered
-          </div>
-
-          <div class="list-group-item notification-item">
-            <small class="text-muted">10 min ago</small><br>
-            Server backup completed
-          </div>
-
-          <div class="list-group-item notification-item">
-            <small class="text-muted">1 hour ago</small><br>
-            New message received
-          </div>
-
-        </div>
-
-        <div class="p-2 text-center border-top">
-          <a href="#" class="small text-decoration-none">View all</a>
-        </div>
-
-      </div>
-    </div>
+    <%- include('../../partials/notification-bell.html') %>
 
     <!-- Profile -->
     <div class="dropdown">
       <button class="btn p-0 border-0" data-bs-toggle="dropdown">
-        <img src="/images/profile-pic.jpg" class="rounded-circle" width="40" height="40">
+        <img src="<%= member.profile_picture || '/assets/brand/fitnexis-mark.svg' %>" class="rounded-circle" width="40" height="40">
       </button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li><a class="dropdown-item" href="/member/edit-profile"><span><i class="fa-solid fa-user"></i></span> <span>Profile</span></a></li>

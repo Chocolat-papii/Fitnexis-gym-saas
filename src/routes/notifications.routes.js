@@ -1,0 +1,11 @@
+import {Router} from 'express';
+import {requireAuth} from '../middleware/requireAuth.js';
+import {billingCsrf,csrfToken} from '../middleware/billingCsrf.js';
+import {notifications,readNotifications} from '../services/notifications.service.js';
+const router=Router();router.use(requireAuth,(req,res,next)=>{res.set('Cache-Control','private, no-store');next();});
+const fail=(res,e)=>res.status(e.status||500).json({error:e.status?e.message:'Notifications are temporarily unavailable'});
+router.get('/',(req,res)=>res.render('notifications/index',{gym:req.gym,isMember:req.user.role==='member',activePage:'notifications',csrf:csrfToken(req)}));
+router.get('/api',async(req,res)=>{try{res.json(await notifications(req.gymId,req.user,req.query.page||1,req.query.limit||20));}catch(e){fail(res,e);}});
+router.post('/read-all',billingCsrf,async(req,res)=>{try{res.json(await readNotifications(req.gymId,req.user));}catch(e){fail(res,e);}});
+router.post('/:id/read',billingCsrf,async(req,res)=>{try{res.json(await readNotifications(req.gymId,req.user,req.params.id));}catch(e){fail(res,e);}});
+export default router;

@@ -1,0 +1,7 @@
+<section class="card glass-card proof-card"><h2 class="h5">Documents and submission history</h2>
+<% detail.versions.forEach(v=>{ %><article class="proof-history"><h3 class="h6">Version <%= v.version %> <small class="small-note">submitted <%= new Date(v.created_at).toLocaleString('en-ZA',{timeZone:'Africa/Johannesburg'}) %></small></h3>
+<dl class="proof-facts"><div><dt>Amount</dt><dd>R <%= Number(v.amount).toFixed(2) %></dd></div><div><dt>Payment date</dt><dd><%= String(v.paid_on instanceof Date?v.paid_on.toISOString().slice(0,10):v.paid_on) %></dd></div><div><dt>Reference</dt><dd><%= v.reference %></dd></div></dl>
+<% if(v.notes){ %><p class="proof-message"><%= v.notes %></p><% } %>
+<a class="btn btn-outline-secondary btn-sm" href="<%= isMember?'/member':'/admin' %>/billing/payment-proofs/<%= detail.submission.id %>/files/<%= v.version %>" data-proof-download>Download document: <%= v.file_name %> (<%= Math.ceil(v.file_size/1024) %> KB)</a>
+<% detail.reviews.filter(r=>r.version===v.version).forEach(r=>{ %><div class="proof-decision"><strong><%= r.action.replaceAll('_',' ') %></strong> by <%= [r.firstname,r.lastname].filter(Boolean).join(' ')||'Gym billing team' %> <span class="small-note"><%= new Date(r.created_at).toLocaleString('en-ZA',{timeZone:'Africa/Johannesburg'}) %></span><p class="proof-message"><%= r.message %></p></div><% }); %></article><% }); %>
+</section>
