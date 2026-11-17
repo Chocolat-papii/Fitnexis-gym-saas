@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 (() => {
   const list=document.getElementById('sessionHistoryList');
   if(!list)return;
@@ -19,7 +20,7 @@
   }
   function errorState(target,error,retry){
     target.textContent=error.message;target.setAttribute('role','alert');
-    const button=document.createElement('button');button.type='button';button.className='btn btn-sm btn-outline-secondary ms-2';button.textContent='Retry';button.addEventListener('click',retry);target.appendChild(button);
+    const button=document.createElement('button');button.type='button';button.className='btn btn-sm btn-outline-secondary ms-2';button.textContent='Retry';button.addEventListener('click',fitnexisLoading.wrap(retry));target.appendChild(button);
   }
   async function load(requested=1){
     if(busy)return;busy=true;selection++;previous.disabled=true;next.disabled=true;
@@ -34,7 +35,7 @@
         button.dataset.sessionId=session.id;button.setAttribute('aria-controls','sessionHistoryDetail');button.setAttribute('aria-expanded','false');
         button.innerHTML='<strong class="history-item-name" title="'+escape(session.class_name)+'">'+escape(session.class_name)+'</strong><span class="history-item-time">'+escape(datePart(session.starts_at,{day:'2-digit',month:'short',year:'numeric'}))+'<span class="history-row-time"> &middot; '+escape(time(session.starts_at))+'</span></span><span class="history-item-meta"><span class="history-price '+(!session.is_paid?'is-free':'')+'">'+escape(session.is_paid?money(session.price):'Free')+'</span>'+badge(session.status)+'</span><span class="history-item-action" aria-hidden="true">&#8250;</span>';
         button.setAttribute('aria-label','View details: '+session.class_name+', '+when(session.starts_at));
-        button.addEventListener('click',()=>show(session.id));list.appendChild(button);
+        button.addEventListener('click',fitnexisLoading.wrap(()=>show(session.id)));list.appendChild(button);
       }
       status.textContent=data.sessions.length?data.sessions.length+' session'+(data.sessions.length===1?'':'s')+' on this page · Most recent first':'No session history yet. Your past sessions will appear here.';
       document.getElementById('sessionHistoryPage').textContent='Page '+page;
@@ -70,6 +71,6 @@
       });
     }catch(error){if(request===selection)errorState(detail,error,()=>show(id));}
   }
-  previous.addEventListener('click',()=>load(page-1));next.addEventListener('click',()=>load(page+1));
+  previous.addEventListener('click',fitnexisLoading.wrap(()=>load(page-1)));next.addEventListener('click',fitnexisLoading.wrap(()=>load(page+1)));
   load();
 })();

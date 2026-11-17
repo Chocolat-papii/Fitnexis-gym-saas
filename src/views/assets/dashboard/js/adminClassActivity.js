@@ -1,8 +1,9 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 
 // - - - class action activities - - - //
 
 
-document.getElementById("saveClassBtn").addEventListener("click", async () => {
+document.getElementById("saveClassBtn").addEventListener("click", fitnexisLoading.wrap(async () => {
 
     try {
     const id = document.getElementById("classId").value;
@@ -42,7 +43,7 @@ document.getElementById("saveClassBtn").addEventListener("click", async () => {
      console.error("CODE:", err.code, "MSG:", err.message); //pg errors have code/message
     showPopup("Server error saving class", "error", 3000);
     }
-});
+}));
 
 // - - edit button - - 
 
@@ -61,7 +62,7 @@ document.addEventListener("click", function (e) {
 
 // - - delete button - -
 
-document.addEventListener("click", async function (e) {
+document.addEventListener("click", fitnexisLoading.wrap(async function (e) {
 
   if (e.target.closest(".delete-class")) {
     const id = e.target.closest(".delete-class").dataset.id;
@@ -81,7 +82,7 @@ document.addEventListener("click", async function (e) {
     }
   }
 
-});
+}, { selector: ".delete-class" }));
 
 // reset form on create new class 
 document.querySelector('[data-bs-target="#classesModal"]').addEventListener("click", () => {

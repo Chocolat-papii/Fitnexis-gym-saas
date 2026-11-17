@@ -37,7 +37,9 @@
 }
   </style>
 
-  </head>
+  <link rel="stylesheet" href="/assets/shared/loading.css">
+<script src="/assets/shared/loading.js"></script>
+</head>
 
   <body class="former d-flex justify-content-center">
 
@@ -204,8 +206,9 @@
   const form = document.getElementById("loginForm");
   const popup = document.getElementById("popup");
 
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", window.FitnexisLoading.wrap(async (e) => {
     e.preventDefault();
+    if (!form.reportValidity()) return;
 
     const formObject = Object.fromEntries(
       new FormData(e.target)
@@ -233,7 +236,7 @@
     console.log(response);
     showPopup(data.message, data.success, data.redirect) 
 
-  });
+  }));
 
 
   function showPopup(message, isSuccess, redirect) {

@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 (() => {
   const body=document.getElementById('membersTbody');if(!body)return;
   const status=document.getElementById('membersStatus'),search=document.getElementById('searchInput'),filter=document.getElementById('statusFilter');
@@ -21,11 +22,11 @@
       for(const button of document.querySelectorAll('[data-filter]'))button.setAttribute('aria-pressed',String(button.dataset.filter===filter.value));
     }catch(error){if(sequence===request){status.setAttribute('role','alert');status.textContent=error.message;}}
   }
-  document.getElementById('memberSearch').addEventListener('submit',event=>{event.preventDefault();clearTimeout(timer);load(1);});
+  document.getElementById('memberSearch').addEventListener('submit',fitnexisLoading.wrap(event=>{event.preventDefault();clearTimeout(timer);return load(1);}));
   search.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>load(1),250);});filter.addEventListener('change',()=>load(1));
-  previous.addEventListener('click',()=>load(page-1));next.addEventListener('click',()=>load(page+1));
-  for(const button of document.querySelectorAll('[data-filter]'))button.addEventListener('click',()=>{filter.value=button.dataset.filter;load(1);});
-  body.addEventListener('click',async event=>{
+  previous.addEventListener('click',fitnexisLoading.wrap(()=>load(page-1)));next.addEventListener('click',fitnexisLoading.wrap(()=>load(page+1)));
+  for(const button of document.querySelectorAll('[data-filter]'))button.addEventListener('click',fitnexisLoading.wrap(()=>{filter.value=button.dataset.filter;return load(1);}));
+  body.addEventListener('click',fitnexisLoading.wrap(async event=>{
     const checkin=event.target.closest('[data-checkin]');
     if(checkin){
       checkin.disabled=true;
@@ -35,16 +36,16 @@
     }
     if(event.target.closest('a,button'))return;
     const row=event.target.closest('[data-profile]');if(row)window.location.assign(row.dataset.profile);
-  });
+  }, { selector: "[data-checkin]" }));
   const dialog=document.getElementById('addMemberDialog'),form=document.getElementById('addMemberForm');
   document.getElementById('openAddMember')?.addEventListener('click',()=>{form.elements.joindate.value=new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'});dialog.showModal();});
   for(const close of dialog.querySelectorAll('[data-close]'))close.addEventListener('click',()=>dialog.close());
-  form.addEventListener('submit',async event=>{
+  form.addEventListener('submit',fitnexisLoading.wrap(async event=>{
     event.preventDefault();const button=event.submitter,message=document.getElementById('addMemberStatus');button.disabled=true;message.textContent='Creating member…';
     try{
       const response=await fetch('/admin/api/members',{method:'POST',headers:{'Content-Type':'application/json','x-billing-csrf':csrf},body:JSON.stringify(Object.fromEntries(new FormData(form)))});
       const data=await response.json();if(!response.ok)throw Error(data.message||'Could not create member.');window.location.assign('/admin/member-details/'+Number(data.data.id));
     }catch(error){message.textContent=error.message;}finally{button.disabled=false;}
-  });
+  }));
   load();
 })();

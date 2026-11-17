@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 (() => {
   const form = document.getElementById('sessionForm');
   const save = document.getElementById('saveSessionBtn');
@@ -37,7 +38,7 @@
     const option = event.target.selectedOptions[0];
     document.getElementById('sessionDuration').value = option?.dataset.duration || '';
   });
-  form.addEventListener('submit', async event => {
+  form.addEventListener('submit', fitnexisLoading.wrap(async event => {
     event.preventDefault();
     if (save.disabled || !form.reportValidity()) return;
     const payload = {
@@ -66,8 +67,8 @@
       location.reload();
     } catch (error) { showPopup(error.message, 'error'); }
     finally { save.disabled = false; }
-  });
-  document.addEventListener('click', async event => {
+  }));
+  document.addEventListener('click', fitnexisLoading.wrap(async event => {
     const button = event.target.closest('.delete-session');
     if (!button || button.disabled || !confirm('Delete this session?')) return;
     button.disabled = true;
@@ -80,6 +81,6 @@
       location.reload();
     } catch (error) { showPopup(error.message, 'error'); }
     finally { button.disabled = false; }
-  });
+  }, { selector: '.delete-session' }));
   paymentFields();
 })();

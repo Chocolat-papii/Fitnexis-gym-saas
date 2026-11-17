@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 window.FitnexisBilling = (() => {
   const token = document.querySelector('meta[name="billing-csrf"]').content;
   const money = value => new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(Number(value || 0));
@@ -29,9 +30,10 @@ window.FitnexisBilling = (() => {
     button.disabled = true;
     button.dataset.billingBusy = 'true';
     button.textContent = 'Please wait…';
+    const stopLoading = fitnexisLoading.start(button);
     try { await work(); }
     catch (error) { message(error.message, true); }
-    finally { if (button.isConnected) { delete button.dataset.billingBusy; button.disabled = false; button.textContent = label; } }
+    finally { stopLoading(); if (button.isConnected) { delete button.dataset.billingBusy; button.disabled = false; button.textContent = label; } }
   }
   const paymentMessage = status => ({
     succeeded: 'Payment confirmed. Your invoice balance has been updated.',

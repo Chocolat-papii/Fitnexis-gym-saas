@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
   // Preview profile image
   document.getElementById("profileImage")?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
@@ -17,7 +18,7 @@
   }); 
 
   // Save profile hook
-  document.getElementById("saveProfileBtn")?.addEventListener("click", async () => {
+  document.getElementById("saveProfileBtn")?.addEventListener("click", fitnexisLoading.wrap(async () => {
   try {
     // If you're uploading a file, use FormData:
     const fd = new FormData();
@@ -53,7 +54,7 @@
     console.error(err);
     showPopup("Could not save profile. Server error","error");
   }
-});
+}));
 
 
 
@@ -78,7 +79,7 @@
     clearPasswords();
   });
 
-  document.getElementById("updatePasswordBtn")?.addEventListener("click", async (e) => {
+  document.getElementById("updatePasswordBtn")?.addEventListener("click", fitnexisLoading.wrap(async (e) => {
     e.preventDefault();
 
     const currentPassword = document.getElementById("currentPassword")?.value.trim();
@@ -122,7 +123,7 @@
       console.error(err);
       showPopup("Server error. Could not update password", "error");
     }
-  });
+  }));
 });
 
 

@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 (() => {
   const gymForm = document.querySelector('[data-gym-form]');
   const confirmation = document.querySelector('[data-platform-reauth]');
@@ -38,7 +39,7 @@
   });
 
   confirmation.querySelectorAll('form').forEach(form => {
-    form.addEventListener('submit', async event => {
+    form.addEventListener('submit', fitnexisLoading.wrap(async event => {
       event.preventDefault();
       if (busy) return;
       busy = true;
@@ -71,6 +72,6 @@
         button.textContent = label;
         busy = false;
       }
-    });
+    }));
   });
 })();

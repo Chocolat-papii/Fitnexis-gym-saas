@@ -1,3 +1,4 @@
+var fitnexisLoading = globalThis.FitnexisLoading || { start: () => () => {}, wrap: handler => handler };
 const timetableEscape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const sessionMoney = value => new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(Number(value || 0));
 
@@ -55,7 +56,7 @@ async function refreshTimetable(role) {
       retry.className = 'btn btn-sm btn-outline-secondary ms-2';
       retry.type = 'button';
       retry.textContent = 'Retry';
-      retry.addEventListener('click', () => refreshTimetable(role));
+      retry.addEventListener('click', fitnexisLoading.wrap(() => refreshTimetable(role)));
       status.appendChild(retry);
     }
   }
@@ -64,7 +65,7 @@ async function refreshTimetable(role) {
 const timetableRole = document.currentScript?.dataset.role;
 if (timetableRole) refreshTimetable(timetableRole);
 
-document.addEventListener('click', async event => {
+document.addEventListener('click', fitnexisLoading.wrap(async event => {
   const button = event.target.closest('.enroll-btn');
   if (!button || button.disabled) return;
   const token = document.querySelector('meta[name="billing-csrf"]')?.content;
@@ -91,4 +92,4 @@ document.addEventListener('click', async event => {
     else alert(error.message);
     button.disabled = false;
   }
-});
+}, { selector: ".enroll-btn" }));

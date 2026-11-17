@@ -1,0 +1,20 @@
+.fitnexis-loading { cursor: progress !important; }
+.gym-form .is-loading.fitnexis-loading::before { display: none; }
+.fitnexis-spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-inline-start: .55em;
+  vertical-align: -.12em;
+  border: .14em solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: fitnexis-spin .7s linear infinite;
+  flex-shrink: 0;
+}
+input.fitnexis-loading { opacity: .7; }
+.fitnexis-loading-error { color: #b42318; font-size: .9rem; }
+@keyframes fitnexis-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .fitnexis-spinner { animation: none; border-style: dotted; }
+}

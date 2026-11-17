@@ -49,6 +49,8 @@ body{
   background:#1d4ed8;
 }
 </style>
+<link rel="stylesheet" href="/assets/shared/loading.css">
+<script src="/assets/shared/loading.js"></script>
 </head>
 
 <body>
@@ -58,7 +60,7 @@ body{
 
   <p><%= message %></p>
 
-  <button class="auth-btn" onclick="goLogin()">
+  <button class="auth-btn" onclick="window.FitnexisLoading.start(this); goLogin()">
     Go to Login
   </button>
 </div>
