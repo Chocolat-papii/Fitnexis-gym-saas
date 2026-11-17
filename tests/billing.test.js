@@ -77,7 +77,7 @@ test('Manual payment refuses balance overpayment without writing', async () => {
         return { rows: [] };
       }, release() {}
     });
-    await assert.rejects(() => recordManualPayment('gym-123', 1, { invoice_id: 7, amount: '71', provider: 'cash', reference: 'test' }), /exceeds/);
+    await assert.rejects(() => recordManualPayment('gym-123', 1, { invoice_id: 7, amount: '71', provider: 'cash', reference: 'test' , received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'}), /exceeds/);
     assert.equal(queries.some(sql => sql.includes('INSERT INTO payments')), false);
     assert.equal(queries.includes('ROLLBACK'), true);
   } finally { db.connect = original; }

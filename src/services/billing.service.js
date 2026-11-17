@@ -25,7 +25,7 @@ const isoDate = value => {
 export const advancePeriod = nextBillingDate;
 
 const invoiceSql = `SELECT i.id,i.user_id,i.membership_id,i.invoice_number,i.description,i.amount,i.currency,i.status,
-  i.issued_at,i.due_at,i.period_start,u.firstname,u.lastname,u.email,
+  i.issued_at,i.due_at,i.period_start,(SELECT ps.status FROM payment_submissions ps WHERE ps.gym_id=i.gym_id AND ps.invoice_id=i.id ORDER BY ps.id DESC LIMIT 1) AS proof_status,u.firstname,u.lastname,u.email,
   COALESCE(pay.paid,0)::numeric(10,2) AS paid_amount,
   CASE WHEN i.status='void' THEN 0 ELSE GREATEST(i.amount-COALESCE(pay.paid,0),0) END::numeric(10,2) AS balance,
   CASE WHEN i.status='void' THEN 'void' WHEN i.amount<=COALESCE(pay.paid,0) THEN 'paid'
@@ -123,33 +123,46 @@ export async function createInvoice(gymId, { user_id, membership_id, amount, due
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
 }
 
-export async function recordManualPayment(gymId, adminId, { invoice_id, amount, provider, reference }) {
-  const invoiceId = positiveId(invoice_id);
-  if (!invoiceId || !['cash', 'eft'].includes(provider)) throw billingError('Invalid invoice or payment method');
-  const sum = amountValue(amount);
-  const ref = String(reference || '').trim();
-  if (!ref || ref.length > 200) throw billingError('Unique payment reference is required');
-  const client = await db.connect();
-  try {
-    await client.query('BEGIN');
-    const { rows: [invoice] } = await client.query('SELECT * FROM invoices WHERE id=$1 AND gym_id=$2 FOR UPDATE', [invoiceId, gymId]);
-    if (!invoice || invoice.status === 'void') throw billingError('Invoice not payable', 404);
-    if (invoice.currency !== 'ZAR') throw billingError('Unsupported invoice currency');
-    const { rows: [pending] } = await client.query("SELECT id FROM payments WHERE invoice_id=$1 AND gym_id=$2 AND provider='paystack' AND status='pending'", [invoiceId, gymId]);
-    if (pending) throw billingError('Verify the pending online payment before recording another receipt for this invoice', 409);
-    const { rows: [settled] } = await client.query(`SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE invoice_id=$1 AND gym_id=$2 AND status='succeeded'`, [invoiceId, gymId]);
-    if (cents(sum) > cents(invoice.amount) - cents(settled.total)) throw billingError('Payment exceeds outstanding balance');
-    const { rows: [payment] } = await client.query(`INSERT INTO payments(invoice_id,gym_id,provider,amount,reference,status,currency,recorded_by,paid_at)
-      VALUES ($1,$2,$3,$4,$5,'succeeded','ZAR',$6,NOW()) RETURNING *`, [invoiceId, gymId, provider, sum, ref, adminId]);
-    if (cents(sum) === cents(invoice.amount) - cents(settled.total)) {
-      await client.query("UPDATE invoices SET status='paid',updated_at=NOW() WHERE id=$1 AND gym_id=$2", [invoiceId, gymId]);
-      await confirmPaidSessionBooking(client, gymId, invoiceId);
-    }
-    await audit(client,{scope:'gym',id:Number(adminId)},'payment.manual_recorded',gymId,ref,{amount:sum,provider});
-    await notify(client,{gymId,userId:invoice.user_id,audience:'member',kind:'payment_success',key:'manual:'+gymId+':'+ref,message:'Your gym has recorded your '+provider.toUpperCase()+' payment.'});
-    await client.query('COMMIT'); return payment;
-  } catch (error) { await client.query('ROLLBACK'); if (error.code === '23505') throw billingError('Payment reference already used', 409); throw error; }
-  finally { client.release(); }
+export const manualReferenceKey = value => String(value || '').trim().replace(/\s+/g,' ').toUpperCase();
+export function manualReceivedDate(value) {
+  const date=isoDate(value);
+  if(date>billingToday())throw billingError('Payment date cannot be in the future');
+  return date;
+}
+// Shared by reviewed proof approvals and staff cash receipts, inside the caller's transaction.
+export async function settleManualPayment(client,gymId,adminId,{invoice_id,amount,provider,reference,received_on,confirmation_note,notification=true}) {
+  const invoiceId=positiveId(invoice_id),sum=amountValue(amount),ref=String(reference||'').trim(),key=manualReferenceKey(ref);
+  if(!invoiceId||!['cash','eft'].includes(provider)||!ref||ref.length>200)throw billingError('Invalid invoice, method or payment reference');
+  const paidOn=manualReceivedDate(received_on),note=String(confirmation_note||'').trim();
+  if(note.length<8||note.length>2000)throw billingError('Explain how funds were verified (8-2000 characters)');
+  const {rows:[invoice]}=await client.query('SELECT * FROM invoices WHERE id=$1 AND gym_id=$2 FOR UPDATE',[invoiceId,gymId]);
+  if(!invoice||invoice.status==='void')throw billingError('Invoice not payable',404);
+  if(invoice.currency!=='ZAR')throw billingError('Unsupported invoice currency');
+  const {rows:[pending]}=await client.query("SELECT id FROM payments WHERE invoice_id=$1 AND gym_id=$2 AND provider='paystack' AND status='pending'",[invoiceId,gymId]);
+  if(pending)throw billingError('Verify the pending online payment before recording another receipt for this invoice',409);
+  const {rows:[settled]}=await client.query("SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE invoice_id=$1 AND gym_id=$2 AND status='succeeded'",[invoiceId,gymId]);
+  if(cents(sum)>cents(invoice.amount)-cents(settled.total))throw billingError('Payment exceeds outstanding balance',409);
+  const {rows:[duplicate]}=await client.query("SELECT id FROM payments WHERE gym_id=$1 AND provider=$2 AND upper(regexp_replace(btrim(reference),'\\s+',' ','g'))=$3 LIMIT 1",[gymId,provider,key]);
+  if(duplicate)throw billingError('Payment reference already used',409);
+  const {rows:[payment]}=await client.query(`INSERT INTO payments(invoice_id,gym_id,provider,amount,reference,status,currency,recorded_by,paid_at,manual_reference_key,received_on,confirmation_note)
+    VALUES($1,$2,$3,$4,$5,'succeeded','ZAR',$6,$7::date::timestamp AT TIME ZONE 'Africa/Johannesburg',$8,$7,$9) RETURNING *`,[invoiceId,gymId,provider,sum,ref,adminId,paidOn,key,note]);
+  const receipt='RCP-'+String(payment.id).padStart(8,'0');
+  await client.query('UPDATE payments SET receipt_number=$2 WHERE id=$1',[payment.id,receipt]);
+  if(cents(sum)===cents(invoice.amount)-cents(settled.total)) {
+    await client.query("UPDATE invoices SET status='paid',updated_at=NOW() WHERE id=$1 AND gym_id=$2",[invoiceId,gymId]);
+    await confirmPaidSessionBooking(client,gymId,invoiceId);
+  }
+  await audit(client,{scope:'gym',id:Number(adminId)},'payment.manual_recorded',gymId,String(payment.id),{amount:sum,provider,receipt_number:receipt,received_on:paidOn});
+  if(notification)await notify(client,{gymId,userId:invoice.user_id,audience:'member',kind:'payment_success',key:'manual:'+gymId+':'+payment.id,message:'Your gym confirmed your '+provider.toUpperCase()+' payment. Your receipt is ready.',url:'/member/billing/receipts/'+payment.id});
+  return {...payment,receipt_number:receipt};
+}
+export async function recordManualPayment(gymId,adminId,input) {
+  if(input.provider!=='cash')throw billingError('EFT payments must be confirmed through the payment-proof review queue');
+  if(input.received_confirmed!==true)throw billingError('Confirm that you personally received the cash');
+  const client=await db.connect();
+  try {await client.query('BEGIN');const payment=await settleManualPayment(client,gymId,adminId,{...input,notification:true});await client.query('COMMIT');return payment;}
+  catch(error){await client.query('ROLLBACK');if(error.code==='23505')throw billingError('Payment reference already used',409);throw error;}
+  finally{client.release();}
 }
 
 export async function createPlan(gymId, { name, price, billing_cycle = 'monthly', description = '', custom_days=null }) {
@@ -239,6 +252,7 @@ export async function requestPlanChange(gymId, userId, { plan_id, reason = '' })
       SELECT $1,$2,p.id,$4 FROM plans p WHERE p.id=$3 AND p.gym_id=$1 AND p.is_active=true RETURNING *`,
       [gymId, userId, planId, String(reason).slice(0, 500)]);
     if (!request) throw billingError('Plan not found', 404);
+    await notify(client,{gymId,audience:'billing',kind:'plan_change_requested',key:'plan-request:'+request.id,message:'A member requested a membership plan change.',url:'/admin/billing?review=requests'});
     await client.query('COMMIT');
     return request;
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
@@ -271,6 +285,7 @@ export async function resolvePlanChange(gymId, requestId, status,actor=null) {
       eventId=await recordMemberChange(client,actor,gymId,member,'member.membership_changed',{
         summary:`Your plan change request for ${plan.name} has been ${status}. Existing invoices and payments remain unchanged.`,details:{action:'plan_request_'+status,plan_name:plan.name}});
     }
+    await notify(client,{gymId,userId:request.user_id,audience:'member',kind:'plan_change_decision',key:'plan-request:'+id+':'+status,message:'Your plan change request was '+status+'.',url:'/member/billing?result=request-sent'});
     await client.query('COMMIT'); changed=eventId?{...updated,message:'Plan request updated.',notification_event_id:eventId}:updated;
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   return changed.notification_event_id?completeMemberChange(changed):changed;

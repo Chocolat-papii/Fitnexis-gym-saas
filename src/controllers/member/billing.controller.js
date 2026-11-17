@@ -20,7 +20,7 @@ export async function viewMemberBlling(req, res, next) {
 export async function memberInvoice(req, res, next) {
   try {
     const { invoice, payments } = await billing.invoiceDetail(req.gymId, req.params.id, Number(req.user.sub));
-    res.render('billing/invoice', { invoice, payments, gym: req.gym, member: res.locals.member });
+    res.render('billing/invoice', { invoice, payments, gym: req.gym, member: res.locals.member, paymentProofUrl:'/member/billing/invoices/'+invoice.id+'/proof', receiptBase:'/member/billing/receipts/' });
   } catch (error) { if (error.status) res.status(error.status).send(error.message); else next(error); }
 }
 export async function startCheckout(req, res) {

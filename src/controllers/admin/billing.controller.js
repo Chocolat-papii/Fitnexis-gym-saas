@@ -68,6 +68,6 @@ export const downloadBillingCsv = async (req, res) => {
 export async function adminInvoice(req, res, next) {
   try {
     const { invoice, payments } = await billing.invoiceDetail(req.gymId, req.params.id);
-    res.render('billing/invoice', { invoice, payments, gym: req.gym, member: res.locals.member });
+    res.render('billing/invoice', { invoice, payments, gym: req.gym, member: res.locals.member, paymentProofUrl:'/admin/billing/payment-proofs', receiptBase:'/admin/billing/receipts/' });
   } catch (error) { if (error.status) res.status(error.status).send(error.message); else next(error); }
 }

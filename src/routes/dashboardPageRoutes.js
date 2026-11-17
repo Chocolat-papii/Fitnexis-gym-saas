@@ -1,3 +1,5 @@
+import notificationRoutes from './notifications.routes.js';
+import {memberPaymentProofRoutes} from './paymentProofs.routes.js';
 
 import express from "express";
 
@@ -21,6 +23,8 @@ import { sameOrigin } from '../middleware/sameOrigin.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
+router.use('/notifications',notificationRoutes);
+router.use('/billing',memberPaymentProofRoutes);
 
 router.use("/member", requireGym, requireAuth, hydrateMember); 
 //// - - - member dashboard update routes - - - //

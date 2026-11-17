@@ -2,7 +2,9 @@
   if (window.FitnexisLoading) return;
   const active = new Map();
   const forms = new Map();
-  const controlFor = event => event.submitter || event.target?.closest?.('button, input[type="submit"], input[type="image"], a[href]');
+  const controlFor = event => event.submitter || (event.type === 'submit'
+    ? event.target?.querySelector?.('button:not([type="button"]):not([type="reset"]), input[type="submit"]')
+    : event.target?.closest?.('button, input[type="submit"], input[type="image"], a[href]'));
 
   function start(button, { disable = false, form = null } = {}) {
     if (!button || active.has(button)) return () => {};

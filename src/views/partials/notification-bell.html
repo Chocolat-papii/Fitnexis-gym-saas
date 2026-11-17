@@ -1,0 +1,6 @@
+<% const notificationBase=member.role==='member'?'/member':'/admin'; %>
+<link rel="stylesheet" href="/assets/dashboard/css/notifications.css">
+<div class="notification-centre" data-notification-root data-base="<%= notificationBase %>" data-csrf="<%= typeof csrf==='string'?csrf:'' %>">
+<button type="button" class="btn icon-btn border position-relative" id="bellBtn" aria-label="Notifications" aria-expanded="false" aria-controls="notificationPanel"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg><span class="notification-unread" data-notification-count hidden></span></button>
+<section id="notificationPanel" class="notification-panel" aria-labelledby="notificationHeading" hidden><header><h2 id="notificationHeading">Notifications</h2><button type="button" class="btn btn-sm btn-outline-secondary" data-note-read-all>Mark all as read</button></header><p class="notification-feedback" data-notification-status role="status" aria-live="polite"></p><div data-notification-items></div><footer><a href="<%= notificationBase %>/notifications">View all notifications</a></footer></section></div>
+<script src="/assets/dashboard/js/notifications.js" defer></script>

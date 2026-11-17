@@ -1,0 +1,4 @@
+<%- include('../billing/proof-head.html',{title:'Notifications'}) %>
+<header class="proof-heading"><div><h1 class="h3">Notifications</h1><p>Updates for your account and your gym. Reading a notification does not complete a pending billing review.</p></div><button type="button" class="btn btn-outline-secondary" data-note-read-all>Mark all as read</button></header>
+<section class="card glass-card proof-card" data-notification-page><p data-notification-page-status role="status" aria-live="polite">Loading notifications...</p><div data-notification-page-items></div><nav class="proof-heading"><button type="button" class="btn btn-outline-secondary" data-notification-previous disabled>Previous</button><span data-notification-page-number>Page 1</span><button type="button" class="btn btn-outline-secondary" data-notification-next disabled>Next</button></nav></section>
+<%- include('../billing/proof-footer.html') %>

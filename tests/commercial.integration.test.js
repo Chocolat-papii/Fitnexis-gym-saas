@@ -120,12 +120,12 @@ test('commercial platform: real migrations, MFA, RBAC, bank onboarding, subscrip
     await updateCommission({scope:'platform',id:999},{commission_bps:300,reason:'Negotiated commercial exception'},gym.id);
     await Promise.all([verifyAndSettle(memberCheckout.reference),verifyAndSettle(memberCheckout.reference)]);
     const payment=(await pool.query('SELECT * FROM payments WHERE reference=$1',[memberCheckout.reference])).rows[0];assert.equal(Number(payment.commission_cents),1000,'Pending payments retain their commission snapshot');assert.equal(payment.commission_bps,200);assert.equal(Number(payment.gateway_fee_cents),150);
-    const manualInvoice=await createInvoice(gym.id,{user_id:member.id,amount:'50'});const manual=await recordManualPayment(gym.id,owner.id,{invoice_id:manualInvoice.id,amount:'50',provider:'cash',reference:`cash-${suffix}`});assert.equal(Number(manual.commission_cents),0);
+    const manualInvoice=await createInvoice(gym.id,{user_id:member.id,amount:'50'});const manual=await recordManualPayment(gym.id,owner.id,{invoice_id:manualInvoice.id,amount:'50',provider:'cash',reference:`cash-${suffix}`, received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'});assert.equal(Number(manual.commission_cents),0);
     const customPlan=await createPlan(gym.id,{name:'Custom 10 days',price:'80',billing_cycle:'custom',custom_days:10});
     const purchased=await purchaseMembership(gym.id,member.id,customPlan.id);
     assert.equal((await purchaseMembership(gym.id,member.id,customPlan.id)).invoice_id,purchased.invoice_id,'Repeated purchase returns the same invoice');
     assert.equal((await pool.query('SELECT status FROM memberships WHERE id=$1',[purchased.membership_id])).rows[0].status,'awaiting_payment');
-    await recordManualPayment(gym.id,owner.id,{invoice_id:purchased.invoice_id,amount:'80',provider:'eft',reference:`purchase-${suffix}`});
+    await recordManualPayment(gym.id,owner.id,{invoice_id:purchased.invoice_id,amount:'80',provider:'cash',reference:`purchase-${suffix}`, received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'});
     assert.equal((await pool.query('SELECT status FROM memberships WHERE id=$1',[purchased.membership_id])).rows[0].status,'active','Only confirmed settlement activates a purchased membership');
     const refundInput={payment_id:payment.id,amount_cents:25000,reference:`fnr-${randomUUID()}`,reason:'Member requested partial refund'};
     await requestRefund(gym.id,{scope:'platform',id:999},refundInput);await requestRefund(gym.id,{scope:'platform',id:999},refundInput);

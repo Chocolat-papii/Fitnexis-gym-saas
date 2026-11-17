@@ -46,11 +46,14 @@
     <div class="modal-header"><h2 class="modal-title fs-5" id="paymentModalTitle">Record payment</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
     <form id="manualPaymentForm"><div class="modal-body">
       <div class="alert alert-danger d-none billing-modal-message" role="alert"></div>
-      <p class="billing-note">Only record funds you have actually received. Unique reference required. Check pending online payments in the payment history before recording another receipt.</p>
+      <p class="billing-note">Use this form only for cash you actually received. EFT payments require a member submission in the payment-proof review queue. Check pending online payments before recording another receipt.</p>
 <label for="paymentInvoice">Invoice</label><select class="form-select" id="paymentInvoice" name="invoice_id" required></select>
 <label for="paymentAmount">Received amount (ZAR)</label><input class="form-control" id="paymentAmount" name="amount" type="number" step="0.01" min="0.01" required>
-<label for="paymentProvider">Method</label><select class="form-select" id="paymentProvider" name="provider"><option value="eft">EFT</option><option value="cash">Cash</option></select>
-<label for="paymentReference">Bank reference / till receipt</label><input class="form-control" id="paymentReference" name="reference" required maxlength="200">
+<label for="paymentProvider">Method</label><select class="form-select" id="paymentProvider" name="provider"><option value="cash">Cash received</option></select>
+<label for="paymentReference">Unique till receipt / cash reference</label><input class="form-control" id="paymentReference" name="reference" required maxlength="200">
+<label class="form-label mt-2">Date cash received<input class="form-control" type="date" name="received_on" id="cashReceivedOn" required></label>
+<label class="form-label mt-2">Receipt notes<textarea class="form-control" name="confirmation_note" minlength="8" maxlength="2000" required></textarea></label>
+<label class="d-block mt-2"><input type="checkbox" name="received_confirmed" required> I personally received this cash and checked the amount.</label>
 
     </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Record payment</button></div></form>
   </div></div>

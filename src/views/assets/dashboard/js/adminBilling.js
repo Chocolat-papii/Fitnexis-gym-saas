@@ -69,7 +69,7 @@
   }
   function renderPayments() {
     const filter = document.getElementById('paymentFilter').value || 'all';
-    rows('billingPayments', payments.filter(payment => filter === 'all' || payment.status === filter), x => `<tr><td>${safe(x.reference)}</td><td>${safe(x.firstname)} ${safe(x.lastname)}</td><td>${money(x.amount)}</td><td>${safe(x.provider.toUpperCase())}</td><td>${status(x.dispute_status==='open'?'disputed':Number(x.refunded_cents)>0?'refunded':x.status)}${Number(x.refunded_cents)>0?' '+money(Number(x.refunded_cents)/100):''}</td><td>${date(x.paid_at)}</td><td>${x.provider === 'paystack' && x.status === 'pending' ? `<button class="btn btn-outline-light btn-sm" data-verify="${safe(x.reference)}">Check status</button>` : ''}</td></tr>`, payments.length ? 'No payments match this status.' : 'No payments recorded yet.');
+    rows('billingPayments', payments.filter(payment => filter === 'all' || payment.status === filter), x => `<tr><td>${safe(x.reference)}</td><td>${safe(x.firstname)} ${safe(x.lastname)}</td><td>${money(x.amount)}</td><td>${safe(x.provider.toUpperCase())}</td><td>${status(x.dispute_status==='open'?'disputed':Number(x.refunded_cents)>0?'refunded':x.status)}${Number(x.refunded_cents)>0?' '+money(Number(x.refunded_cents)/100):''}</td><td>${date(x.paid_at)}</td><td>${['cash','eft'].includes(x.provider) && ['succeeded','reversed'].includes(x.status) ? `<a class="btn btn-outline-secondary btn-sm" href="/admin/billing/receipts/${Number(x.id)}">Receipt</a>` : x.provider === 'paystack' && x.status === 'pending' ? `<button class="btn btn-outline-light btn-sm" data-verify="${safe(x.reference)}">Check status</button>` : ''}</td></tr>`, payments.length ? 'No payments match this status.' : 'No payments recorded yet.');
   }
   document.getElementById('invoiceFilter').addEventListener('change', renderInvoices);
   document.getElementById('invoiceSearch').addEventListener('input', renderInvoices);
@@ -99,7 +99,9 @@
   Object.entries(forms).forEach(([id, path]) => document.getElementById(id).addEventListener('submit', event => {
     event.preventDefault();
     void mutate(event.submitter || event.target.querySelector('[type="submit"]'), async () => {
-      await api(path, 'POST', Object.fromEntries(new FormData(event.target)));
+      const payload=Object.fromEntries(new FormData(event.target));
+      if(id==='manualPaymentForm')payload.received_confirmed=event.target.elements.received_confirmed.checked;
+      await api(path, 'POST', payload);
       const modal = event.target.closest?.('.modal');
       if (modal) window.bootstrap?.Modal.getInstance(modal)?.hide();
       message('Saved successfully.');
@@ -143,9 +145,9 @@
   });
   function setDates() {
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-    for (const id of ['membershipStart', 'invoiceDue']) if (!document.getElementById(id).value) document.getElementById(id).value = today;
+    for (const id of ['membershipStart', 'invoiceDue', 'cashReceivedOn']) if (!document.getElementById(id).value) document.getElementById(id).value = today;
   }
   setDates();
   setFormAvailability();
-  void loadBilling().catch(error => message(error.message, true)).finally(setFormAvailability);
+  void loadBilling().then(()=>{if(window.location?.search?.includes('review=requests'))window.bootstrap?.Modal.getOrCreateInstance(document.getElementById('requestsModal')).show();}).catch(error => message(error.message, true)).finally(setFormAvailability);
 })();

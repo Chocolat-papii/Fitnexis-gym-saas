@@ -1,0 +1,5 @@
+<%- include('../admin/partials/management-head.html',{title, pageStyles:'payment-proofs.css'}) %>
+<body class="bg-body-bg">
+<%- include(isMember?'../dashboard/partials/header.html':'../admin/partials/header.html') %>
+<div class="app-shell"><%- include(isMember?'../dashboard/partials/sidebar.html':'../admin/partials/sidebar.html') %>
+<main class="content payment-proof-page"><meta name="billing-csrf" content="<%= csrf %>">

@@ -52,9 +52,9 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     assert.equal((await pool.query('SELECT next_bill_on::text FROM memberships WHERE id=$1', [membership.id])).rows[0].next_bill_on, '2026-04-30');
     const invoice = (await billing.listInvoices(gymId))[0];
     assert.equal(new Date(invoice.due_at).toISOString(), '2026-03-30T22:00:00.000Z', 'Invoice deadlines use South African midnight even on a UTC database');
-    await billing.recordManualPayment(gymId, admin.id, { invoice_id: invoice.id, amount: '30', provider: 'eft', reference: 'receipt-1' });
+    await billing.recordManualPayment(gymId, admin.id, { invoice_id: invoice.id, amount: '30', provider: 'cash', reference: 'receipt-1' , received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'});
     assert.equal((await billing.invoiceDetail(gymId, invoice.id)).invoice.balance, '70.00');
-    await assert.rejects(() => billing.recordManualPayment(gymId, admin.id, { invoice_id: invoice.id, amount: '71', provider: 'cash', reference: 'overpayment' }), /exceeds/);
+    await assert.rejects(() => billing.recordManualPayment(gymId, admin.id, { invoice_id: invoice.id, amount: '71', provider: 'cash', reference: 'overpayment' , received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'}), /exceeds/);
     await assert.rejects(() => billing.invoiceDetail('00000000-0000-0000-0000-000000000000', invoice.id), /not found/);
     await assert.rejects(() => billing.invoiceDetail(gymId, invoice.id, admin.id), /not found/);
 
@@ -76,7 +76,7 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     verifyStatus = 'pending';
     assert.equal((await initiatePaystackCheckout(gymId, user.id, invoice.id)).reference, checkout.reference, 'Retrying a pending checkout reuses its reference');
     verifyStatus = 'success';
-    await assert.rejects(() => billing.recordManualPayment(gymId, admin.id, { invoice_id: invoice.id, amount: '1', provider: 'cash', reference: 'during-checkout' }), /pending online payment/);
+    await assert.rejects(() => billing.recordManualPayment(gymId, admin.id, { invoice_id: invoice.id, amount: '1', provider: 'cash', reference: 'during-checkout' , received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'}), /pending online payment/);
     await assert.rejects(() => verifyAndSettle(checkout.reference, { gymId, userId: admin.id }), /not found/);
     verifyAmount = 6900;
     await assert.rejects(() => verifyAndSettle(checkout.reference), /amount mismatch/);
@@ -149,9 +149,9 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     await assert.rejects(() => createBooking(paidSession.id, user.id, '00000000-0000-0000-0000-000000000000'), /not found/);
     await assert.rejects(() => sessions.updateSession(paidSession.id, { ...sessionData, is_paid: false }, gymId), /Payment terms/);
     await assert.rejects(() => sessions.deleteSession(paidSession.id, gymId), /cannot be deleted/);
-    await billing.recordManualPayment(gymId, admin.id, { invoice_id: paidBooking.invoice_id, amount: '25', provider: 'cash', reference: 'session-partial' });
+    await billing.recordManualPayment(gymId, admin.id, { invoice_id: paidBooking.invoice_id, amount: '25', provider: 'cash', reference: 'session-partial' , received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'});
     assert.equal((await createBooking(paidSession.id, user.id, gymId)).booking_status, 'awaiting_payment');
-    await billing.recordManualPayment(gymId, admin.id, { invoice_id: paidBooking.invoice_id, amount: '50.50', provider: 'eft', reference: 'session-final' });
+    await billing.recordManualPayment(gymId, admin.id, { invoice_id: paidBooking.invoice_id, amount: '50.50', provider: 'cash', reference: 'session-final' , received_confirmed:true, received_on:'2026-11-01', confirmation_note:'Cash counted and received at reception'});
     assert.equal((await createBooking(paidSession.id, user.id, gymId)).booking_status, 'booked', 'Full manual receipt confirms the class booking');
     const freeSession = await sessions.createClassSession({ ...sessionData, capacity: 1, price: '999' }, gymId);
     assert.equal(freeSession.price, '0.00', 'Free sessions ignore stale browser prices');
@@ -177,8 +177,8 @@ test('PostgreSQL migrations and complete gym billing lifecycle', { skip: !connec
     await verifyAndSettle(onlineReference);
     assert.equal((await createBooking(onlineSession.id, user.id, gymId)).booking_status, 'booked', 'Verified online receipt confirms the class booking');
     const insights = await billing.billingOverview(gymId);
-    assert.equal(insights.month_cash, '25.00');
-    assert.equal(insights.month_eft, '80.50');
+    assert.equal(insights.month_cash, '105.50');
+    assert.equal(insights.month_eft, '0.00');
     assert.equal(insights.month_paystack, '80.00');
     assert.equal(insights.month_collected, '185.50', 'Monthly method totals match confirmed collections');
     assert.equal(insights.pending_payments, 1);
